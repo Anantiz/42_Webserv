@@ -28,5 +28,8 @@
 #include <dirent.h>
 #include <arpa/inet.h>
 
+// Pre-declarations
+#include "general.hpp"
+
 // Custom headers
-#include "debug.hpp"
+#include "logs.hpp"

@@ -25,7 +25,7 @@ INTERPRET_FILES:=
 SRC_FILES+= 	$(addprefix $(INTERPRET_PATH)/,$(INTERPRET_FILES))
 
 UTILS_PATH:=utils
-UTILS_FILES:= debug.cpp
+UTILS_FILES:= logs.cpp
 SRC_FILES+= 	$(addprefix $(UTILS_PATH)/,$(UTILS_FILES))
 
 EXEC_PATH:=exec

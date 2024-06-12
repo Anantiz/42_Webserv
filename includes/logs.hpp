@@ -32,35 +32,45 @@ public:
 		ERROR
 	};
 	// For development
-	const static logs::LogLevel logs::defaultLogLevel = logs::DEV;
 	// For release
 	// const static logs::LogLevel logs::defaultLogLevel = logs::INFO;
 
-	/* Meta */
-	logs( void );
+	/*
+	 ** Meta
+	*/
+
 	~logs();
 
-	// Logs message to the appropriate output stream
-	void	log(enum LogLevel level, const std::string &msg);
+	logs(void);																				  // Default constructor
+	logs(const enum LogLevel log_level);																						  // Set log level only
+	logs(enum LogLevel log_level, const std::string &errLogFileName, const std::string &infoLogFileName); // Give log files
 
-	// Setters
-	void	setLogLevel(enum LogLevel level) { _log_level = level; }
-	void	setDevOut(std::ostream &devOut) { _devOut.rdbuf(devOut.rdbuf()); }
-	void	setDebugOut(std::ostream &debugOut) { _debugOut.rdbuf(debugOut.rdbuf()); }
-	void	setInfoOut(std::ostream &infoOut) { _infoOut.rdbuf(infoOut.rdbuf()); }
-	void	setWarningOut(std::ostream &warningOut) { _warningOut.rdbuf(warningOut.rdbuf()); }
-	void	setErrorOut(std::ostream &errorOut) { _errorOut.rdbuf(errorOut.rdbuf()); }
-	// Getters (Not needed)
-	// Blank
+	/*
+	 ** Members
+	*/
+
+	// Logs message to the appropriate output stream
+	void devLog(const std::string &msg) const;
+	void debugLog(const std::string &msg) const;
+	void infoLog(const std::string &msg) const;
+	void warnLog(const std::string &msg) const;
+	void errLog(const std::string &msg) const;
 
 private:
 
-	// Output streams
-	std::ostream *_devOut;
-	std::ostream *_debugOut;
-	std::ostream *_infoOut;
-	std::ostream *_warningOut;
-	std::ostream *_errorOut;
+	const static logs::LogLevel defaultLogLevel = logs::DEV;
 
-	enum LogLevel _log_level;
+	enum LogLevel _logLevel;
+
+	// Output streams
+	std::ostream *_highPriorityOut; // Errors, warnings
+	std::ostream *_lowPriorityOut;	// Info, debug, dev
+
+	// Log files if redirected
+	std::ofstream _errLogFile;	// Errors, warnings
+	std::ofstream _infoLogFile; // Info, debug, dev
+
+	// Lowest level of logs to be displayed
+	// Use warpers instead of calling log directly
+	void log(enum LogLevel level, const std::string &msg) const;
 };

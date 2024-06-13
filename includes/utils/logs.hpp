@@ -1,8 +1,7 @@
 #pragma once
-
-#include <iostream>
-#include <fstream>
-#include <string>
+// This file contains the general includes that are used in the project
+// as well as pre-declarations of custom classes and functions
+#include "webserv.hpp"
 
 // ANSI color codes
 #define RED "\033[91m"
@@ -37,17 +36,17 @@ public:
 
 	/*
 	 ** Meta
-	*/
+	 */
 
 	~logs();
 
-	logs(void);																				  // Default constructor
-	logs(const enum LogLevel log_level);																						  // Set log level only
+	logs(void);																							  // Default constructor
+	logs(const enum LogLevel log_level);																  // Set log level only
 	logs(enum LogLevel log_level, const std::string &errLogFileName, const std::string &infoLogFileName); // Give log files
 
 	/*
 	 ** Members
-	*/
+	 */
 
 	// Logs message to the appropriate output stream
 	void devLog(const std::string &msg) const;
@@ -57,7 +56,6 @@ public:
 	void errLog(const std::string &msg) const;
 
 private:
-
 	const static logs::LogLevel defaultLogLevel = logs::DEV;
 
 	enum LogLevel _logLevel;

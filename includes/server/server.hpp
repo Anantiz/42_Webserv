@@ -16,21 +16,27 @@ public:
 
 private:
 
+	// Network parameters
 	const std::string _serverName;
-
-	// Listen directive
 	const std::vector<int> _ports;
 
 	const bool _ssl_enforced;
 	const std::string _ssl_certificate;
 	const std::string _ssl_certificate_key;
 
+	// Server parameters
+	const std::string _root;
+	const std::vector<std::string> _indexes; // Index.html, index.php ... So a vector of strings
+
 	const std::vector<location> _locations;
+
+	// Clients conections
+	clientManager _clientManager;
+
+	const logs _log;
 };
 
 /* Exac words in nginx
-
-
 Make it so that you can recognize directives
 allowed in a parent block
 

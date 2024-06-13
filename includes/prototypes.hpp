@@ -5,20 +5,17 @@
 
 /* Config file directives */
 
-class config;
+class config; // Used for parsing the config file
+
+// Server directives
 class server;
 class location;
 
-/* Run-time classes */
-
+// Client directives
+class client;
+class clientManager;
 class clientConnection;
-class serverConnection;
 
-/* Utils */
-
+// Utils
 class logs;
-class regexParser;
-
-/* Exceptions */
-
 class webservException;

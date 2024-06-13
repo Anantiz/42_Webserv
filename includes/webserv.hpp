@@ -1,15 +1,17 @@
 #pragma once
 
 // C++ headers
-#include <algorithm>
+#include <string>
+#include <iomanip>
+#include <cstdlib>
+#include <exception>
+
+#include <iostream>
 #include <fstream>
 #include <sstream>
-#include <iomanip>
+
+#include <algorithm>
 #include <iterator>
-#include <exception>
-#include <cstdlib>
-#include <iostream>
-#include <string>
 #include <vector>
 #include <map>
 
@@ -28,8 +30,23 @@
 #include <dirent.h>
 #include <arpa/inet.h>
 
-// Pre-declarations
-#include "general.hpp"
+/*
+	** Custom headers
+*/
 
-// Custom headers
+// Every class prototypes of the project
+#include "prototypes.hpp"
+
+
+// Server related
+#include "server.hpp"
+#include "location.hpp"
+
+// Client related
+#include "clientManager.hpp"
+#include "clientConnection.hpp"
+#include "client.hpp"
+
+// Utils
 #include "logs.hpp"
+#include "webservException.hpp"

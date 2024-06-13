@@ -6,8 +6,8 @@
 /* Config file directives */
 
 class config;
-class configServer;
-class configLocation;
+class server;
+class location;
 
 /* Run-time classes */
 

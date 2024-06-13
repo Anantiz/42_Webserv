@@ -82,22 +82,22 @@ void logs::log(enum logs::LogLevel level, const std::string &msg) const
 	switch (level)
 	{
 	case (DEV):
-		*_lowPriorityOut << "DEV: " << msg << RESET << std::endl;
+		*_lowPriorityOut << "[DEV] " << RESET << msg << std::endl;
 		break;
 	case (DEBUG):
-		*_lowPriorityOut << "DEBUG: " << msg << RESET << std::endl;
+		*_lowPriorityOut << "[DEBUG] " << RESET << msg << std::endl;
 		break;
 	case (INFO):
-		*_highPriorityOut << BLUE "INFO: " << msg << RESET << std::endl;
+		*_highPriorityOut << BLUE "[INFO] " << RESET << msg << std::endl;
 		break;
 	case (WARNING):
-		*_highPriorityOut << YELLOW "WARNING: " << msg << RESET << std::endl;
+		*_highPriorityOut << YELLOW "[WARNING] " << RESET << msg << std::endl;
 		break;
 	case (ERROR):
-		*_highPriorityOut << RED "ERROR: " << msg << RESET << std::endl;
+		*_highPriorityOut << RED "[ERROR] " << RESET << msg << std::endl;
 		break;
 	default:
-		std::cerr << MAGENTA "What the dog doing ? " << msg << RESET << std::endl;
+		std::cerr << MAGENTA "What the dog doing ? " << RESET << msg << std::endl;
 		return;
 	}
 }

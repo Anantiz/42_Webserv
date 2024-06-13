@@ -11,6 +11,7 @@ class server
 {
 public:
 
+	// Meta [constructor, destructor, operators]
 	server();
 	~server();
 
@@ -25,15 +26,34 @@ private:
 	const std::string _ssl_certificate_key;
 
 	// Server parameters
-	const std::string _root;
+	const std::vector<std::string> _root; // The global server root is the first one
+		/*
+			To manage DELETE
+				> Any sub-routes will append their root here
+				> If the DELETE path is not in the root, then it is forbidden
+				> Kinda usefull to not have an `rm -rf /` in the config file  ( ༎ຶ ۝ ༎ຶ )
+		*/
+
 	const std::vector<std::string> _indexes; // Index.html, index.php ... So a vector of strings
 
-	const std::vector<location> _locations;
+	const std::vector<route> _routes;
 
 	// Clients conections
 	clientManager _clientManager;
 
 	const logs _log;
+
+public:
+
+	// Methods
+
+	/*
+		** This ones interact with the `clientManager`
+	*/
+	void	acceptConnection();
+	void	closeConnection();
+	void	readConnection();
+	void	writeConnection();
 };
 
 /* Exac words in nginx
@@ -50,8 +70,8 @@ server
 	root		// default directory
 	index		// default file in the directory
 
-	// This is what the subjects refers as a `route`
-	location `expression` {}
+	// In our case, `route` is the same as nginx `location` ...
+	route `expression` {}
 }
 */
 
@@ -61,7 +81,6 @@ If multiples servers are defined
 		> Take the first one
 
 */
-
 
 /*
 Needs to handle:

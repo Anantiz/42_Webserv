@@ -9,7 +9,7 @@ class config; // Used for parsing the config file
 
 // Server directives
 class server;
-class location;
+class route;
 
 // Client directives
 class client;

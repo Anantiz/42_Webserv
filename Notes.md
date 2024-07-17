@@ -20,4 +20,9 @@ Parts:
 	? Store POST wherever the f it needs to be stored
 
 
-	? COOKIES 
+	? COOKIES
+
+
+SECOND THOUGHTS:
+
+	> Keep-alive ???

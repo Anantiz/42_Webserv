@@ -26,3 +26,4 @@ Parts:
 SECOND THOUGHTS:
 
 	> Keep-alive ???
+	> Declare state machines for resources lifetime, it will be clean

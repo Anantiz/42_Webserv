@@ -1,7 +1,10 @@
 #pragma once
-// This file contains the general includes that are used in the project
-// as well as pre-declarations of custom classes and functions
-#include "webserv.hpp"
+
+#include <iostream>
+#include <fstream>
+#include <string>
+
+#include "utils.hpp"
 
 // ANSI color codes
 #define RED "\033[91m"

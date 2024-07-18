@@ -1,47 +1,54 @@
 CXX:=c++
-INCLUDES:= -I./includes
+INCLUDES:= -I./includes -I./src
 CPPFLAGS:= -std=c++98 -Wall -Wextra -g3 -Wshadow $(INCLUDES)
 # -Werror //
 
+DEFINES:= -DDEBUG_PROD
+
 RM:=rm -rf
-
 NAME = webserv
-
-##############################################################################
-##############################################################################
-##############################################################################
 
 OBJDIR = .obj
 SRCDIR = src
 
-SRC_FILES = main.cpp
+SRC_FILES = main.cpp mock_data.cpp
 
-PARSING_PATH:=parsing
-PARSING_FILES:=
+### PARSER ########## ########## ########## ########## ##########
+PARSING_PATH:=config_parser
+PARSING_FILES:= config_parser.cpp
 SRC_FILES+= 	$(addprefix $(PARSING_PATH)/,$(PARSING_FILES))
 
-INTERPRET_PATH:=interpret
-INTERPRET_FILES:=
-SRC_FILES+= 	$(addprefix $(INTERPRET_PATH)/,$(INTERPRET_FILES))
 
+
+### CLIENT ########## ########## ########## ########## ##########
+CLIENT_EVENT_PATH:=client_event
+CLIENT_EVENT_FILES:= client_event.cpp
+SRC_FILES+= 	$(addprefix $(CLIENT_EVENT_PATH)/,$(CLIENT_EVENT_FILES))
+
+
+
+### UTILS ########## ########## ########## ########## ##########
 UTILS_PATH:=utils
-UTILS_FILES:= logs.cpp
+UTILS_FILES:= logs.cpp utils.cpp
 SRC_FILES+= 	$(addprefix $(UTILS_PATH)/,$(UTILS_FILES))
 
-EXEC_PATH:=exec
-EXEC_FILES:=
-SRC_FILES+= 	$(addprefix $(EXEC_PATH)/,$(EXEC_FILES))
 
-SETUP_PATH:=setup
-SETUP_FILES:=
-SRC_FILES+= 	$(addprefix $(SETUP_PATH)/,$(SETUP_FILES))
+
+### CLUSTER & SERV ########## ########## ########## ########## ##########
+CLUSTER_PATH:=cluster
+CLUSTER_FILES:= cluster.cpp start.cpp run.cpp methods.cpp
+SRC_FILES+= 	$(addprefix $(CLUSTER_PATH)/,$(CLUSTER_FILES))
+SERV_PATH:=$(CLUSTER_PATH)/server
+SERV_FILES:= server.cpp
+SRC_FILES+= 	$(addprefix $(SERV_PATH)/,$(SERV_FILES))
+LOCATIONS_PATH:=$(SERV_PATH)/location
+LOCATIONS_FILES:= location.cpp
+SRC_FILES+= 	$(addprefix $(LOCATIONS_PATH)/,$(LOCATIONS_FILES))
+
 
 SRC_FILES:=		$(addprefix $(SRCDIR)/,$(SRC_FILES))
 SRC_OBJECTS:=	$(patsubst $(SRCDIR)/%.cpp, ${OBJDIR}/%.o,$(SRC_FILES))
 
-##############################################################################
-##############################################################################
-##############################################################################
 
 all: $(NAME)
 
@@ -50,7 +57,7 @@ ${OBJDIR}/%.o:$(SRCDIR)/%.cpp
 	@$(CXX) $(CPPFLAGS) -c $< -o $@
 
 $(NAME): $(SRC_OBJECTS)
-	$(CXX) $(CPPFLAGS) -o $@ $^
+	$(CXX) $(CPPFLAGS) $(DEFINES) -o $@ $^
 
 clean:
 	@$(RM) $(SRC_OBJECTS)

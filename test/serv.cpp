@@ -1,6 +1,5 @@
 #include "serv.hpp"
 
-
 void serv::start()
 {
 	std::cout << "Starting server " << _name << " on port " << _port << " with root " << _root << std::endl;
@@ -21,15 +20,13 @@ void serv::start()
 
 	// Required for bind()
 	struct sockaddr_in address;
-
-	// int bind(int sockfd,
-	// 		const struct sockaddr *addr, --> Basically, what will the socket be doing, info given in a struct
-	// 		socklen_t addrlen); // Why ? The struct will always have a fixed size ?
-
-
 	address.sin_family = AF_INET; // domaine: IPv4
 	address.sin_addr.s_addr = INADDR_ANY; // Listen on all interfaces
 	address.sin_port = htons(_port);
+	
+	// int bind(int sockfd,
+	// 		const struct sockaddr *addr, --> Basically, what will the socket be doing, info given in a struct
+	// 		socklen_t addrlen); // Why ? The struct will always have a fixed size ?
 
 	if (bind(sfd, (struct sockaddr *)&address, sizeof(address)) == -1)
 	{ std::cerr << "Error binding socket" << std::endl; throw std::runtime_error("bind"); }

@@ -23,6 +23,7 @@ ClientEvent *Cluster::accept_client(int i)
 }
 
 int	Cluster::run() {
+Cluster::_run = true;
 while (_run) {
 	// Make this loop CPU-friendly for production
 	#ifdef DEBUG_PROD

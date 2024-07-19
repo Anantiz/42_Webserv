@@ -15,7 +15,6 @@
 
 #include "prototypes.hpp"
 
-
 /// @brief This bad boy will be used to store the request and response, it could even hold a mutex if we were allowed
 struct s_client_event {
 	uint								access_port;

@@ -21,3 +21,5 @@ void	Cluster::match_request_serv(struct s_client_event &request) const
 		request.error = 404;
 		request.server = NULL;
 }
+
+bool	*Cluster::get_run_ptr() { return &_run; }

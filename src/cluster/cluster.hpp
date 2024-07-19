@@ -25,24 +25,6 @@
 class Cluster {
 private:
 
-	bool							_run = true;
-	int								_max_queue = 10;
-	int								_max_events = 50;
-	int								_events_count = 0;
-	logs							_logs;
-
-	std::vector<u_int16_t>			_ports;
-	std::vector<int>				_listen_socket_fds;
-	std::vector<struct pollfd>		_poll_fds;
-
-	std::vector<Server>				_servers;
-	std::map<int, ClientEvent*>		_client_pool;
-	std::vector<int>				_to_remove;
-
-	typedef \
-		std::vector< std::pair< u_int16_t, std::vector< std::pair<std::string, Server*> > > > \
-		ss_reichfuhrer_t; // ss_reichfuhrer_t cuz it's the worst eveil type possible
-
 	/** @brief
 	*  It is a list of ports, each port has a list of names
 	*    these names are associated with a server, hardcore type but straightforward
@@ -50,7 +32,25 @@ private:
     *   [(80, [("server1.com", ptr_to_serv), ("server2.com", ptr_to_serv)]),
 	*   (443, [("server1.com", ptr_to_serv), ("server2.com", ptr_to_serv)])]
 	*/
-	std::vector< std::pair< u_int16_t, std::vector< std::pair<std::string, Server*> > > >	servers_ports;
+	typedef \
+		std::vector< std::pair< u_int16_t, std::vector< std::pair<std::string, Server*> > > > \
+		ss_reichfuhrer_t; // ss_reichfuhrer_t cuz it's the worst eveil type possible
+
+	static bool						_run;
+	int								_max_queue = 10;
+	int								_max_events = 50;
+	int								_events_count = 0;
+	logs							_logs;
+
+	std::vector<u_int16_t>			_ports;
+	std::vector<Server>				_servers;
+	ss_reichfuhrer_t				_servers_ports;
+
+	std::vector<int>				_listen_socket_fds;
+	std::vector<struct pollfd>		_poll_fds;
+
+	std::map<int, ClientEvent*>		_client_pool;
+	std::vector<int>				_to_remove;
 
 
 public:
@@ -58,7 +58,10 @@ public:
 	Cluster(const char *config_file_path);
 	~Cluster();
 
+	bool	*get_run_ptr(); // For signal handling
+
 	int		Cluster::start();
+	static void	Cluster::down() { _run = false; };
 
 private:
 
@@ -71,13 +74,11 @@ private:
 	 */
 	void	match_request_serv(struct s_client_event &request) const;
 
-
-
 	void	Cluster::init_sockets();
 	int		Cluster::run();
 
-	ClientEvent *Cluster::accept_client(int i);
-	void	remove_clients();
+	ClientEvent		*Cluster::accept_client(int i);
+	void			remove_clients();
 
 };
 

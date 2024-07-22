@@ -21,9 +21,9 @@ SRC_FILES+= 	$(addprefix $(PARSING_PATH)/,$(PARSING_FILES))
 
 
 ### CLIENT ########## ########## ########## ########## ##########
-CLIENT_EVENT_PATH:=client_event
-CLIENT_EVENT_FILES:= client_event.cpp
-SRC_FILES+= 	$(addprefix $(CLIENT_EVENT_PATH)/,$(CLIENT_EVENT_FILES))
+CLIENT_PATH:=client
+CLIENT_FILES:= client.cpp
+SRC_FILES+= 	$(addprefix $(CLIENT_PATH)/,$(CLIENT_FILES))
 
 
 
@@ -34,16 +34,22 @@ SRC_FILES+= 	$(addprefix $(UTILS_PATH)/,$(UTILS_FILES))
 
 
 
-### CLUSTER & SERV ########## ########## ########## ########## ##########
+### CLUSTER ########## ########## ########## ########## ##########
 CLUSTER_PATH:=cluster
 CLUSTER_FILES:= cluster.cpp start.cpp run.cpp methods.cpp
 SRC_FILES+= 	$(addprefix $(CLUSTER_PATH)/,$(CLUSTER_FILES))
-SERV_PATH:=$(CLUSTER_PATH)/server
+
+
+
+### SERV ########## ########## ########## ########## ##########
+SERV_PATH:=server
 SERV_FILES:= server.cpp
 SRC_FILES+= 	$(addprefix $(SERV_PATH)/,$(SERV_FILES))
 LOCATIONS_PATH:=$(SERV_PATH)/location
 LOCATIONS_FILES:= location.cpp
 SRC_FILES+= 	$(addprefix $(LOCATIONS_PATH)/,$(LOCATIONS_FILES))
+
+
 
 
 SRC_FILES:=		$(addprefix $(SRCDIR)/,$(SRC_FILES))

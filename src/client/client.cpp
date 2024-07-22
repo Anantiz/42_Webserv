@@ -1,7 +1,7 @@
-#include "client_event.hpp"
+#include "client.hpp"
 
 
-ClientEvent::ClientEvent(int poll_fd) {
+Client::Client(int poll_fd) {
 	// struct s_client_event _data;
 
 	error = 0;
@@ -11,17 +11,16 @@ ClientEvent::ClientEvent(int poll_fd) {
 	if (cfd == -1)
 		throw std::runtime_error("accept");
 	this->poll_fd = (pollfd){cfd, POLLIN, 0};
-	connection_status = ClientEvent::REQUEST;
+	connection_status = Http::REQUEST;
 }
 
-ClientEvent::~ClientEvent() {
+Client::~Client() {
 	if (body)
 		free(body);
 	close(poll_fd.fd);
 }
 
 // GETTERS
-
-pollfd &ClientEvent::getPollfd() {
+pollfd &Client::getPollfd() {
 	return poll_fd;
 }

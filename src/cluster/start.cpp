@@ -29,7 +29,7 @@ void	Cluster::init_sockets()
 		// Open an IPv4 socket for TCP connections
 		int sfd = socket(AF_INET, SOCK_STREAM, 0);
 		if (sfd == -1)
-			throw std::runtime_error("socket");
+			throw std::runtime_error("socket:" + std::string(::strerror(errno)));
 
 		struct sockaddr_in addr;
 		addr.sin_family = AF_INET;         // IPv4
@@ -38,11 +38,11 @@ void	Cluster::init_sockets()
 
 		int yes = 1;
 		if (setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &yes, sizeof(yes)) == -1)
-			throw std::runtime_error("setsockopt: " + std::string(::strerror(errno)));
+			throw std::runtime_error("setsockopt:" + std::string(::strerror(errno)));
 		if (bind(sfd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
-			throw std::runtime_error("bind: " + std::string(::strerror(errno)));
+			throw std::runtime_error("bind:" + std::string(::strerror(errno)));
 		if (listen(sfd, 10) == -1)
-			throw std::runtime_error("listen: " + std::string(::strerror(errno)));
+			throw std::runtime_error("listen:" + std::string(::strerror(errno)));
 		_listen_socket_fds.push_back(sfd);
 	}
 }
@@ -52,7 +52,7 @@ int	Cluster::start()
 	try {
 		init_sockets();
 	} catch (const std::exception &e) {
-		std::cerr << "Error initializing socket: " << e.what() << std::endl;
+		_logger.errLog("Error initializing sockets:" + std::string(e.what()));
 		return EXIT_FAILURE;
 	}
 
@@ -60,6 +60,6 @@ int	Cluster::start()
 	for (size_t i=0; i<size; i++)
 		_poll_fds.push_back((pollfd){_listen_socket_fds[i], POLLIN, 0});
 
-	_to_remove.reserve(_max_events / 2);
+	_to_remove.reserve(_max_clients / 4);
 	return run();
 }

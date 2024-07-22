@@ -18,7 +18,8 @@
 #include <netinet/in.h> // sockaddr_in
 
 #include "server/server.hpp"
-#include "client_event/client_event.hpp"
+#include "client/client.hpp"
+#include "http/http.hpp"
 #include "utils/logs.hpp"
 
 
@@ -34,22 +35,26 @@ private:
 	*/
 	typedef \
 		std::vector< std::pair< u_int16_t, std::vector< std::pair<std::string, Server*> > > > \
-		ss_reichfuhrer_t; // ss_reichfuhrer_t cuz it's the worst eveil type possible
+		ss_reichfuhrer_t; // ss_reichfuhrer_t cuz it's the worst evil type possible
 
 	static bool						_run;
+
+	// Config
 	int								_max_queue;
 	int								_max_events;
+	int								_max_clients;
 	int								_events_count;
-	logs							_logs;
-
+	logs							_logger;
 	std::vector<u_int16_t>			_ports;
 	std::vector<Server>				_servers;
 	ss_reichfuhrer_t				_servers_ports;
 
+	// start()
 	std::vector<int>				_listen_socket_fds;
-	std::vector<struct pollfd>		_poll_fds;
 
-	std::map<int, ClientEvent*>		_client_pool;
+	// run()
+	std::vector<struct pollfd>		_poll_fds;
+	std::map<int, Client*>		_client_pool;
 	std::vector<int>				_to_remove;
 
 
@@ -68,8 +73,8 @@ private:
 	void	init_sockets();
 	int		run();
 
-	ClientEvent		*accept_client(int i);
-	void			remove_clients();
+	Client		*accept_client(int i);
+	void			remove_poll_fds();
 
 	/**
 	 * Server found
@@ -78,7 +83,7 @@ private:
 	 *   > error is set to 404
 	 *   > server is set to NULL
 	 */
-	void	Cluster::match_request_serv(ClientEvent &request) const;
+	void	Cluster::match_request_serv(Client &request) const;
 
 };
 

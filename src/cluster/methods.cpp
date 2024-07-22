@@ -1,6 +1,6 @@
 #include "cluster.hpp"
 
-void	Cluster::match_request_serv(ClientEvent &request) const
+void	Cluster::match_request_serv(Client &request) const
 {
 		for (size_t i=0; i<_servers_ports.size(); i++) {
 			if (_servers_ports[i].first == request.access_port)
@@ -23,3 +23,12 @@ void	Cluster::match_request_serv(ClientEvent &request) const
 }
 
 bool	*Cluster::get_run_ptr() { return &_run; }
+
+void	Cluster::remove_poll_fds() {
+	while (_to_remove.size()) {
+		int i = _to_remove.back();
+		_to_remove.pop_back();
+		_client_pool.erase(_poll_fds[i].fd);
+		_poll_fds.erase(_poll_fds.begin() + i);
+	}
+}

@@ -10,7 +10,7 @@ class Server;
 class Location;
 
 // client_event
-class ClientEvent;
+class Client;
 struct s_client_event; // Not part of the class for more flexibility
 
 // utils

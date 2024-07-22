@@ -5,6 +5,7 @@
 /// @param path the path of the file to send
 /// @return -1 for error, 0 for success
 int	send_file_content(int socket_fd, const char *path) {
+	// Very bad code
 	char buffer[4096];
 
 	int file_fd = open(path, O_RDONLY);

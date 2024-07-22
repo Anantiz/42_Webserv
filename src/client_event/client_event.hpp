@@ -15,8 +15,13 @@
 
 #include "prototypes.hpp"
 
-namespace CEvent {
+/// @brief This bad boy will be used to store the request and response, it could even hold a mutex if we were allowed
+struct s_client_event {
 
+};
+
+class ClientEvent {
+public:
 	enum e_method {
 		GET,
 		POST,
@@ -36,29 +41,38 @@ namespace CEvent {
 		Others
 	};
 
+	enum e_conection_status {
 	/**
 	 * I don't know at all what to do with this
 	 * most probaly useless feature
 	 * we'll see
 	 */
-	enum e_conection_status {
 		REQUEST,
 		RESPONSE,
 		CLOSED,
 		KEEP_ALIVE
 	};
-};
 
-/// @brief This bad boy will be used to store the request and response, it could even hold a mutex if we were allowed
-struct s_client_event {
+	typedef std::map<int, ClientEvent*>::iterator client_pool_it;
+
+	ClientEvent(int fd);
+	~ClientEvent();
+
+	pollfd				&getPollfd();
+
+	void				parse_request();
+	void				send_response();
+
+public:
+	// It's all public because we use this more as a struct than a class
 	uint								access_port;
 	sockaddr_in							client_addr;
 	socklen_t							client_len;
-	pollfd								pollfd;
+	pollfd								poll_fd;
 
 	/// The Request Header will be Read before being sent to the server, can't match the server otherwise
-	enum CEvent::e_method				method;
-	enum CEvent::e_protocol				protocol;
+	enum e_method						method;
+	enum e_protocol						protocol;
 	std::string							uri;
 	std::string							host;
 	char*								body;
@@ -66,26 +80,7 @@ struct s_client_event {
 	Server*								server;
 	uint								error;
 
-	enum CEvent::e_conection_status	connection_status;
-};
-
-class ClientEvent {
-private:
-
-	struct s_client_event		_request;
-
-public:
-
-	typedef std::map<int, ClientEvent*>::iterator client_pool_it;
-	
-	ClientEvent(int fd);
-	~ClientEvent();
-
-	s_client_event		&getRequest();
-	pollfd				&getPollfd();
-
-	void				parse_request();
-	void				send_response();
+	enum e_conection_status				connection_status;
 };
 
 

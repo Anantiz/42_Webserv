@@ -33,7 +33,7 @@ void	Cluster::init_sockets()
 
 		struct sockaddr_in addr;
 		addr.sin_family = AF_INET;         // IPv4
-		addr.sin_port = htons(_ports[i]);   // Port
+		addr.sin_port = htons(_ports[i]);  // Port
 		addr.sin_addr.s_addr = INADDR_ANY; // Listen on all interfaces
 
 		int yes = 1;

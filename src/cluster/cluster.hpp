@@ -61,9 +61,15 @@ public:
 	bool	*get_run_ptr(); // For signal handling
 
 	int			start();
-	static void	down();
+	static void	down(); // Affects all instances
 
 private:
+
+	void	init_sockets();
+	int		run();
+
+	ClientEvent		*accept_client(int i);
+	void			remove_clients();
 
 	/**
 	 * Server found
@@ -72,13 +78,7 @@ private:
 	 *   > error is set to 404
 	 *   > server is set to NULL
 	 */
-	void	match_request_serv(struct s_client_event &request) const;
-
-	void	init_sockets();
-	int		run();
-
-	ClientEvent		*accept_client(int i);
-	void			remove_clients();
+	void	Cluster::match_request_serv(ClientEvent &request) const;
 
 };
 

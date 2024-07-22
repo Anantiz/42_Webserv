@@ -42,7 +42,7 @@ int	Cluster::run() {
 				// they will be handled by send_response() if any,
 				// no need to handle anything here
 				client->parse_request();
-				if (client->getRequest().connection_status == CEvent::CLOSED) {
+				if (client->connection_status == ClientEvent::CLOSED) {
 					_to_remove.push_back(i);
 				}
 				else

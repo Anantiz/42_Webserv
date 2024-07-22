@@ -1,6 +1,6 @@
 #include "cluster.hpp"
 
-void	Cluster::match_request_serv(struct s_client_event &request) const
+void	Cluster::match_request_serv(ClientEvent &request) const
 {
 		for (size_t i=0; i<_servers_ports.size(); i++) {
 			if (_servers_ports[i].first == request.access_port)

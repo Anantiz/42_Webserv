@@ -23,37 +23,36 @@ ClientEvent *Cluster::accept_client(int i)
 }
 
 int	Cluster::run() {
-Cluster::_run = true;
-while (_run) {
-	// Make this loop CPU-friendly for production
-	#ifdef DEBUG_PROD
-		sleep(1);
-	#endif
+	while (_run) {
+		// Make this loop CPU-friendly for production
+		#ifdef DEBUG_PROD
+			sleep(1);
+		#endif
 
-	int events_count = poll(_poll_fds.data(), _poll_fds.size(), 0); // 0 for non-blocking
-	if (!events_count)
-		continue;
-	if (events_count == -1)
-		throw std::runtime_error("poll: " + std::string(::strerror(errno)));
-
-	for (size_t i=0; i < _poll_fds.size(); ++i) {
-		try {
-			ClientEvent *client = accept_client(i);
-			// The parser will save Error codes
-			// they will be handled by send_response() if any,
-			// no need to handle anything here
-			client->parse_request();
-			if (client->getRequest().connection_status == ClientEvent::CLOSED) {
-				_to_remove.push_back(i);
-			}
-			else
-				client->send_response();
-		} catch (const std::exception &e) {
-			_logs.debugLog("Error client conection: " + std::string(e.what()));
+		int events_count = poll(_poll_fds.data(), _poll_fds.size(), 0); // 0 for non-blocking
+		if (!events_count)
 			continue;
+		if (events_count == -1)
+			throw std::runtime_error("poll: " + std::string(::strerror(errno)));
+
+		for (size_t i=0; i < _poll_fds.size(); ++i) {
+			try {
+				ClientEvent *client = accept_client(i);
+				// The parser will save Error codes
+				// they will be handled by send_response() if any,
+				// no need to handle anything here
+				client->parse_request();
+				if (client->getRequest().connection_status == CEvent::CLOSED) {
+					_to_remove.push_back(i);
+				}
+				else
+					client->send_response();
+			} catch (const std::exception &e) {
+				_logs.debugLog("Error client conection: " + std::string(e.what()));
+				continue;
+			}
 		}
+		remove_clients(); // Remove after the loop to avoid iterator invalidation
 	}
-	remove_clients();
-}
-return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }

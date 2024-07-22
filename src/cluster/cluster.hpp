@@ -37,9 +37,9 @@ private:
 		ss_reichfuhrer_t; // ss_reichfuhrer_t cuz it's the worst eveil type possible
 
 	static bool						_run;
-	int								_max_queue = 10;
-	int								_max_events = 50;
-	int								_events_count = 0;
+	int								_max_queue;
+	int								_max_events;
+	int								_events_count;
 	logs							_logs;
 
 	std::vector<u_int16_t>			_ports;
@@ -60,8 +60,8 @@ public:
 
 	bool	*get_run_ptr(); // For signal handling
 
-	int		Cluster::start();
-	static void	Cluster::down() { _run = false; };
+	int			start();
+	static void	down();
 
 private:
 
@@ -74,10 +74,10 @@ private:
 	 */
 	void	match_request_serv(struct s_client_event &request) const;
 
-	void	Cluster::init_sockets();
-	int		Cluster::run();
+	void	init_sockets();
+	int		run();
 
-	ClientEvent		*Cluster::accept_client(int i);
+	ClientEvent		*accept_client(int i);
 	void			remove_clients();
 
 };

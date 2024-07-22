@@ -1,5 +1,8 @@
 #include "cluster.hpp"
 
+bool Cluster::_run = true;
+
+
 Cluster::Cluster(const char *config_file_path) {
 	/// Parse the config file
 	// [...]
@@ -16,10 +19,15 @@ Cluster::Cluster(const char *config_file_path) {
 Cluster::~Cluster() {
 
 	// Close all listen sockets
-	for (int i=0; i<_listen_socket_fds.size(); i++)
+	for (size_t i=0; i<_listen_socket_fds.size(); i++)
 		close(_listen_socket_fds[i]);
 
 	// Remove any remaining client
-	for (int i=0; i<_client_pool.size(); i++)
+	for (size_t i=0; i<_client_pool.size(); i++)
 		delete _client_pool[i];
 }
+
+void	Cluster::down()
+{
+	Cluster::_run = false;
+};

@@ -2,12 +2,12 @@
 
 void	Cluster::match_request_serv(struct s_client_event &request) const
 {
-		for (int i=0; i<servers_ports.size(); i++) {
-			if (servers_ports[i].first == request.access_port)
+		for (size_t i=0; i<_servers_ports.size(); i++) {
+			if (_servers_ports[i].first == request.access_port)
 			{
-				for (int j=0; j<servers_ports[i].second.size(); j++) {
-					if (servers_ports[i].second[j].first == request.host) {
-						request.server = servers_ports[i].second[j].second;
+				for (size_t j=0; j<_servers_ports[i].second.size(); j++) {
+					if (_servers_ports[i].second[j].first == request.host) {
+						request.server = _servers_ports[i].second[j].second;
 						return ;
 					}
 				}

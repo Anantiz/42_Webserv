@@ -7,7 +7,7 @@
 
 namespace utils
 {
-	const std::string	&ito_str(int i);
+	const std::string	ito_str(int i);
 }
 
 #endif // UTILS_HPP

@@ -10,7 +10,7 @@ ClientEvent::ClientEvent(int poll_fd) {
 	if (cfd == -1)
 		throw std::runtime_error("accept");
 	event.pollfd = (pollfd){cfd, POLLIN, 0};
-	event.connection_status = REQUEST;
+	event.connection_status = CEvent::REQUEST;
 	_request = event;
 }
 

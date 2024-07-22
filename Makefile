@@ -15,7 +15,7 @@ SRC_FILES = main.cpp mock_data.cpp
 
 ### PARSER ########## ########## ########## ########## ##########
 PARSING_PATH:=config_parser
-PARSING_FILES:= config_parser.cpp
+PARSING_FILES:= parser.cpp
 SRC_FILES+= 	$(addprefix $(PARSING_PATH)/,$(PARSING_FILES))
 
 

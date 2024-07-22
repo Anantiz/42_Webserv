@@ -15,33 +15,7 @@
 
 #include "prototypes.hpp"
 
-/// @brief This bad boy will be used to store the request and response, it could even hold a mutex if we were allowed
-struct s_client_event {
-	uint								access_port;
-	sockaddr_in							client_addr;
-	socklen_t							client_len;
-	pollfd								pollfd;
-
-	/// The Request Header will be Read before being sent to the server, can't match the server otherwise
-	enum ClientEvent::e_method			method;
-	enum ClientEvent::e_protocol		protocol;
-	std::string							uri;
-	std::string							host;
-	char*								body;
-	size_t								body_size;
-	Server*								server;
-	uint								error;
-
-	enum ClientEvent::e_conection_status	connection_status;
-};
-
-class ClientEvent {
-private:
-
-	s_client_event		_request;
-
-public:
-	typedef std::map<int, ClientEvent*>::iterator client_pool_it;
+namespace CEvent {
 
 	enum e_method {
 		GET,
@@ -73,15 +47,47 @@ public:
 		CLOSED,
 		KEEP_ALIVE
 	};
+};
 
+/// @brief This bad boy will be used to store the request and response, it could even hold a mutex if we were allowed
+struct s_client_event {
+	uint								access_port;
+	sockaddr_in							client_addr;
+	socklen_t							client_len;
+	pollfd								pollfd;
+
+	/// The Request Header will be Read before being sent to the server, can't match the server otherwise
+	enum CEvent::e_method				method;
+	enum CEvent::e_protocol				protocol;
+	std::string							uri;
+	std::string							host;
+	char*								body;
+	size_t								body_size;
+	Server*								server;
+	uint								error;
+
+	enum CEvent::e_conection_status	connection_status;
+};
+
+class ClientEvent {
+private:
+
+	struct s_client_event		_request;
+
+public:
+
+	typedef std::map<int, ClientEvent*>::iterator client_pool_it;
+	
 	ClientEvent(int fd);
 	~ClientEvent();
 
 	s_client_event		&getRequest();
-	pollfd				&ClientEvent::getPollfd();
+	pollfd				&getPollfd();
 
-	void parse_request();
-	void send_response();
+	void				parse_request();
+	void				send_response();
 };
+
+
 
 #endif // CLIENT_EVENT_HPP

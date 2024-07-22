@@ -1,4 +1,3 @@
-{
 // Const value
 const int a = 5;
 int const a = 5;
@@ -13,5 +12,3 @@ int * const a;
 // Const pointer to a const value
 const int * const a;
 int const * const a;
-
-} 

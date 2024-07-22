@@ -3,6 +3,7 @@
 #define SERVER_HPP
 
 #include <vector>
+#include <cstdlib>
 #include <string>
 
 #include "location/location.hpp"

@@ -11,20 +11,23 @@
 class Location {
 private:
 
-	bool							_dir_listing = false;
-	bool							_accept_upload = false;
-	bool							_cgi_on = false;
-	int								_allowed_methods = 0b001; // Mask, GET=001 POST=010 DELETE=100
+	bool							_dir_listing = false;     // If true, list files in dir instead of 404
+	bool							_accept_upload = false;   // Self explanatory
+	int								_allowed_methods = 0b011; // Mask, GET=001 POST=010 DELETE=100
 	std::vector<std::string>		_indexes;                 // Default files if uri is a dir
 	std::string						_root;                    // Directory where to search the files
-	std::string						_cgi_extension;           // sends to cgi if extension match, none means any file
-	std::string						_cgi_path;                // path to execute
+	std::string						_upload_dir = "/tmp";     // Directory to save uploaded files
+	std::pair<int, std::string>		_redirect;                // (status_code, target_uri)
+
+	// A list of cgi scripts/programs with their respective extensions
+	std::vector< std::pair< std::string, std::string> > _cgis;
 };
 
 #endif // LOCATION_HPP
 
 /*
 	Brain Storm:
+
 
 
 */

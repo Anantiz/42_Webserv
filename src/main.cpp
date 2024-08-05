@@ -1,24 +1,22 @@
-#include "utils/logs.hpp"
-#include "cluster/cluster.hpp"
-#include <stdlib.h>
+#include "webserv.hpp"
 
-// I am not doing a full header file just for one stray function
-void	signal_handler();
 
-int main(int ac, char **av, char **envp)
+#define DEFAULT_CONFIG_FILE_PATH "configs/webserv-default.conf"
+
+int main(int ac, char **av)
 {
-	(void)envp;
-	(void)av;
-
 	logs globalLog;
+	const char *config_path;
 
-	if (ac != 2)
-		globalLog.warnLog("No configuration file provided, using default configuration");
+	if (ac > 1)
+		config_path = av[1];
+	else
+		config_path = DEFAULT_CONFIG_FILE_PATH;
 
 	try {
-		Cluster	cluster(av[1]);
+		Cluster cluster(config_path);
 		signal_handler(); // Graceful shutdown
-		globalLog.infoLog("Starting the server, you can gracefully shutdown with [Ctrl+C] or [Ctrl+\\]");
+		globalLog.infoLog("Starting the server, you can gracefully shut it down with [Ctrl+C] or [Ctrl+\\]");
 		return (cluster.start());
 	} catch (std::exception &e) {
 		globalLog.errLog(e.what());
@@ -27,4 +25,3 @@ int main(int ac, char **av, char **envp)
 
 	return (EXIT_SUCCESS);
 }
-

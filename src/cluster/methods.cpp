@@ -1,5 +1,8 @@
 #include "cluster.hpp"
 
+/*
+	As long as the Client 'host' is set, this function will set the 'server' pointer
+*/
 void	Cluster::match_request_serv(Client &request) const
 {
 		for (size_t i=0; i<_servers_ports.size(); i++) {

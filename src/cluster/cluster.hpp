@@ -34,8 +34,7 @@ private:
 	*   (443, [("server1.com", ptr_to_serv), ("server2.com", ptr_to_serv)])]
 	*/
 	typedef \
-		std::vector< std::pair< u_int16_t, std::vector< std::pair<std::string, Server*> > > > \
-		evil_typedef_t; // evil_typedef cuz it's the worst evil type possible
+		std::vector< std::pair< u_int16_t, std::vector< std::pair<std::string, Server* > > > > evil_typedef_t;
 
 	static bool						_run;
 
@@ -88,3 +87,31 @@ private:
 };
 
 #endif // CLUSTER_HPP
+
+// *.c
+int wildcard(char *str)
+{
+	int i = 0;
+	while (str[i] && str[i] != '*')
+		i++;
+	if (str[i] == '*')
+	{
+		char next = str[++i];
+		while (str[i] != next)
+			i++;
+	}
+	if (str[i] == '\0')
+		return 1;
+	return 0;
+}
+
+
+void get_files_in_dir()
+{
+	char *file = get_file();
+	if (match_wildcard(file))
+	{
+		add_to_args(node->args, file);
+	}
+
+}

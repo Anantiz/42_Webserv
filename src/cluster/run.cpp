@@ -46,7 +46,10 @@ int	Cluster::run() {
 					_to_remove.push_back(i);
 				}
 				else
+				{
+					match_request_serv(*client);
 					client->send_response();
+				}
 			} catch (const std::exception &e) {
 				_logger.debugLog("Error client conection: " + std::string(e.what()));
 				continue;

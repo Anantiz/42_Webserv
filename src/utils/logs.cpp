@@ -32,14 +32,15 @@ logs::logs(const enum logs::LogLevel log_level) : _logLevel(log_level), _highPri
 
 /*
 	Set log level and log files:
-		> all logs are printed to std::cerr
+		> logs are printed to std::cerr or log files
 		> log level is set to log_level
 		> log files are set to errLogFileName and infoLogFileName
 */
 logs::logs(enum logs::LogLevel log_level, const std::string &errLogFileName, const std::string &infoLogFileName) : _logLevel(log_level), _highPriorityOut(&std::cerr), _lowPriorityOut(&std::cerr)
 {
-	_errLogFile.open(errLogFileName.c_str());
-	_infoLogFile.open(infoLogFileName.c_str());
+	// Open log files
+	_errLogFile.open(errLogFileName.c_str(), std::ios::app);
+	_infoLogFile.open(infoLogFileName.c_str(), std::ios::app);
 	if (_errLogFile.is_open())
 		_highPriorityOut = &_errLogFile;
 	else

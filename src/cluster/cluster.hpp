@@ -35,7 +35,7 @@ private:
 	*/
 	typedef \
 		std::vector< std::pair< u_int16_t, std::vector< std::pair<std::string, Server*> > > > \
-		ss_reichfuhrer_t; // ss_reichfuhrer_t cuz it's the worst evil type possible
+		evil_typedef_t; // evil_typedef cuz it's the worst evil type possible
 
 	static bool						_run;
 
@@ -47,14 +47,14 @@ private:
 	logs							_logger;
 	std::vector<u_int16_t>			_ports;
 	std::vector<Server>				_servers;
-	ss_reichfuhrer_t				_servers_ports;
+	evil_typedef_t					_servers_ports;
 
 	// start()
 	std::vector<int>				_listen_socket_fds;
 
 	// run()
 	std::vector<struct pollfd>		_poll_fds;
-	std::map<int, Client*>		_client_pool;
+	std::map<int, Client*>			_client_pool;
 	std::vector<int>				_to_remove;
 
 

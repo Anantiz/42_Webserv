@@ -19,6 +19,8 @@ namespace utils
 	};
 
 	const std::string		ito_str(int i);
+	template <typename T>
+	const std::string		anything_to_str(T i);
 	enum e_path_type		what_is_this_path(char *path);
 } // namespace utils
 

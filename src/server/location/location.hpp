@@ -16,7 +16,7 @@ private:
 	int								_allowed_methods = 0b011; // Mask, GET=001 POST=010 DELETE=100
 	std::vector<std::string>		_indexes;                 // Default files if uri is a dir
 	std::string						_root;                    // Directory where to search the files
-	std::string						_upload_dir = "/tmp";     // Directory to save uploaded files
+	std::string						_upload_dir;              // Directory to save uploaded files, default is root+"/uploads/"
 	std::pair<int, std::string>		_redirect;                // (status_code, target_uri)
 
 	// A list of cgi scripts/programs with their respective extensions

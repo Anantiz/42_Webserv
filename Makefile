@@ -1,5 +1,5 @@
 CXX:=c++
-INCLUDES:= -I./includes -I./src
+INCLUDES:= -I./src
 CPPFLAGS:= -std=c++98 -Wall -Wextra -g3 -Wshadow $(INCLUDES)
 # -Werror //
 

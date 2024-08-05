@@ -35,14 +35,19 @@ public:
 	socklen_t							client_len;
 	pollfd								poll_fd;
 
+
+	// Set at least this one
+	std::string							host;
+	// Cluster::match_request_serv() will set this
+	Server*								server;
+
+
 	/// The Request Header will be Read before being sent to the server, can't match the server otherwise
 	enum Http::e_method					method;
 	enum Http::e_protocol				protocol;
-	std::string							uri;
-	std::string							host;
+	std::string							uri; // uris stands for Uniform Resource Identifier, it's the path of the requested file/dir
 	char*								body;
 	size_t								body_size;
-	Server*								server;
 	uint								error;
 
 	enum Http::e_conection_status		connection_status;

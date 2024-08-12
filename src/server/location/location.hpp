@@ -23,12 +23,13 @@ private:
 	std::vector< std::pair< std::string, std::string> > _cgis;
 public:
 	Location();
+	Location(std::string &location_path);
 	~Location();
 
 	void set_dir_listing(bool);
 	void set_accept_upload(bool);
 	void set_allowed_methods(int);
-	void set_indexes(std::vector<std::string>);
+	void add_index(std::string);
 	void set_root(std::string);
 	void set_upload_dir(std::string);
 	void set_redirect(std::pair<int, std::string>);

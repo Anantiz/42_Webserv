@@ -17,8 +17,11 @@ class ConfigParser
 {
 private:
 
-    typedef int (*t_server_directive_ptr)(std::string &line, Server &server);
-    typedef int (*t_location_directive_ptr)(std::string &line, Location &location);
+    typedef size_t (*t_server_directive_ptr)(const std::string &, size_t , Server &);
+    typedef size_t (*t_location_directive_ptr)(const std::string &, size_t , Location &);
+
+    std::map<std::string, t_server_directive_ptr> server_keywords;
+    std::map<std::string, t_location_directive_ptr> location_keywords;
 
 	int     fd;
 	char    buff[16384];
@@ -26,30 +29,25 @@ private:
 	bool    _fully_read;
 	logs 	logger;
 
-    std::map<std::string, t_server_directive_ptr> server_keywords;
-    std::map<std::string, t_location_directive_ptr> location_keywords;
-
+	void init_directives_ptr( void );
 	void parse_file( void );
 	size_t server_block(const std::string &unit, size_t start);
 	size_t location_block(const std::string &unit, size_t start);
 
-
-
     // Server directives
-	int listen_directive(std::string &line, Server &server);
-	int location_directive(std::string &line, Server &server);
-	int server_name_directive(std::string &line, Server &server);
-	int error_page_directive(std::string &line, Server &server);
-	int client_body_size_directive(std::string &line, Server &server);
+	static size_t listen_directive(const std::string &unit, size_t start, Server &server);
+	static size_t server_name_directive(const std::string &unit, size_t start, Server &server);
+	static size_t error_page_directive(const std::string &unit, size_t start, Server &server);
+	static size_t client_body_size_directive(const std::string &unit, size_t start, Server &server);
 
 	// Location directives
-	int root_directive(std::string &line, Location &location);
-	int index_directive(std::string &line, Location &location);
-	int directory_listing_directive(std::string &line, Location &location);
-	int cgi_directive(std::string &line, Location &location);
-	int allow_methods_directive(std::string &line, Location &location);
-	int return_directive(std::string &line, Location &location);
-	int upload_dir_directive(std::string &line, Location &location);
+	static size_t root_directive(const std::string &unit, size_t start, Location &location);
+	static size_t index_directive(const std::string &unit, size_t start, Location &location);
+	static size_t directory_listing_directive(const std::string &unit, size_t start, Location &location);
+	static size_t cgi_directive(const std::string &unit, size_t start, Location &location);
+	static size_t allow_methods_directive(const std::string &unit, size_t start, Location &location);
+	static size_t return_directive(const std::string &unit, size_t start, Location &location);
+	static size_t upload_dir_directive(const std::string &unit, size_t start, Location &location);
 
 	// Utils
 
@@ -58,7 +56,6 @@ private:
 	std::string get_next_unit( void );
 
 	std::vector<Server *> _servers;
-	void add_server(Server *server);
 
 public:
 

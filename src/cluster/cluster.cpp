@@ -64,7 +64,9 @@ void Cluster::init_server_ports()
 	}
 }
 
-Cluster::~Cluster() {
+Cluster::~Cluster()
+{
+	_logger.infoLog("Shuting down the server");
 
 	// Close all listen sockets
 	for (size_t i=0; i<_listen_socket_fds.size(); i++)
@@ -76,6 +78,9 @@ Cluster::~Cluster() {
 
 	for (size_t i=0; i<_servers.size(); i++)
 		delete _servers[i];
+
+	_logger.infoLog("Server is down");
+	exit(0);
 }
 
 void	Cluster::down()

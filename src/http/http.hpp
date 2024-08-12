@@ -6,9 +6,8 @@
 #include <unistd.h>
 #include <sys/socket.h>
 
-#include "client/client.hpp"
-
 namespace Http {
+
 	enum e_method {
 		GET = 0b1,
 		POST = 0b10,

@@ -15,7 +15,7 @@ SRC_FILES = main.cpp mock_data.cpp
 
 ### PARSER ########## ########## ########## ########## ##########
 PARSING_PATH:=config_parser
-PARSING_FILES:= parser.cpp
+PARSING_FILES:= parser.cpp directives.cpp
 SRC_FILES+= 	$(addprefix $(PARSING_PATH)/,$(PARSING_FILES))
 
 
@@ -32,6 +32,11 @@ UTILS_PATH:=utils
 UTILS_FILES:= logs.cpp utils.cpp signals.cpp
 SRC_FILES+= 	$(addprefix $(UTILS_PATH)/,$(UTILS_FILES))
 
+
+### HTTP ########## ########## ########## ########## ##########
+HTTP_PATH:=http
+HTTP_FILES:= http.cpp
+SRC_FILES+= 	$(addprefix $(HTTP_PATH)/,$(HTTP_FILES))
 
 
 ### CLUSTER ########## ########## ########## ########## ##########

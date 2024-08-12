@@ -83,10 +83,10 @@ void logs::log(enum logs::LogLevel level, const std::string &msg) const
 	switch (level)
 	{
 	case (DEV):
-		*_lowPriorityOut << "[DEV] " << RESET << msg << std::endl;
+		*_lowPriorityOut << WHITE << "[DEV] " << RESET << msg << std::endl;
 		break;
 	case (DEBUG):
-		*_lowPriorityOut << "[DEBUG] " << RESET << msg << std::endl;
+		*_lowPriorityOut << WHITE << "[DEBUG] " << RESET << msg << std::endl;
 		break;
 	case (INFO):
 		*_highPriorityOut << BLUE "[INFO] " << RESET << msg << std::endl;

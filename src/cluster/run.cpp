@@ -38,18 +38,19 @@ int	Cluster::run() {
 		for (size_t i=0; i < _poll_fds.size(); ++i) {
 			try {
 				Client *client = accept_client(i);
+				(void)client;
 				// The parser will save Error codes
 				// they will be handled by send_response() if any,
 				// no need to handle anything here
-				client->parse_request();
-				if (client->connection_status == Http::CLOSED) {
-					_to_remove.push_back(i);
-				}
-				else
-				{
-					match_request_serv(*client);
-					client->send_response();
-				}
+				// client->parse_request();
+				// if (client->connection_status == Http::CLOSED) {
+				// 	_to_remove.push_back(i);
+				// }
+				// else
+				// {
+				// 	match_request_serv(*client);
+				// 	client->send_response();
+				// }
 			} catch (const std::exception &e) {
 				_logger.debugLog("Error client conection: " + std::string(e.what()));
 				continue;

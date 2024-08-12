@@ -13,7 +13,9 @@
 #define BLUE "\033[94m"
 #define MAGENTA "\033[95m"
 #define CYAN "\033[96m"
+#define WHITE "\033[97m"
 #define RESET "\033[0m"
+
 
 /*
 	** Logs message of different levels into associated output streams.

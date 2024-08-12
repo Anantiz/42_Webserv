@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdlib>
 #include <string>
+#include <map>
 
 #include "http/http.hpp"
 #include "location/location.hpp"
@@ -17,8 +18,25 @@ private:
 	std::vector<Location>			_locations;
 	std::map<int, std::string>		_custom_error_pages;    // If not inside, serve default instead
 	size_t							_max_client_body_size;  // -1 for unlimited
+
+public:
+
+	Server();
+	~Server();
+
+	void add_port(u_int16_t p);
+	void add_name(std::string n);
+	void set_protocol(Http::e_protocol p);
+	void add_location(Location l);
+	void add_custom_error_page(int status_code, std::string path);
+	void set_max_client_body_size(size_t s);
+
+	std::vector<u_int16_t>			&get_ports();
+	std::vector<std::string>		&get_names();
+	Http::e_protocol				&get_protocol();
+	std::vector<Location>			&get_locations();
+	std::map<int, std::string>		&get_custom_error_pages();
+	size_t							&get_max_client_body_size();
 };
 
 #endif // SERVER_HPP
-
-

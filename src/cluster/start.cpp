@@ -56,7 +56,7 @@ int	Cluster::start()
 		return EXIT_FAILURE;
 	}
 
-	int size = _listen_socket_fds.size();
+	size_t size = _listen_socket_fds.size();
 	for (size_t i=0; i<size; i++)
 		_poll_fds.push_back((pollfd){_listen_socket_fds[i], POLLIN, 0});
 

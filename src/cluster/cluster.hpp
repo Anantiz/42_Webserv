@@ -17,6 +17,7 @@
 #include <sys/poll.h>   // poll
 #include <netinet/in.h> // sockaddr_in
 
+#include "config_parser/parser.hpp"
 #include "server/server.hpp"
 #include "client/client.hpp"
 #include "http/http.hpp"
@@ -33,8 +34,7 @@ private:
     *   [(80, [("server1.com", ptr_to_serv), ("server2.com", ptr_to_serv)]),
 	*   (443, [("server1.com", ptr_to_serv), ("server2.com", ptr_to_serv)])]
 	*/
-	typedef \
-		std::vector< std::pair< u_int16_t, std::vector< std::pair<std::string, Server* > > > > evil_typedef_t;
+	typedef std::vector< std::pair< u_int16_t, std::vector< std::pair<std::string, Server* > > > > evil_typedef_t;
 
 	static bool						_run;
 
@@ -45,7 +45,7 @@ private:
 	int								_events_count;
 	logs							_logger;
 	std::vector<u_int16_t>			_ports;
-	std::vector<Server>				_servers;
+	std::vector<Server*>			_servers;
 	evil_typedef_t					_servers_ports;
 
 	// start()
@@ -62,18 +62,20 @@ public:
 	Cluster(const char *config_file_path);
 	~Cluster();
 
-	bool	*get_run_ptr(); // For signal handling
 
+	bool		*get_run_ptr(); // For signal handling
 	int			start();
 	static void	down(); // Affects all instances
 
 private:
 
+	bool	not_in_ports(u_int16_t p);
+	void 	init_server_ports();
 	void	init_sockets();
 	int		run();
 
-	Client		*accept_client(int i);
-	void			remove_poll_fds();
+	Client	*accept_client(int i);
+	void	remove_poll_fds();
 
 	/**
 	 * Server found
@@ -82,36 +84,8 @@ private:
 	 *   > error is set to 404
 	 *   > server is set to NULL
 	 */
-	void	Cluster::match_request_serv(Client &request) const;
+	void	match_request_serv(Client &request) const;
 
 };
 
 #endif // CLUSTER_HPP
-
-// *.c
-int wildcard(char *str)
-{
-	int i = 0;
-	while (str[i] && str[i] != '*')
-		i++;
-	if (str[i] == '*')
-	{
-		char next = str[++i];
-		while (str[i] != next)
-			i++;
-	}
-	if (str[i] == '\0')
-		return 1;
-	return 0;
-}
-
-
-void get_files_in_dir()
-{
-	char *file = get_file();
-	if (match_wildcard(file))
-	{
-		add_to_args(node->args, file);
-	}
-
-}

@@ -1,7 +1,7 @@
 #include "webserv.hpp"
 
-
 #define DEFAULT_CONFIG_FILE_PATH "configs/webserv-default.conf"
+// #define DEFAULT_CONFIG_FILE_PATH "configs/webserv-test-tokens.conf"
 
 int main(int ac, char **av)
 {
@@ -17,7 +17,8 @@ int main(int ac, char **av)
 		Cluster cluster(config_path);
 		signal_handler(); // Graceful shutdown
 		globalLog.infoLog("Starting the server, you can gracefully shut it down with [Ctrl+C] or [Ctrl+\\]");
-		return (cluster.start());
+		// return (cluster.start());
+		return(0);
 	} catch (std::exception &e) {
 		globalLog.errLog(e.what());
 		return (EXIT_FAILURE);

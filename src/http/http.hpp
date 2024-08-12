@@ -12,6 +12,7 @@ namespace Http {
 		GET = 0b1,
 		POST = 0b10,
 		DELETE = 0b100,
+		UNKNOWN_METHOD = 0b0,
 	};
 
 	enum e_protocol {
@@ -19,6 +20,7 @@ namespace Http {
 		HTTP_1_0 = 0b1,
 		HTTP_1_1 = 0b10,
 		HTTP_2_0 = 0b100,
+		FALSE_PROTOCOL = 0b0,
 	};
 
 	enum e_conection_status {

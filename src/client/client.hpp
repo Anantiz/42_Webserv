@@ -16,6 +16,11 @@
 #include "prototypes.hpp"
 #include "http/http.hpp"
 
+struct requestKv {
+    std::string key;
+    std::string value;
+};
+
 class Client {
 public:
 	typedef std::map<int, Client*>::iterator client_pool_it;
@@ -25,8 +30,12 @@ public:
 
 	pollfd				&getPollfd();
 
-	void				parse_request();
+	bool				parse_request();
 	void				send_response();
+	bool				parseFirstLine( std::string &line, std::string &methodstr,
+					std::string &pathstr,
+					std::string &protocolstr );
+
 
 public:
 	// It's all public because we use this more as a struct than a class
@@ -46,7 +55,7 @@ public:
 	enum Http::e_method					method;
 	enum Http::e_protocol				protocol;
 	std::string							uri; // uris stands for Uniform Resource Identifier, it's the path of the requested file/dir
-	char*								body;
+	std::string							body;
 	size_t								body_size;
 	uint								error;
 

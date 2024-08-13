@@ -24,7 +24,7 @@
 void	Cluster::init_sockets()
 {
 	int size = _ports.size();
-	for (int i=0; i<size; i++)
+	for (int i=0; i < size; i++)
 	{
 		// Open an IPv4 socket for TCP connections
 		int sfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -44,6 +44,7 @@ void	Cluster::init_sockets()
 		if (listen(sfd, 10) == -1)
 			throw std::runtime_error("listen:" + std::string(::strerror(errno)));
 		_listen_socket_fds.push_back(sfd);
+		_logger.debugLog("Listening on port " + utils::ito_str(_ports[i]));
 	}
 }
 

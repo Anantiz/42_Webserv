@@ -19,6 +19,9 @@ Cluster::Cluster(const char *config_file_path) {
 	_servers = p.get_servers();
 	_logger.devLog("Initiating the demon");
 	init_server_ports();
+	_client_count = 0;
+	_max_queue = 10;
+	_max_clients = 100;
 }
 
 void Cluster::init_server_ports()

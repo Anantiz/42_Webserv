@@ -40,9 +40,8 @@ private:
 
 	// Config
 	int								_max_queue;
-	int								_max_events;
 	int								_max_clients;
-	int								_events_count;
+	int								_client_count;
 	logs							_logger;
 	std::vector<u_int16_t>			_ports;
 	std::vector<Server*>			_servers;

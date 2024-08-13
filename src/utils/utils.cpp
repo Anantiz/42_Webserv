@@ -17,8 +17,8 @@ const std::string utils::anything_to_str(T i)
 
 int utils::str_to_int(const std::string &str, int &error)
 {
-	std::string str2 = str.substr(0, str.find_first_of(" \t\n"));
-
+	std::string str2 = str.substr(0, str.find_first_of(" \t\n\r"));
+	error = 0;
 	if (str2.empty())
 	{
 		error = 1;
@@ -108,10 +108,15 @@ std::string	utils::read_word(const std::string &str, size_t start, size_t &next_
 {
 	start = utils::skip_spaces(str, start);
 	start = utils::skip_comments(str, start);
-	if (start < str.size() && (str[start] == '{' || str[start] == '}' || str[start] == ';'))
+	if (start < str.size())
 	{
 		next_start = start + 1;
-		return str.substr(start, 1);
+		if (str[start] == '}')
+			return "}";
+		if (str[start] == '{')
+			return "{";
+		if (str[start] == ';')
+			return ";";
 	}
 	size_t end = start;
 	while (end < str.size() && !utils::ft_isspace(str[end]) \
@@ -131,14 +136,54 @@ std::string	utils::read_path(const std::string &str, size_t start, size_t &next_
 	char	q = 0;
 	if (str[start] && (str[start] == '"' || str[start] == '\''))
 		q = str[start++];
-	size_t	end = start;
-	if (q) {
-		while (str[end]) {
-		}
-	} else {
-		while (str[end] && !utils::ft_isspace(str[end]) && str[end] != ';')
-			++end;
-	}
 
-	return str.substr(start, end - start);
+	size_t				end = start;
+	bool				escaped = false;
+	std::vector<size_t> escaped_indexes;
+	if (q) // Handle escaped quotes
+	{
+		while (str[end])
+		{
+			if (!escaped && str[end] == '\\')
+			{
+				escaped_indexes.push_back(end);
+				escaped = true;
+				++end;
+				continue;
+			}
+			if (!escaped && str[end] == q)
+				break;
+			escaped = false;
+			++end;
+		}
+	}
+	else // Handle escaped whitespaces
+	{
+		while (str[end])
+		{
+			if (!escaped && str[end] == '\\')
+			{
+				escaped_indexes.push_back(end);
+				escaped = true;
+				++end;
+				continue;
+			}
+			if (!escaped && (utils::ft_isspace(str[end]) || str[end] == ';' || str[end] == '{' || str[end] == '}'))
+				break;
+			escaped = false;
+			++end;
+		}
+	}
+	next_start = end;
+	if (q)
+		++next_start;
+	std::string ret("");
+	ret.reserve(end - start);
+	for (size_t i = start; i < end; i++)
+	{
+		if (std::find(escaped_indexes.begin(), escaped_indexes.end(), i) != escaped_indexes.end())
+			continue;
+		ret += str[i];
+	}
+	return ret;
 }

@@ -7,6 +7,7 @@ Server::Server()
 
 Server::~Server()
 {
+
 }
 
 void Server::add_port(u_int16_t p)
@@ -24,10 +25,11 @@ void Server::set_protocol(Http::e_protocol p)
     _protocols = p;
 }
 
-void Server::add_location(Location l)
+void Server::add_location(std::string &location_path)
 {
-    _locations.push_back(l);
+    _locations.push_back(Location(location_path));
 }
+
 
 void Server::add_custom_error_page(int status_code, std::string path)
 {
@@ -67,4 +69,14 @@ std::map<int, std::string> &Server::get_custom_error_pages()
 size_t &Server::get_max_client_body_size()
 {
     return _max_client_body_size;
+}
+
+Location &Server::get_location(std::string &path)
+{
+    for (size_t i = 0; i < _locations.size(); i++)
+    {
+        if (_locations[i].get_root() == path)
+            return _locations[i];
+    }
+    throw std::runtime_error("Location not found");
 }

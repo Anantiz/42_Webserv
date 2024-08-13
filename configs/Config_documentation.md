@@ -60,3 +60,38 @@ TO_DO    {global, server} {Optional} log_access <path/to/local/file>
 TO_DO    {global, server} {Optional} log_misc <path/to/local/file>
                         ? Logs any other events. Default is /dev/null.
 
+1 - Global Configuration (global)
+
+    - log_error <path> (Optional): Spécifie le fichier où les erreurs (warnings et erreurs) doivent être enregistrées. Par défaut, c'est stderr.
+
+    - log_access <path> (Optional): Enregistre tous les accès au serveur. Par défaut, c'est /dev/null, ce qui signifie que les accès ne sont pas enregistrés.
+
+    - log_misc <path> (Optional): Enregistre tous les autres événements (hors erreurs et accès). Par défaut, c'est /dev/null.
+
+2 - Server Block Configuration (server)
+
+    - listen <port> <port> ... (Required): Spécifie les ports sur lesquels le serveur doit écouter. Au moins un port doit être spécifié.
+
+    - location <uri/path> { ... } (Required): Définit un bloc location qui correspond à une URI ou un chemin spécifique. Le serveur utilisera ce bloc pour traiter les requêtes dont l'URI correspond au chemin spécifié.
+
+    - server_name <Name> <Name> ... (Optional): Définit des noms de serveur (virtual hosts). Utile lorsque plusieurs serveurs écoutent sur le même port pour distinguer quel serveur doit gérer la requête en fonction du nom d'hôte dans l'en-tête HTTP "Host".
+
+    - error_page <error_code> <path> (Optional): Spécifie une page d'erreur personnalisée pour un code d'erreur spécifique (ex: 404, 500). Remplace la page d'erreur par défaut.
+
+    - max_body_size <size> (Optional): Limite la taille du corps des requêtes HTTP. Par défaut, c'est 4089 octets, et -1 signifie illimité.
+
+3- Location Block Configuration (location)
+
+    - root <local/path> (Required): Spécifie le répertoire racine pour cette location. Le chemin URI de la requête est combiné avec ce répertoire pour trouver le fichier.
+
+    - index <file> <file> ... (Optional): Définit les fichiers d'index qui seront utilisés si l'URI est un répertoire. Par défaut, c'est [index.php, index.html].
+
+    - directory_listing on/off (Optional): Active ou désactive l'affichage de la liste des fichiers dans un répertoire si l'URI correspond à un répertoire sans fichier d'index.
+
+    - cgi_pass <path> <extension> (Optional): Associe un script CGI avec une extension spécifique de fichier (ex: .php). Le script est exécuté lorsque le fichier avec l'extension correspondante est demandé.
+
+    - allow_methods <method> <method> ... (Optional): Spécifie les méthodes HTTP autorisées pour cette location. Par défaut, GET et POST sont autorisés.
+
+    - return <status> <uri> (Optional): Définit une redirection HTTP pour cette location, avec le statut et l'URI cible spécifiés.
+
+    - upload_dir <path> (Optional): Spécifie le répertoire où les fichiers téléchargés doivent être sauvegardés. Par défaut, c'est /tmp. Les fichiers dépassant la max_body_size sont rejetés.

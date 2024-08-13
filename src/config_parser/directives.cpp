@@ -170,7 +170,6 @@ size_t ConfigParser::cgi_directive(const std::string &unit, size_t start, Locati
 size_t ConfigParser::allow_methods_directive(const std::string &unit, size_t start, Location &location)
 {
     std::string word;
-    int err;
 
     word = utils::read_word(unit, start, start);
     if (word == "")
@@ -185,7 +184,7 @@ size_t ConfigParser::allow_methods_directive(const std::string &unit, size_t sta
         else if (word[i] == 'D')
             mask |= 0b100;
         else
-            throw std::runtime_error("Invalid method: only G,P,D are allowed: " + word[i]);
+            throw std::runtime_error("Invalid method: only G,P,D are allowed: " + word);
     }
     location.set_allowed_methods(mask);
     word = utils::read_word(unit, start, start);

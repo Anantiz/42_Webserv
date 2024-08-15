@@ -8,7 +8,6 @@
 ███████ ███████ ██   ██   ████   ███████ ██   ██
 */
 
-
 size_t ConfigParser::listen_directive(const std::string &unit, size_t start, Server &server)
 {
     std::string word;

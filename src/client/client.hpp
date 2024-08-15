@@ -52,11 +52,8 @@ public:
 	Server*								server;
 
 	Http::Request						request;
-	//http::RESPONSE
-
+	Http::Response						response;
 	enum Http::e_conection_status		connection_status;
-
-	std::string							root;
 };
 
 

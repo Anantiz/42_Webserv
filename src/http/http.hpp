@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <string>
+#include <map>
 
 namespace Http {
 
@@ -38,14 +39,27 @@ namespace Http {
 
 	struct Request
 	{
-		std::string							host;
 		enum Http::e_method					method;
 		enum Http::e_protocol				protocol;
-		std::string							uri; // uris stands for Uniform Resource Identifier, it's the path of the requested file/dir
+		std::string							host;
+		std::string							uri;
+
+		std::map<std::string, std::string>	headers;
+		std::string							body;
+		size_t								body_size;
+
+	};
+
+	struct Response
+	{
+		enum Http::e_method					method;
+		enum Http::e_protocol				protocol;
+
+		std::map<std::string, std::string>	headers;
 		std::string							body;
 		size_t								body_size;
 	};
-	
+
 }
 
 #endif // HTTP_HPP

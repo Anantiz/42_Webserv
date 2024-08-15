@@ -44,6 +44,7 @@ public:
 	std::string					&get_root();
 	std::string					&get_upload_dir();
 	std::pair<int, std::string>	&get_redirect();
+
 };
 
 #endif // LOCATION_HPP

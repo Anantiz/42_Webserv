@@ -38,7 +38,7 @@ int utils::str_to_int(const std::string &str, int &error)
 
 
 /// @brief Returns whether the path is a FILE, DIRECTORY, or is INVALID
-enum utils::e_path_type	utils::what_is_this_path(std::string &path)
+enum utils::e_path_type	utils::what_is_this_path(const std::string &path)
 {
 	struct stat path_stat;
 
@@ -59,12 +59,21 @@ bool	utils::in_ports(u_int16_t p, std::vector<u_int16_t> &ports)
 	return false;
 }
 
+bool    utils::in_servers(std::string &name, std::vector<std::pair<std::string, Server *> > &servers)
+{
+	for (size_t i=0; i< servers.size(); i++)
+		if (servers[i].first == name)
+			return true;
+	return false;
+}
+
+
 bool     utils::ft_isspace(char c)
 {
     return (c == ' ' || (c >= 9 && c <= 13));
 }
 
-void utils::ft_bzero(void *s, size_t n)
+void utils::bzero(void *s, size_t n)
 {
 	if (!s || !n)
 		return;

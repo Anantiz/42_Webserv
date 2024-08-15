@@ -44,12 +44,12 @@ public:
 
 public:
 	// It's all public because we use this more as a struct than a class
-	uint								access_port;
-	sockaddr_in							client_addr;
-	socklen_t							client_len;
-	pollfd								poll_fd;
+	const uint							access_port;
+	const sockaddr_in					client_addr;
+	const socklen_t						client_len;
+	const pollfd						poll_fd;
 
-	Server*								server;
+	const Server*						server;
 
 	Http::Request						request;
 	Http::Response						response;

@@ -17,54 +17,11 @@ Cluster::Cluster(const char *config_file_path) {
 	ConfigParser p(config_file_path);
 	_logger.devLog("Parsing done");
 	_servers = p.get_servers();
-	_logger.devLog("Initiating the demon");
+	_logger.devLog("Initializing server ports");
 	init_server_ports();
 	_client_count = 0;
 	_max_queue = 10;
 	_max_clients = 100;
-}
-
-void Cluster::init_server_ports()
-{
-
-	for (size_t i=0; i<_servers.size(); i++)
-	{
-		Server *s = _servers[i];
-
-		std::vector<u_int16_t> p = s->get_ports();
-		for (size_t j=0; j < p.size(); j++){
-			if (!utils::in_ports(p[i], _ports))
-				_ports.push_back(p[i]);
-		}
-	}
-	std::pair<u_int16_t, std::vector< std::pair<std::string, Server* > > > port_servs_pair;
-
-	for (size_t i=0; i<_ports.size(); i++)
-	{
-		uint16_t port = _ports[i];
-		std::vector< std::pair<std::string, Server* > >\
-			servs_per_port_vector;
-
-		port_servs_pair.first = _ports[i];
-		for (size_t j=0; j<_servers.size(); j++)
-		{
-			Server *s = _servers[j];
-			if (utils::in_ports(port, s->get_ports()))
-			{
-				std::pair<std::string, Server* >\
-					serv_name_ptr_pair;
-				std::vector<std::string> names = s->get_names();
-				for (size_t k=0; k<names.size(); k++)
-				{
-					serv_name_ptr_pair.first = names[k];
-					serv_name_ptr_pair.second = s;
-					servs_per_port_vector.push_back(serv_name_ptr_pair);
-				}
-			}
-		}
-		port_servs_pair.second = servs_per_port_vector;
-		_servers_ports.push_back(port_servs_pair);
-	}
 }
 
 Cluster::~Cluster()
@@ -90,3 +47,71 @@ void	Cluster::down()
 {
 	Cluster::_run = false;
 };
+
+
+void Cluster::init_server_ports()
+{
+	// #####
+	// For all parsed servers, get all ports they are listening to
+	// and add them to the _ports vector, they will be our listening sockets
+	for (size_t i=0; i<_servers.size(); i++)
+	{
+		Server *s = _servers[i];
+
+		std::vector<u_int16_t> p = s->get_ports();
+		for (size_t j=0; j < p.size(); j++){
+			if (!utils::in_ports(p[j], _ports))
+				_ports.push_back(p[j]);
+		}
+	}
+	//#### --End of _ports vector initialization
+
+	// A pair Port-[Servers] where each server in this vector is itself a pair of server_name-server_ptr
+	std::pair<u_int16_t, std::vector< std::pair<std::string, Server* > > > pair_port_vec_nptr;
+
+	/**
+	 * For each port in _ports, for Servers listening to that port
+	 * Add a pair of server_name and server_ptr to the vector of servers
+	 * associated with that port
+	 *
+	 * Complex to explain, but if you think about it, it's just the most
+	 * straightforward way to do the job.
+	 */
+	for (size_t i=0; i<_ports.size(); i++)
+	{
+		uint16_t port = _ports[i];
+		std::vector< std::pair<std::string, Server* > >	vec_name_ptr;
+		pair_port_vec_nptr.first = port;              // Port
+		pair_port_vec_nptr.second = vec_name_ptr;     // Vector[ServerName-ServerPtr]
+		_servers_ports.push_back(pair_port_vec_nptr); // You can already push, the parser ensure there will
+		                                              // be at least one server listening to the port
+
+		/**
+		 * For each server in _servers, if the server is listening to the port
+		 * create a pair server_name-server_ptr, if the server_name is already in the
+		 * vector, Log an error but continue without adding the server to the vector
+		 * Otherwise, add the server to the vector
+		 */
+		for (size_t j=0; j<_servers.size(); j++)
+		{
+			Server *s = _servers[j];
+			if (utils::in_ports(port, s->get_ports()))
+			{
+				/**
+				 * Now, for each name the server has, check if it's already in the vector
+				 *     > YES: Log an error and ignore it
+				 *     > NO:  Add the server to the vector
+				 */
+				std::vector<std::string> names = s->get_names();
+				for (size_t k=0; k<names.size(); k++)
+				{
+					std::string name = names[k];
+					if (utils::in_servers(name, vec_name_ptr))
+						_logger.errLog("Server name `" + name + "` already in the list, you might want to edit your config file, ignoring it for now");
+					else
+						vec_name_ptr.push_back(std::make_pair(name, s));
+				}
+			}
+		}
+	}
+}

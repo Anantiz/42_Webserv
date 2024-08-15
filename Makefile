@@ -11,7 +11,7 @@ NAME = webserv
 OBJDIR = .obj
 SRCDIR = src
 
-SRC_FILES = main.cpp mock_data.cpp
+SRC_FILES = main.cpp
 
 ### PARSER ########## ########## ########## ########## ##########
 PARSING_PATH:=config_parser

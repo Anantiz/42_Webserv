@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <string>
 #include <map>
+#include <stdexcept>
 
 namespace Http {
 
@@ -47,7 +48,6 @@ namespace Http {
 		std::map<std::string, std::string>	headers;
 		std::string							body;
 		size_t								body_size;
-
 	};
 
 	struct Response
@@ -55,9 +55,24 @@ namespace Http {
 		enum Http::e_method					method;
 		enum Http::e_protocol				protocol;
 
-		std::map<std::string, std::string>	headers;
+		int									status_code; // 200, 404, 500, etc
+		std::string							headers; // Raw string, just send it
+
+		// IF file_path_to_send is not empty, send the file
+		// (read path into buffer and write to socket directly)
+		// Othwerwise, send body
+		std::string							file_path_to_send;
 		std::string							body;
 		size_t								body_size;
+	};
+
+	class HttpException: public std::exception
+	{
+		private:
+			int _status_code;
+		public:
+			HttpException(int status_code) : _status_code(status_code) {}
+			int get_status_code() { return _status_code; }
 	};
 
 }

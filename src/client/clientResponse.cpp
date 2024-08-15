@@ -1,12 +1,11 @@
 #include "client.hpp"
 
-
 void	Client::getMethod( void )
 {
-	std::string	file_path = this->root + this->request.uri;
+	std::string	file_path = this->request.uri;
 	if ( this->request.uri == "/" )
 		file_path += "index.html";
-	
+
 	std::ifstream file(file_path.c_str());
 	if (!file.is_open())
 		;//handleerror

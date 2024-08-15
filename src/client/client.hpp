@@ -8,7 +8,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdexcept>
-
+#include <fstream>
+#include <sstream>
 #include <sys/socket.h> // socket
 #include <sys/poll.h>   // poll
 #include <netinet/in.h> // sockaddr_in
@@ -28,6 +29,10 @@ public:
 	Client(int fd);
 	~Client();
 
+	//response function
+	void				getMethod( void );
+	void				postMethod( void );
+	void				deleteMethod( void );
 	pollfd				&getPollfd();
 
 	bool				parse_request();
@@ -44,22 +49,14 @@ public:
 	socklen_t							client_len;
 	pollfd								poll_fd;
 
-
-	// Set at least this one
-	std::string							host;
-	// Cluster::match_request_serv() will set this
 	Server*								server;
 
-
-	/// The Request Header will be Read before being sent to the server, can't match the server otherwise
-	enum Http::e_method					method;
-	enum Http::e_protocol				protocol;
-	std::string							uri; // uris stands for Uniform Resource Identifier, it's the path of the requested file/dir
-	std::string							body;
-	size_t								body_size;
-	uint								error;
+	Http::Request						request;
+	//http::RESPONSE
 
 	enum Http::e_conection_status		connection_status;
+
+	std::string							root;
 };
 
 

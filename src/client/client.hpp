@@ -50,7 +50,6 @@ public:
 	pollfd								poll_fd;
 
 	Server*								server;
-
 	Http::Request						request;
 	Http::Response						response;
 	enum Http::e_conection_status		connection_status;

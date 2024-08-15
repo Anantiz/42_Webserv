@@ -1,6 +1,12 @@
 #include "client.hpp"
 #include <string>
 
+bool	gnlEcoplus( std::string &str, std::string &result );
+bool	checkline( std::string &line, requestKv	request );
+enum	Http::e_method	detectMethode( std::string &method );
+enum 	Http::e_protocol	detectProtocol( std::string &proto );
+
+
 Client::Client(int poll_fd) {
 	// struct s_client_event _data;
 	client_len = sizeof(client_addr);
@@ -25,11 +31,11 @@ pollfd &Client::getPollfd() {
 
 bool	Client::parse_request()
 {
-	requestKv request;
+	requestKv rKeyVal;
 	int		isHeader = 0;
 	char	buffer[ 1024 ];
 	pollfd pollFd = getPollfd();
-	ssize_t	bytes_read = recv(poll_fd.fd, buffer, sizeof(buffer) - 1, 0);
+	ssize_t	bytes_read = recv(pollFd.fd, buffer, sizeof(buffer) - 1, 0);
 	if ( bytes_read < 0 )
 		; //handle error
 	else if ( bytes_read == 0 )
@@ -52,27 +58,38 @@ bool	Client::parse_request()
 			}
 			else if ( isHeader == 1 )
 			{
-				if (!checkline( line, request ));
+				if (!checkline( line, rKeyVal ))
 					return false;
-				request.key == "Host";
-				this->request.host = request.value;
+				if (rKeyVal.key == "Host")
+					this->request.host = rKeyVal.value;
+			}
+			else if ( checkline( line, rKeyVal ) && rKeyVal.value == "" )
+			{
+				// do somthing w/ boundary shit
 			}
 			else
 			{
-				if (!checkline( line, request ));
+				if (!checkline( line, rKeyVal ))
 					return false;
-				this->request.body.append(line);
+				this->request.headers[rKeyVal.key] = rKeyVal.value;
 			}
 		}
 	}
 	return true;
 }
 
+bool	dividedBody( std::string &line )
+{
+	requestKv rKeyVal;
+	if ()
+
+}
+
 bool isAlpha( const std::string& str ) 
 {
     for ( size_t i = 0; i < str.size(); ++i ) 
 	{
-        if ( !std::isalnum(str[i]) && str[i] != '.' && str[i] != '/ ')
+        if ( !std::isalnum(str[i]) && str[i] != '.' && str[i] != '/')
             return false;
     }
     return true;
@@ -136,7 +153,7 @@ enum Http::e_method	detectMethode( std::string &method )
 bool	gnlEcoplus( std::string &str, std::string &result )
 {
 	size_t pos;
-	if ( pos = str.find( "\n\r" ) != std::string::npos )
+	if ( (pos = str.find( "\n\r" )) != std::string::npos )
 	{
 		std::string line = str.substr( 0, pos );
 		str.erase( 0, pos + 1 );
@@ -152,7 +169,7 @@ bool	gnlEcoplus( std::string &str, std::string &result )
 bool	checkline( std::string &line, requestKv	request )
 {
 	size_t pos;
-	if ( pos = line.find( ':' ) != std::string::npos && line.size() < pos + 2 )
+	if ( (pos = line.find( ':' )) != std::string::npos && line.size() < pos + 2 )
 	{
 		if (line[pos + 1] != ' ')
 			return false;

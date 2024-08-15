@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <string>
 
 namespace Http {
 
@@ -34,6 +35,17 @@ namespace Http {
 		CLOSED,
 		KEEP_ALIVE
 	};
+
+	struct Request
+	{
+		std::string							host;
+		enum Http::e_method					method;
+		enum Http::e_protocol				protocol;
+		std::string							uri; // uris stands for Uniform Resource Identifier, it's the path of the requested file/dir
+		std::string							body;
+		size_t								body_size;
+	};
+	
 }
 
 #endif // HTTP_HPP

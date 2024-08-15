@@ -3,8 +3,6 @@
 
 Client::Client(int poll_fd) {
 	// struct s_client_event _data;
-
-	error = 0;
 	client_len = sizeof(client_addr);
 	int cfd = accept(poll_fd, (struct sockaddr *)&client_addr, &client_len);
 
@@ -57,13 +55,13 @@ bool	Client::parse_request()
 				if (!checkline( line, request ));
 					return false;
 				request.key == "Host";
-				this->host = request.value;
+				this->request.host = request.value;
 			}
 			else
 			{
 				if (!checkline( line, request ));
 					return false;
-				this->body.append(line);
+				this->request.body.append(line);
 			}
 		}
 	}
@@ -99,10 +97,10 @@ bool	Client::parseFirstLine( std::string &line, std::string &methodstr,
 
    	if (!isAlpha(methodstr) || !isAlpha(pathstr) || !isAlpha(protocolstr))
         return false;
-	this->method = detectMethode( methodstr );
-	this->uri = pathstr;
-	this->protocol = detectProtocol( protocolstr );
-	if (this->method == Http::UNKNOWN_METHOD || this->protocol == Http::FALSE_PROTOCOL)
+	this->request.method = detectMethode( methodstr );
+	this->request.uri = pathstr;
+	this->request.protocol = detectProtocol( protocolstr );
+	if (this->request.method == Http::UNKNOWN_METHOD || this->request.protocol == Http::FALSE_PROTOCOL)
 		return false;
 	return true;
 }

@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <string>
 #include <map>
+#include <stdexcept>
 
 #include "http/http.hpp"
 #include "location/location.hpp"
@@ -27,7 +28,7 @@ public:
 	void add_port(u_int16_t p);
 	void add_name(std::string n);
 	void set_protocol(Http::e_protocol p);
-	void add_location(Location l);
+	void add_location(std::string &location_path);
 	void add_custom_error_page(int status_code, std::string path);
 	void set_max_client_body_size(size_t s);
 
@@ -35,6 +36,7 @@ public:
 	std::vector<std::string>		&get_names();
 	Http::e_protocol				&get_protocol();
 	std::vector<Location>			&get_locations();
+	Location						&get_location(std::string &path);
 	std::map<int, std::string>		&get_custom_error_pages();
 	size_t							&get_max_client_body_size();
 };

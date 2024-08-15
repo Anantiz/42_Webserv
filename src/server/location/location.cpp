@@ -2,6 +2,14 @@
 
 Location::Location()
 {
+    _root = "";
+    _dir_listing = false;
+    _accept_upload = false;
+    _allowed_methods = 0b011;
+}
+
+Location::Location(std::string &location_path) : _root(location_path)
+{
     _dir_listing = false;
     _accept_upload = false;
     _allowed_methods = 0b011;
@@ -27,9 +35,9 @@ void Location::set_allowed_methods(int m)
     _allowed_methods = m;
 }
 
-void Location::set_indexes(std::vector<std::string> i)
+void Location::add_index(std::string i)
 {
-    _indexes = i;
+    _indexes.push_back(i);
 }
 
 void Location::set_root(std::string r)

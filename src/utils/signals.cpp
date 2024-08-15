@@ -4,6 +4,7 @@
 
 static void	signal_handler_sigint(int signum) {
 	(void)signum;
+	write(1, "\n", 1);
 	Cluster::down();
 }
 

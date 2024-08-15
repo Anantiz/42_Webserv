@@ -4,37 +4,49 @@
 
 Client *Cluster::accept_client(int i)
 {
+	Client *client = NULL;
+
 	if (_poll_fds[i].revents & POLLIN) {
 		_logger.devLog("New POLLIN Event on socket " + utils::ito_str(_poll_fds[i].fd));
-		try {
-			Client *new_client = new Client(_poll_fds[i].fd);
-			_client_pool[new_client->getPollfd().fd] = new_client;
-			_poll_fds.push_back(new_client->getPollfd());
-			_events_count++;
-		} catch (const std::exception &e) {
-			_logger.debugLog("Error accepting connection: " + std::string(e.what()));
+		Client::client_pool_it client_it = _client_pool.find(_poll_fds[i].fd);
+
+		if (client_it == _client_pool.end())
+		{
+			try {
+				client = new Client(_poll_fds[i].fd);
+				_logger.devLog("New client accepted with fd: " + utils::ito_str(client->getPollfd().fd));
+				_client_pool[client->getPollfd().fd] = client;
+				_poll_fds.push_back(client->getPollfd());
+				_client_count++;
+			} catch (const std::exception &e) {
+				_logger.warnLog("Error accepting connection: " + std::string(e.what()));
+			}
+		}
+		else
+		{
+			client = client_it->second;
+			_logger.devLog("Client already in pool with fd: " + utils::ito_str(client->getPollfd().fd));
 		}
 	}
-	Client::client_pool_it client = _client_pool.find(_poll_fds[i].fd);
-	// Should never happen if we don't code like monkeys
-	if (client == _client_pool.end())
-		throw std::runtime_error("Client not found in pool, invalid socket, internal error");
-	return client->second;
+	return client;
 }
 
+#define DEBUG_PROD
 int	Cluster::run() {
 	while (_run) {
 		// Make this loop CPU-friendly for production
 		#ifdef DEBUG_PROD
-			sleep(1);
+			sleep(2);
 		#endif
 
 		int events_count = poll(_poll_fds.data(), _poll_fds.size(), 0); // 0 for non-blocking
+		_logger.devLog("\n");
+		_logger.devLog("Clients count: " + utils::ito_str(_client_count));
+		_logger.devLog("Events count: " + utils::ito_str(events_count));
 		if (!events_count)
 			continue;
 		if (events_count == -1)
 			throw std::runtime_error("poll: " + std::string(::strerror(errno)));
-
 		for (size_t i=0; i < _poll_fds.size(); ++i) {
 			try {
 				Client *client = accept_client(i);

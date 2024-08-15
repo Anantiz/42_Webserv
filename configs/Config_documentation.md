@@ -5,7 +5,7 @@ Syntax rule:
     All words following the directive-name and the closure will be arguments
     Paths are required to be absolute.
 
-    Comments: Any unescaped '#' will be considered the start of comment, the comment ends at the first semicolon or newline.
+    Comments: Any unescaped '#' will be considered the start of comment, the comment ends at the first newline.
 
 Directive list:
 
@@ -27,7 +27,7 @@ TO_DO    {server} {Optional} server_name <Name> <Name> ...
 TO_DO    {server} {Optional} error_page <error_code> <path/to/local/file>
                         ? Replace the default error page with the given one.
 
-TO_DO    {server} {Optional} max_body_size <size>
+TO_DO    {server} {Optional} client_body_size <size>
                         ? The maximum body size of a client request in bytes. -1 for unlimited. Default is 4089.
 
 TO_DO    {location} {Required} root <local/path/>
@@ -42,8 +42,8 @@ TO_DO    {location} {Optional} directory_listing on/off
 TO_DO    {location} {Optional} cgi_pass <path/to/local/cgi> <extension>
                         ? Exectutes the given cgi script with the given extension. The script must be executable. Multiple cgi_pass can be used with each different scripts and extension.
 
-TO_DO    {location} {Optional} allow_methods <method> <method> ...
-                        ? The allowed methods for the location. Default is [GET, POST]. Only GET, POST and DELETE are supported.
+TO_DO    {location} {Optional} allow_methods <methods>
+                        ? The allowed methods for the location. Default is [GET, POST]. Only GET, POST and DELETE are supported. Specify methods in a single string e.i GP or G ,G=GET P=POST D=DELETE respectively
 
 TO_DO    {location} {Optional} return <status> <uri>
                         ? Defines an HTTP redirection with the given status code and target URI.
@@ -60,7 +60,7 @@ TO_DO    {global, server} {Optional} log_access <path/to/local/file>
 TO_DO    {global, server} {Optional} log_misc <path/to/local/file>
                         ? Logs any other events. Default is /dev/null.
 
-1 - Global Configuration (global)
+  1 - Global Configuration (global)
 
     - log_error <path> (Optional): Spécifie le fichier où les erreurs (warnings et erreurs) doivent être enregistrées. Par défaut, c'est stderr.
 

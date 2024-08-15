@@ -33,5 +33,6 @@ void	Cluster::remove_poll_fds() {
 		_to_remove.pop_back();
 		_client_pool.erase(_poll_fds[i].fd);
 		_poll_fds.erase(_poll_fds.begin() + i);
+		_client_count--;
 	}
 }

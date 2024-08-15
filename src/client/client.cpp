@@ -18,7 +18,7 @@ Client::~Client() {
 	close(poll_fd.fd);
 }
 
-// GETTERS
+// // GETTERS
 pollfd &Client::getPollfd() {
 	return poll_fd;
 }
@@ -163,4 +163,3 @@ bool	checkline( std::string &line, requestKv	request )
 	else
 		return false;
 }
-

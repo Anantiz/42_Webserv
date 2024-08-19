@@ -11,7 +11,6 @@ Client::Client(int poll_fd) {
 	// struct s_client_event _data;
 	client_len = sizeof(client_addr);
 	int cfd = accept(poll_fd, (struct sockaddr *)&client_addr, &client_len);
-
 	if (cfd == -1)
 		throw std::runtime_error("accept");
 	this->poll_fd = (pollfd){cfd, POLLIN, 0};
@@ -45,6 +44,11 @@ bool	Client::parse_request()
 		buffer[ bytes_read ] = '\0';
 		std::string str( buffer );
 		std::string	line;
+		size_t pos;
+		if ( pos = (str.find("multipart") != std::string::npos) )
+		{
+			
+		}
 		while ( gnlEcoplus( str, line ) )
 		{
 			if ( !isHeader )
@@ -53,7 +57,7 @@ bool	Client::parse_request()
 				std::string methodstr;
 				std::string pathstr;
 				std::string protocolstr;
-				if (!parseFirstLine(line, methodstr, pathstr, protocolstr))
+				if ( !parseFirstLine( line, methodstr, pathstr, protocolstr ) )
 					return false;
 			}
 			else if ( isHeader == 1 )
@@ -78,10 +82,8 @@ bool	Client::parse_request()
 	return true;
 }
 
-bool	dividedBody( std::string &line )
+void	handleBoundary( std::string &str )
 {
-	requestKv rKeyVal;
-	if ()
 
 }
 

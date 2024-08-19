@@ -59,7 +59,13 @@ namespace Http {
 		std::string							body;
 		size_t								body_size;
 	};
-
+	// Only when boundary
+	struct Boundary
+	{
+		std::string							delimiter;
+		std::map<std::string, std::string>	headers;
+		std::string							body;
+	};
 }
 
 #endif // HTTP_HPP

@@ -52,6 +52,7 @@ public:
 	Server*								server;
 	Http::Request						request;
 	Http::Response						response;
+	Http::Boundary						boundary;
 	enum Http::e_conection_status		connection_status;
 };
 

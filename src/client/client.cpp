@@ -31,60 +31,72 @@ pollfd &Client::getPollfd() {
 bool	Client::parse_request()
 {
 	requestKv 	rKeyVal;
-	int			isHeader = 0;
+	bool		isHeader = true;
+	bool		isFirstLine = false;
 	char		buffer[ 1024 ];
 	pollfd 		pollFd = getPollfd();
-	ssize_t	bytes_read = recv(pollFd.fd, buffer, sizeof(buffer) - 1, 0);
-	if ( bytes_read < 0 )
-		; //handle error
-	else if ( bytes_read == 0 )
-		; //handle end or no info
-	else
+	size_t		totalByte = 0;
+	while (true)
 	{
-		buffer[ bytes_read ] = '\0';
-		std::string str( buffer );
-		std::string	line;
-		size_t pos;
-		if ( pos = (str.find("multipart") != std::string::npos) )
+		ssize_t	bytes_read = recv(pollFd.fd, buffer, sizeof(buffer) - 1, 0);
+		totalByte += bytes_read;
+		if ( bytes_read < 0 )
+			; //handle error
+		else if ( bytes_read == 0 )
+			break; //handle end or no info
+		else if ( isHeader )
 		{
-			
-		}
-		while ( gnlEcoplus( str, line ) )
-		{
-			if ( !isHeader )
+			buffer[ bytes_read ] = '\0';
+			std::string str( buffer );
+			std::string	header;
+			header += str;
+			std::string startBody;
+			if ( size_t endPos = (header.find( "\r\n\r\n" ) != std::string::npos) )
 			{
-				isHeader++;
-				std::string methodstr;
-				std::string pathstr;
-				std::string protocolstr;
-				if ( !parseFirstLine( line, methodstr, pathstr, protocolstr ) )
-					return false;
+				if ( (endPos + 4) < totalByte )
+					startBody = header.substr((endPos + 4), totalByte - (endPos + 4));
+				isHeader = false;
+				if ( size_t pos = (str.find("boundary=") != std::string::npos) )
+				{
+					this->multipart = true;
+					std::string delimiter = boundaryExtractor( header, pos + 8 );
+					this->boundary.endDelimiter = delimiter + "--";
+					this->boundary.startDelimiter = "--" + delimiter;
+				}
+				std::string	line;
+				while ( gnlEcoplus( header, line ) )
+				{
+					if ( isFirstLine )
+					{
+						isFirstLine = false;
+						std::string methodstr;
+						std::string pathstr;
+						std::string protocolstr;
+						if ( !parseFirstLine( line, methodstr, pathstr, protocolstr ) )
+							return false;
+					}
+					else
+					{
+						if (!checkline( line, rKeyVal ))
+							return false;
+						if ( rKeyVal.key == "Host" )
+							this->request.host = rKeyVal.value;
+						else
+							this->request.headers[rKeyVal.key] = rKeyVal.value;
+					}
+				}
 			}
-			else if ( isHeader == 1 )
-			{
-				if (!checkline( line, rKeyVal ))
-					return false;
-				if (rKeyVal.key == "Host")
-					this->request.host = rKeyVal.value;
-			}
-			else if ( checkline( line, rKeyVal ) && rKeyVal.value == "" )
-			{
-				// do somthing w/ boundary shit
-			}
-			else
-			{
-				if (!checkline( line, rKeyVal ))
-					return false;
-				this->request.headers[rKeyVal.key] = rKeyVal.value;
-			}
+			// handle body
 		}
 	}
 	return true;
 }
 
-void	boundaryExtractor( std::string &str )
+std::string	boundaryExtractor( std::string &str, size_t pos)
 {
-
+	size_t endPos = str.find( "\r\n", pos );
+	std::string	boundary = str.substr( pos, endPos - pos );
+	return boundary;
 }
 
 void	boundaryParser( std::string &str )

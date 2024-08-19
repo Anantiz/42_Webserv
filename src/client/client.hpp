@@ -49,6 +49,8 @@ public:
 	socklen_t							client_len;
 	pollfd								poll_fd;
 
+	bool								multipart;
+	
 	Server*								server;
 	Http::Request						request;
 	Http::Response						response;

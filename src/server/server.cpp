@@ -143,3 +143,4 @@ Location &Server::match_best_location(std::string &uri)
         throw Http::HttpException(404);
     return *best_location;
 }
+

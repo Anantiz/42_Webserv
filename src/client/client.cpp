@@ -1,20 +1,18 @@
 #include "client.hpp"
 #include <string>
 
-Client::Client(int poll_fd) {
+Client::Client(int poll_fd) : client_len(sizeof(client_addr))
+{
 	// struct s_client_event _data;
-	client_len = sizeof(client_addr);
 	int cfd = accept(poll_fd, (struct sockaddr *)&client_addr, &client_len);
 
 	if (cfd == -1)
 		throw std::runtime_error("accept");
-	this->poll_fd = (pollfd){cfd, POLLIN, 0};
+	this->poll_fd = (pollfd){cfd, POLLIN & POLLOUT, 0};
 	connection_status = Http::REQUEST;
 }
 
 Client::~Client() {
-	// if (body)
-	// 	free(body);
 	close(poll_fd.fd);
 }
 
@@ -68,9 +66,9 @@ bool	Client::parse_request()
 	return true;
 }
 
-bool isAlpha( const std::string& str ) 
+bool isAlpha( const std::string& str )
 {
-    for ( size_t i = 0; i < str.size(); ++i ) 
+    for ( size_t i = 0; i < str.size(); ++i )
 	{
         if ( !std::isalnum(str[i]) && str[i] != '.' && str[i] != '/ ')
             return false;

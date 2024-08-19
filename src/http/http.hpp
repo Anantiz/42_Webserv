@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <string>
 #include <map>
+#include <list>
 #include <stdexcept>
 
 namespace Http {
@@ -38,6 +39,21 @@ namespace Http {
 		KEEP_ALIVE
 	};
 
+	enum client_status {
+    	GETTING_HEADER,
+    	HEADER_ALL_RECEIVED,
+    	GETTING_BODY,       // X This can all be done in parallel
+    	BODY_ALL_RECEIVED,
+    	TREATING_REQUEST, // X This can all be done in parallel
+    	SENDING_RESPONSE, // X This can all be done in parallel
+	};
+
+	struct sub_request {
+		std::map<std::string, std::string>	headers;
+		std::string							body;
+		size_t								body_size;
+	};
+
 	struct Request
 	{
 		enum Http::e_method					method;
@@ -45,9 +61,9 @@ namespace Http {
 		std::string							host;
 		std::string							uri;
 
-		std::map<std::string, std::string>	headers;
-		std::string							body;
-		size_t								body_size;
+		std::list<struct sub_request>		sub_requests;
+		size_t								total_body_size;
+		enum client_status					status;
 	};
 
 	struct Response
@@ -62,7 +78,8 @@ namespace Http {
 		// (read path into buffer and write to socket directly)
 		// Othwerwise, send body
 		std::string							file_path_to_send;
-		std::string							body;
+		std::string							body; // Might be a char* instead, if using cgi(reduces overhead)
+		char*								c_body;
 		size_t								body_size;
 	};
 

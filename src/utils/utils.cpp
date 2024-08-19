@@ -196,3 +196,19 @@ std::string	utils::read_path(const std::string &str, size_t start, size_t &next_
 	}
 	return ret;
 }
+
+char	**map_to_envp(const std::map<std::string, std::string> &map)
+{
+	char **envp = new char*[map.size() + 1];
+	size_t i = 0;
+	for (std::map<std::string, std::string>::const_iterator it = map.begin(); it != map.end(); ++it)
+	{
+		std::string tmp = it->first + "=" + it->second;
+		envp[i] = new char[tmp.size() + 1];
+		std::copy(tmp.begin(), tmp.end(), envp[i]);
+		envp[i][tmp.size()] = 0;
+		++i;
+	}
+	envp[i] = 0;
+	return envp;
+}

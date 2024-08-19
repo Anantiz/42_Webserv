@@ -52,7 +52,7 @@ public:
 	// getters
 	bool						get_dir_listing();
 	bool						get_accept_upload();
-	int 						get_allowed_methods();
+	int							get_allowed_methods();
 	std::vector<std::string>	&get_indexes();
 	std::string					&get_root();
 	std::string					&get_upload_dir();
@@ -70,10 +70,18 @@ private:
 	void						handle_post_request(Client &client);
 	void						handle_delete_request(Client &client);
 
-	std::string 				get_local_path(std::string &uri);
-	std::string 				dir_listing_content(const std::string &dir_path );
+	// Get
+	std::string					get_local_path(std::string &uri);
+	std::string					dir_listing_content(const std::string &dir_path );
 	void						build_response_get_file(Client &client, std::string &local_path);
 	void						build_response_get_dir(Client &client, std::string &local_path);
+
+	// Post
+	void						download_client_file(Client &client, std::string &file_path);
+	void						post_to_cgi(Client &client, std::string &local_path);
+
+	// Delete
+	void						delete_file(std::string &file_path);
 
 
 };

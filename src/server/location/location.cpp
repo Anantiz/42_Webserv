@@ -149,6 +149,9 @@ size_t  Location::count_blocks(std::string &uri)
 
 void   Location::build_request_response(Client &client)
 {
+    if (_allowed_methods & client.request.method == 0)
+        throw Http::HttpException(405);
+
     switch (client.request.method)
     {
         case Http::GET:
@@ -181,6 +184,10 @@ std::string   Location::get_local_path(std::string &uri)
 	// local_path     = root + (uri - location_path) = /var/www/images/1.jpg
 	return _root + uri.substr(_location_path.size(), uri.size());
 }
+
+/**
+ * GET
+ */
 
 /*
 	Returns an extremelly basic html page with a list of files in the directory
@@ -225,6 +232,26 @@ std::string Location::dir_listing_content(const std::string &dir_path)
 
 void   Location::build_response_get_dir(Client &client, std::string &local_path)
 {
+    if (client.request.uri.)
+
+    if (_indexes.size() > 0)
+    {
+        for (size_t i = 0; i < _indexes.size(); i++)
+        {
+            std::string index_path = local_path + _indexes[i];
+            if (utils::what_is_this_path(index_path) == utils::FILE)
+            {
+                client.response.file_path_to_send = index_path;
+                client.response.body = "";
+                client.response.status_code = 200;
+                client.response.headers = "Content-Type: application/octet-stream\r\n";
+                return ;
+            }
+        }
+    }
+
+    if (_dir_listing == false)
+        throw Http::HttpException(403);
 	client.response.file_path_to_send = "";
 	client.response.body = dir_listing_content(local_path);
 	client.response.status_code = 200;
@@ -264,12 +291,48 @@ void   Location::handle_get_request(Client &client)
     }
 }
 
+/**
+ * POST
+ */
+
+void    Location::download_client_file(Client &client, std::string &file_path)
+{
+    std::ofstream file(file_path, std::ios::binary);
+    if (!file.is_open())
+        throw Http::HttpException(500);
+    file << client.request.body;
+    file.close();
+}
+
+void    Location::post_to_cgi(Client &client, std::string &local_path)
+{
+    (void)client;
+    (void)local_path;
+}
+
 void	Location::handle_post_request(Client &client)
 {
     (void)client;
 }
 
+/**
+ * DELETE
+ */
+
+void    Location::delete_file(std::string &file_path)
+{
+    if (remove(file_path.c_str()) != 0)
+        throw Http::HttpException(500);
+}
+
 void	Location::handle_delete_request(Client &client)
 {
-    (void)client;
+    std::string        local_path = get_local_path(client.request.uri);
+    utils::e_path_type type = utils::what_is_this_path(local_path);
+
+    if (type == utils::DIRECTORY)
+        throw Http::HttpException(403);
+    if (type == utils::INVALID)
+        throw Http::HttpException(404);
+    delete_file(local_path);
 }

@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <algorithm>
+#include <map>
 
 class Server;
 
@@ -39,6 +40,8 @@ namespace utils
 	std::string	read_word(const std::string &str, size_t start, size_t &next_start);
 	std::string	read_path(const std::string &str, size_t start, size_t &next_start);
 	std::string strip(const std::string &str);
+
+	char	**map_to_envp(const std::map<std::string, std::string> &map);
 
 
 } // namespace utils

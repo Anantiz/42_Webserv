@@ -30,10 +30,10 @@ pollfd &Client::getPollfd() {
 
 bool	Client::parse_request()
 {
-	requestKv rKeyVal;
-	int		isHeader = 0;
-	char	buffer[ 1024 ];
-	pollfd pollFd = getPollfd();
+	requestKv 	rKeyVal;
+	int			isHeader = 0;
+	char		buffer[ 1024 ];
+	pollfd 		pollFd = getPollfd();
 	ssize_t	bytes_read = recv(pollFd.fd, buffer, sizeof(buffer) - 1, 0);
 	if ( bytes_read < 0 )
 		; //handle error
@@ -82,7 +82,12 @@ bool	Client::parse_request()
 	return true;
 }
 
-void	handleBoundary( std::string &str )
+void	boundaryExtractor( std::string &str )
+{
+
+}
+
+void	boundaryParser( std::string &str )
 {
 
 }

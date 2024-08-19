@@ -37,9 +37,7 @@ public:
 
 	bool				parse_request();
 	void				send_response();
-	bool				parseFirstLine( std::string &line, std::string &methodstr,
-					std::string &pathstr,
-					std::string &protocolstr );
+	bool				parseFirstLine( std::string &line );
 
 
 public:

@@ -69,10 +69,7 @@ bool	Client::parse_request()
 					if ( isFirstLine )
 					{
 						isFirstLine = false;
-						std::string methodstr;
-						std::string pathstr;
-						std::string protocolstr;
-						if ( !parseFirstLine( line, methodstr, pathstr, protocolstr ) )
+						if ( !parseFirstLine( line ) )
 							return false;
 					}
 					else
@@ -114,9 +111,7 @@ bool isAlpha( const std::string& str )
     return true;
 }
 
-bool	Client::parseFirstLine( std::string &line, std::string &methodstr,
-					std::string &pathstr,
-					std::string &protocolstr )
+bool	Client::parseFirstLine( std::string &line )
 {
 	size_t firstSpace = line.find(' ');
 	if (firstSpace == std::string::npos) return false;
@@ -127,9 +122,9 @@ bool	Client::parseFirstLine( std::string &line, std::string &methodstr,
 	if (line.find(' ', secondSpace + 1) != std::string::npos) return false;
 
 
-	methodstr = line.substr(0, firstSpace);
-    pathstr = line.substr(firstSpace + 1, secondSpace - firstSpace - 1);
-    protocolstr = line.substr(secondSpace + 1);
+	std::string methodstr = line.substr(0, firstSpace);
+    std::string pathstr = line.substr(firstSpace + 1, secondSpace - firstSpace - 1);
+    std::string protocolstr = line.substr(secondSpace + 1);
 
    	if (!isAlpha(methodstr) || !isAlpha(pathstr) || !isAlpha(protocolstr))
         return false;

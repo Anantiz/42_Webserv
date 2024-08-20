@@ -16,19 +16,28 @@ Server::~Server()
 void    Server::check_mandatory_directives( void )
 {
     if (_ports.size() == 0)
-        throw std::runtime_error("No port specified for server");
+        throw std::runtime_error("No port specified for server, cannot start server without a port");
     if (_locations.size() == 0)
-        throw std::runtime_error("No location specified for server");
+        throw std::runtime_error("No location specified for server, have at least one location");
 }
 
 void Server::add_port(u_int16_t p)
 {
-    _ports.push_back(p);
+    if (p > 65535)
+        throw std::runtime_error("Invalid port number");
+    if (std::find(_ports.begin(), _ports.end(), p) != _ports.end())
+        _logger.warnLog("Ignoring duplicate server-port");
+    else
+        _ports.push_back(p);
 }
 
-void Server::add_name(std::string n)
+void Server::add_name(const std::string &n)
 {
-    _names.push_back(n);
+    std::string name = utils::as_lower(n);
+    if (std::find(_names.begin(), _names.end(), name) != _names.end())
+        _logger.warnLog("Ignoring duplicate server-name: " + name);
+    else
+        _names.push_back(name);
 }
 
 void Server::set_protocol(Http::e_protocol p)
@@ -46,6 +55,18 @@ void Server::add_location(Location *l)
 
 void Server::add_custom_error_page(int status_code, std::string path)
 {
+    // Check valid code
+    static const int const valid_codes[] = {\
+    400, 401, 402, 403, 404, 405, 406, 407, 408, 409, \
+    410, 411, 412, 413, 414, 415, 416, 417, 418, 421, \
+    422, 423, 424, 425, 426, 428, 429, 431, 451, 500, \
+    501, 502, 503, 504, 505, 506, 507, 508, 510, 511};
+    int i;
+    for (i = 0; i < 40; i++)
+        if (status_code == valid_codes[i])
+            break;
+    if (i == 40)
+        throw std::runtime_error("Invalid status code for custom error page");
     if (_custom_error_pages.find(status_code) != _custom_error_pages.end())
         throw std::runtime_error("Duplicate directive: 2 error pages for the same status code");
     _custom_error_pages[status_code] = path;
@@ -55,6 +76,8 @@ void Server::set_max_client_body_size(size_t s)
 {
     if (_was_set_max_client_body_size)
         throw std::runtime_error("Duplicate directive: client_body_size");
+    if (_max_client_body_size > 1000000000)
+        _logger.warnLog("Client body size is larger than 1GB, are you sure ? The server might get overhelmed by only a few clients");
     _was_set_max_client_body_size = true;
     _max_client_body_size = s;
 }
@@ -143,4 +166,3 @@ Location &Server::match_best_location(std::string &uri)
         throw Http::HttpException(404);
     return *best_location;
 }
-

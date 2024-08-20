@@ -16,9 +16,11 @@ void	Cluster::match_request_serv(Client &client) const
 				client.server = _servers_ports[p].second[0].second;
 				return;
 			}
+			// RFC 2616, section 3.2.3, states that the host is case-insensitive
+			std::string request_host = utils::as_lower(client.request.host);
 			// Find the server associated with the host, slow af striing comparison
 			for (size_t i = 0; i < _servers_ports[p].second.size(); i++) {
-				if (client.request.host == _servers_ports[p].second[i].first) {
+				if (request_host == _servers_ports[p].second[i].first) {
 					client.server = _servers_ports[p].second[i].second;
 					return;
 				}

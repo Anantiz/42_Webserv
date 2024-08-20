@@ -58,8 +58,6 @@ public:
 	std::string					&get_upload_dir();
 	std::pair<int, std::string>	&get_redirect();
 
-
-
 	// Methods
 	void						build_request_response(Client &client);
 	size_t						count_blocks(std::string &uri);

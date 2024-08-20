@@ -178,9 +178,9 @@ void   Location::build_request_response(Client &client)
 
 std::string   Location::get_local_path(std::string &uri)
 {
+	// uri            = /image/chats/1.jpg
 	// _location_path = /image/chats
 	// _root          = /var/www/images
-	// uri            = /image/chats/1.jpg
 	// local_path     = root + (uri - location_path) = /var/www/images/1.jpg
 	return _root + uri.substr(_location_path.size(), uri.size());
 }
@@ -232,7 +232,7 @@ std::string Location::dir_listing_content(const std::string &dir_path)
 
 void   Location::build_response_get_dir(Client &client, std::string &local_path)
 {
-    if (client.request.uri.)
+    if (client.request.uri)
 
     if (_indexes.size() > 0)
     {

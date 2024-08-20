@@ -11,6 +11,8 @@
 #include "http/http.hpp"
 #include "location/location.hpp"
 #include "client/client.hpp"
+#include "utils/logs.hpp"
+#include "utils/utils.hpp"
 
 #define DEFAULT_ERROR_PAGES_RELATIVE_TO_SERVER "../../http_error_pages/"
 
@@ -22,6 +24,7 @@ private:
 	std::vector<Location *>			_locations;
 	std::map<int, std::string>		_custom_error_pages;    // If not inside, serve default instead
 	size_t							_max_client_body_size;  // -1 for unlimited
+	logs							_logger;
 
 	bool _was_set_max_client_body_size;
 	bool _was_set_protocol;
@@ -32,12 +35,12 @@ public:
 	~Server();
 	void	check_mandatory_directives( void );
 
-	void add_port(u_int16_t p);
-	void add_name(std::string n);
-	void set_protocol(Http::e_protocol p);
-	void add_location(Location *l);
-	void add_custom_error_page(int status_code, std::string path);
-	void set_max_client_body_size(size_t s);
+	void 							add_port(u_int16_t p);
+	void 							add_name(const std::string &n);
+	void 							set_protocol(Http::e_protocol p);
+	void 							add_location(Location *l);
+	void 							add_custom_error_page(int status_code, std::string path);
+	void 							set_max_client_body_size(size_t s);
 
 	std::vector<u_int16_t>			&get_ports();
 	std::vector<std::string>		&get_names();

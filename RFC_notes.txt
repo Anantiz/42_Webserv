@@ -1,0 +1,30 @@
+CRLF = /r/n
+
+Http Url:
+    http_URL = "http:" "//" host [ ":" port ] [ abs_path [ "?" query ]]
+    > If the port is empty or not given, port 80 is assumed.
+    > If the abs_path is not present in the URL, it MUST be given as "/"
+       when used as a Request-URI for a resource
+Uri:
+    If Uri is too large return 414
+    - A port that is empty or not given is equivalent to the default
+        port for that URI-reference;
+
+        - Comparisons of host names MUST be case-insensitive;
+
+        - Comparisons of scheme names MUST be case-insensitive;
+
+        - An empty abs_path is equivalent to an abs_path of "/".
+
+Status line:
+    Status-Line = HTTP-Version SP Status-Code SP Reason-Phrase CRLF
+
+HOST:
+    Send back 400 Bad request if there is no host header field
+
+
+
+Misc:
+    Replace missing uri by /
+    Implement timeout
+    

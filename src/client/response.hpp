@@ -11,7 +11,6 @@
 #include <sys/poll.h>   // poll
 #include <netinet/in.h> // sockaddr_in
 
-#include "prototypes.hpp"
 #include "http/http.hpp"
 
 class response

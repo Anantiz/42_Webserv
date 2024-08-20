@@ -67,7 +67,6 @@ bool    utils::in_servers(std::string &name, std::vector<std::pair<std::string, 
 	return false;
 }
 
-
 bool     utils::ft_isspace(char c)
 {
     return (c == ' ' || (c >= 9 && c <= 13));
@@ -211,4 +210,12 @@ char	**map_to_envp(const std::map<std::string, std::string> &map)
 	}
 	envp[i] = 0;
 	return envp;
+}
+
+std::string utils::as_lower(const std::string &str)
+{
+	std::string ret(str);
+	for (size_t i = 0; i < ret.size(); i++)
+		ret[i] = std::tolower(ret[i]);
+	return ret;
 }

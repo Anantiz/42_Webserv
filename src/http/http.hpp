@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <string>
 #include <map>
+#include <vector>
 
 namespace Http {
 
@@ -44,8 +45,7 @@ namespace Http {
 		std::string							host;
 		std::string							uri;
 
-		std::map<std::string, std::string>	headers;
-		std::string							body;
+		std::vector<std::pair<std::map<std::string, std::string>, std::string>>	headBody;
 		size_t								body_size;
 
 	};

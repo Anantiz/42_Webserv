@@ -27,20 +27,27 @@ Cluster::Cluster(const char *config_file_path) {
 Cluster::~Cluster()
 {
 	_logger.infoLog("Shuting down the server");
+	cleanup();
+	_logger.infoLog("Server is down");
+	exit(0);
+}
 
+void	Cluster::cleanup()
+{
 	// Close all listen sockets
 	for (size_t i=0; i<_listen_socket_fds.size(); i++)
 		close(_listen_socket_fds[i]);
-
 	// Remove any remaining client
-	for (size_t i=0; i<_client_pool.size(); i++)
-		delete _client_pool[i];
-
+	for (client_pool_it it = _client_pool.begin(); it != _client_pool.end(); it++)
+		delete it->second;
+	// Remove all servers
 	for (size_t i=0; i<_servers.size(); i++)
 		delete _servers[i];
+}
 
-	_logger.infoLog("Server is down");
-	exit(0);
+bool	*Cluster::get_run_ptr()
+{
+	return &_run;
 }
 
 void	Cluster::down()

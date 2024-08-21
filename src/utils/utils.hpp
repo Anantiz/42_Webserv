@@ -44,7 +44,7 @@ namespace utils
 
 	char					**map_to_envp(const std::map<std::string, std::string> &map);
 	std::string 			as_lower(const std::string &str);
-
+	const std::string		build_error_page(int error);
 
 } // namespace utils
 

@@ -31,10 +31,11 @@ private:
 	*  It is a list of ports, each port has a list of names
 	*    these names are associated with a server, hardcore type but straightforward
 	*  e.i:
-    *   [(80, [("server1.com", ptr_to_serv), ("server2.com", ptr_to_serv)]),
+	*   [(80, [("server1.com", ptr_to_serv), ("server2.com", ptr_to_serv)]),
 	*   (443, [("server1.com", ptr_to_serv), ("server2.com", ptr_to_serv)])]
 	*/
 	typedef std::vector< std::pair< u_int16_t, std::vector< std::pair<std::string, Server* > > > > evil_typedef_t;
+	typedef std::map<int, Client*>::iterator client_pool_it;
 
 	static bool						_run;
 
@@ -60,7 +61,7 @@ public:
 
 	Cluster(const char *config_file_path);
 	~Cluster();
-
+	int restart_attempt; // For sudden crashes, we try to restart the server at least 2 times
 
 	bool		*get_run_ptr(); // For signal handling
 	int			start();
@@ -68,23 +69,30 @@ public:
 
 private:
 
-	bool	not_in_ports(u_int16_t p);
-	void 	init_server_ports();
+	void	init_server_ports();
 	void	init_sockets();
 	int		run();
+	void	cleanup();
 
-	Client	*accept_client(int i);
-	void	remove_poll_fds();
+	Client	*accept_or_create_client(int i);
+	void	handle_pollin(int i, Client *client);
+	void	handle_pollout(int i, Client *client);
+	void	handle_anything_else(int i, Client *client);
+	void	remove_closed_conections();
+
+	void	build_error_response(Client *client);
+
 
 	/**
-	 * Server found
-	 *   > host is set.
-	 * Server not found
+	 * No "Host" header
+	 *   > Do nothing (will get called again)
+	 * Server is "" (empty)
+	 *   > Server is set to the first server in the list
+	 * Server is invalid (It was accessed by IP and `host` was set to gibberish)
 	 *   > error is set to 404
 	 *   > server is set to NULL
 	 */
 	void	match_request_serv(Client &request) const;
-
 };
 
 #endif // CLUSTER_HPP

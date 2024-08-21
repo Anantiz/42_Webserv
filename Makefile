@@ -29,7 +29,7 @@ SRC_FILES+= 	$(addprefix $(CLIENT_PATH)/,$(CLIENT_FILES))
 
 ### UTILS ########## ########## ########## ########## ##########
 UTILS_PATH:=utils
-UTILS_FILES:= logs.cpp utils.cpp signals.cpp
+UTILS_FILES:= logs.cpp utils.cpp signals.cpp build_error_page.cpp
 SRC_FILES+= 	$(addprefix $(UTILS_PATH)/,$(UTILS_FILES))
 
 

@@ -33,7 +33,28 @@ struct requestKv {
 
 class Client {
 public:
-	typedef std::map<int, Client*>::iterator client_pool_it;
+
+	enum client_status {
+		IDLE,
+		GETTING_HEADER,
+		HEADER_ALL_RECEIVED,
+		GETTING_BODY,       // Can work together
+		BODY_ALL_RECEIVED,
+		TREATING_REQUEST,   // Can work together
+		RESPONSE_READY,
+		SENDING_RESPONSE,
+		RESPONSE_SENT,
+		KEEP_ALIVE,
+		TO_CLOSE,
+	};
+
+	enum treting_status
+	{
+		awaiting_headers,
+		awaiting_body,
+		uploading,
+		waiting_body_chunk,
+	};
 
 	Client(int fd);
 	~Client();
@@ -63,7 +84,8 @@ public:
 
 	Http::Request						request;
 	Http::Response						response;
-	enum Http::e_conection_status		connection_status;
+	enum client_status					connection_status;
+	bool								to_close; // Close the conection after sending the whole
 };
 
 

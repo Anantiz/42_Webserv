@@ -31,9 +31,7 @@ void	Cluster::match_request_serv(Client &client) const
 	}
 }
 
-bool	*Cluster::get_run_ptr() { return &_run; }
-
-void	Cluster::remove_poll_fds() {
+void	Cluster::remove_closed_conections() {
 	while (_to_remove.size()) {
 		int i = _to_remove.back();
 		_to_remove.pop_back();
@@ -41,4 +39,36 @@ void	Cluster::remove_poll_fds() {
 		_poll_fds.erase(_poll_fds.begin() + i);
 		_client_count--;
 	}
+}
+
+void	Cluster::build_error_response(Client *client)
+{
+	// Just to test
+	const std::string const default_error_pages_path = "/home/aurban/Projects/webserv/src/http_error_pages/";
+	Http::Response &res = client->response;
+
+	if (res.status_code >= 400 && res.body.empty()) {
+		res.file_path_to_send = "";
+		try {
+			res.body = utils::build_error_page(res.status_code);
+		}
+		catch (std::exception &e) { // If the memory is so dead that the string concatenation fails just send 500 cuz the server is kinda dead at this point
+			res.status_code = 500;
+			// String literals are always available even if the memory is dead
+			res.headers = "HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/html\r\nContent-Length: 93\r\n\r\n";
+			res.body = "<html><body><h1>500 Error: Our servers are going through a rough time !</h1></body></html>\r\n";
+		}
+	}
+	// We are only building an error reponse, wtf is this *brain-is-dead* ?
+
+	//if (!res.file_path_to_send.empty()) { // Read the file yourself and send it as soon
+	//	// [...]
+	//}
+	//else if (!res.body.empty()) { // Body has already been built, most likely CGI
+	//	// [...]
+	//}
+	//else { // What the hell happened?
+	//	_logger.devLog("Look at this, we're trying to send an error response without a body or a file path");
+	//
+	//}
 }

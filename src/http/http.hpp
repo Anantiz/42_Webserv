@@ -27,50 +27,19 @@ namespace Http {
 		FALSE_PROTOCOL = 0b0,
 	};
 
-	enum e_conection_status {
-	/**
-	 * I don't know at all what to do with this
-	 * most probaly useless feature
-	 * we'll see
-	 */
-		REQUEST,
-		RESPONSE,
-		CLOSED,
-		KEEP_ALIVE
-	};
-
-	enum client_status {
-    	GETTING_HEADER,
-    	HEADER_ALL_RECEIVED,
-    	GETTING_BODY,       // X This can all be done in parallel
-    	BODY_ALL_RECEIVED,
-    	TREATING_REQUEST, // X This can all be done in parallel
-    	SENDING_RESPONSE, // X This can all be done in parallel
-	};
-
-	struct sub_request {
-		std::map<std::string, std::string>	headers;
-		std::string							body;
-		size_t								body_size;
-	};
-
 	struct Request
 	{
 		enum Http::e_method					method;
 		enum Http::e_protocol				protocol;
 		std::string							host;
 		std::string							uri;
-
-		std::list<struct sub_request>		sub_requests;
+		std::map<std::string, std::string>	headers;
 		size_t								total_body_size;
-		enum client_status					status;
 	};
 
 	struct Response
 	{
 		enum Http::e_method					method;
-		enum Http::e_protocol				protocol;
-
 		int									status_code; // 200, 404, 500, etc
 		std::string							headers; // Raw string, just send it
 
@@ -78,8 +47,8 @@ namespace Http {
 		// (read path into buffer and write to socket directly)
 		// Othwerwise, send body
 		std::string							file_path_to_send;
+		int									file_fd;
 		std::string							body; // Might be a char* instead, if using cgi(reduces overhead)
-		char*								c_body;
 		size_t								body_size;
 	};
 
@@ -91,7 +60,6 @@ namespace Http {
 			HttpException(int status_code) : _status_code(status_code) {}
 			int get_status_code() { return _status_code; }
 	};
-
 }
 
 #endif // HTTP_HPP

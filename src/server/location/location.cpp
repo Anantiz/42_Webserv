@@ -232,8 +232,6 @@ std::string Location::dir_listing_content(const std::string &dir_path)
 
 void   Location::build_response_get_dir(Client &client, std::string &local_path)
 {
-    if (client.request.uri)
-
     if (_indexes.size() > 0)
     {
         for (size_t i = 0; i < _indexes.size(); i++)

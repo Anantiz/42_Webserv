@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <string>
 #include <map>
+#include <vector>
 
 namespace Http {
 
@@ -43,7 +44,6 @@ namespace Http {
 		enum Http::e_protocol				protocol;
 		std::string							host;
 		std::string							uri;
-
 		std::map<std::string, std::string>	headers;
 		std::string							body;
 		size_t								body_size;
@@ -59,7 +59,15 @@ namespace Http {
 		std::string							body;
 		size_t								body_size;
 	};
+	// Only when boundary
+	struct Boundary
+	{
 
+		std::string							startDelimiter;
+		std::string							endDelimiter;
+		std::vector<std::pair<std::map<std::string, std::string>, std::string>>	headBody;
+	};
 }
 
 #endif // HTTP_HPP
+

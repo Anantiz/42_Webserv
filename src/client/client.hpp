@@ -34,25 +34,36 @@ public:
 	void				postMethod( void );
 	void				deleteMethod( void );
 	pollfd				&getPollfd();
+	void				parseChunk();
+	void				findBoundary( std::string &line );
+	void				parseHeaders( std::string &line, std::map<std::string, std::string> &headers );
+	void				parseContent( std::string &line );
+	void				boundaryParser();
+	bool				isLine();
 
 	bool				parse_request();
 	void				send_response();
-	bool				parseFirstLine( std::string &line, std::string &methodstr,
-					std::string &pathstr,
-					std::string &protocolstr );
+	bool				parseFirstLine( std::string &line );
+	bool				checkline( std::string &line, std::map<std::string, \
+	 					std::string>	&intermheader );
 
 
 public:
 	// It's all public because we use this more as a struct than a class
+	std::string							buffer;
 	uint								access_port;
 	sockaddr_in							client_addr;
 	socklen_t							client_len;
 	pollfd								poll_fd;
+	std::map<std::string, std::string>  mainHeader;
 
+	bool								multipart;
+	
 	Server*								server;
-
+	ParserState							state;
 	Http::Request						request;
 	Http::Response						response;
+	Http::Boundary						boundary;
 	enum Http::e_conection_status		connection_status;
 };
 

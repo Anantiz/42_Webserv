@@ -7,9 +7,15 @@
 #include <sys/socket.h>
 #include <string>
 #include <map>
+
+#include <list>
+#include <stdexcept>
 #include <vector>
 
 namespace Http {
+
+	const std::string   &get_status_string(int status);
+
 
 	enum e_method {
 		GET = 0b1,
@@ -26,18 +32,6 @@ namespace Http {
 		FALSE_PROTOCOL = 0b0,
 	};
 
-	enum e_conection_status {
-	/**
-	 * I don't know at all what to do with this
-	 * most probaly useless feature
-	 * we'll see
-	 */
-		REQUEST,
-		RESPONSE,
-		CLOSED,
-		KEEP_ALIVE
-	};
-
 	struct Request
 	{
 		enum Http::e_method					method;
@@ -45,24 +39,36 @@ namespace Http {
 		std::string							host;
 		std::string							uri;
 		std::map<std::string, std::string>	headers;
-		std::string							body;
-		size_t								body_size;
-
+		size_t								total_body_size;
 	};
 
 	struct Response
 	{
 		enum Http::e_method					method;
-		enum Http::e_protocol				protocol;
+		int									status_code; // 200, 404, 500, etc
+		std::string							headers; // Raw string, just send it
 
-		std::map<std::string, std::string>	headers;
-		std::string							body;
+		// IF file_path_to_send is not empty, send the file
+		// (read path into buffer and write to socket directly)
+		// Othwerwise, send body
+		std::string							file_path_to_send;
+		int									file_fd;
+		std::string							body; // Might be a char* instead, if using cgi(reduces overhead)
 		size_t								body_size;
 	};
+  
+  class HttpException: public std::exception
+	{
+		private:
+			int _status_code;
+		public:
+			HttpException(int status_code) : _status_code(status_code) {}
+			int get_status_code() { return _status_code; }
+  };
+  
 	// Only when boundary
 	struct Boundary
 	{
-
 		std::string							startDelimiter;
 		std::string							endDelimiter;
 		std::vector<std::pair<std::map<std::string, std::string>, std::string>>	headBody;

@@ -29,7 +29,7 @@ SRC_FILES+= 	$(addprefix $(CLIENT_PATH)/,$(CLIENT_FILES))
 
 ### UTILS ########## ########## ########## ########## ##########
 UTILS_PATH:=utils
-UTILS_FILES:= logs.cpp utils.cpp signals.cpp
+UTILS_FILES:= logs.cpp utils.cpp signals.cpp build_error_page.cpp
 SRC_FILES+= 	$(addprefix $(UTILS_PATH)/,$(UTILS_FILES))
 
 
@@ -53,8 +53,6 @@ SRC_FILES+= 	$(addprefix $(SERV_PATH)/,$(SERV_FILES))
 LOCATIONS_PATH:=$(SERV_PATH)/location
 LOCATIONS_FILES:= location.cpp
 SRC_FILES+= 	$(addprefix $(LOCATIONS_PATH)/,$(LOCATIONS_FILES))
-
-
 
 
 SRC_FILES:=		$(addprefix $(SRCDIR)/,$(SRC_FILES))

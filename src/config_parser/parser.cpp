@@ -10,7 +10,7 @@ ConfigParser::ConfigParser(const char *path)
     _fully_read = false;
     init_directives_ptr();
     try {
-        utils::ft_bzero(buff, buff_size);
+        utils::bzero(buff, buff_size);
        parse_file();
     } catch (std::exception &e) {
         logger.errLog("Error parsing config file: " + std::string(e.what()));
@@ -84,12 +84,12 @@ std::string ConfigParser::get_next_unit( void )
 
     if (!buff_i && buff[buff_i] == ';')
     {
-        utils::ft_bzero(buff, buff_i);
+        utils::bzero(buff, buff_i);
         return get_next_unit();
     }
     std::string ret;
     ret =  std::string(buff, buff_i);
-    utils::ft_bzero(buff, buff_i);
+    utils::bzero(buff, buff_i);
     return ret;
 }
 
@@ -130,6 +130,7 @@ size_t ConfigParser::server_block(const std::string &unit, size_t start)
                 throw std::runtime_error("Invalid directive: " + sub_directive);
             start = it->second(unit, start, *serv);
         }
+        serv->check_mandatory_directives();
     }
     return start;
 }
@@ -139,14 +140,15 @@ size_t ConfigParser::location_block(const std::string &unit, size_t start)
     std::string location_path = utils::read_path(unit, start, start);
     logger.devLog("\t\tLocation path: " + location_path);
     start = block_open_bracket(unit, start);
-    _servers.back()->add_location(location_path);
-    Location &location = _servers.back()->get_location(location_path);
+    Location *location = new Location(location_path);
+    _servers.back()->add_location(location);
     while (true)
     {
         std::string sub_directive = utils::read_word(unit, start, start);
         if (sub_directive == "}")
             {logger.devLog("\t\tEnd of Location block");break;}
         logger.devLog("\t\tDirective: " + sub_directive);
+
         if (sub_directive == "")
             {throw std::runtime_error("Unexpected end of file: location block unclosed");break;}
         else
@@ -154,12 +156,12 @@ size_t ConfigParser::location_block(const std::string &unit, size_t start)
             std::map<std::string, t_location_directive_ptr>::iterator it = location_keywords.find(sub_directive);
             if (it == location_keywords.end())
                 throw std::runtime_error("Invalid directive: " + sub_directive);
-            start = it->second(unit, start, location);
+            start = it->second(unit, start, *location);
         }
     }
+    location->check_mandatory_directives();
     return start;
 }
-
 
 void ConfigParser::parse_file( void )
 {

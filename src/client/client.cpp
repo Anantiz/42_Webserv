@@ -1,31 +1,25 @@
 #include "client.hpp"
 #include <string>
 
-bool	gnlEcoplus( std::string &str, std::string &result );
-bool	checkline( std::string &line, requestKv	request );
-enum	Http::e_method	detectMethode( std::string &method );
-enum 	Http::e_protocol	detectProtocol( std::string &proto );
-
-
 enum ParserState {
     PARSING_HEADERS,
     PARSING_CONTENT,
     LOOKING_FOR_BOUNDARY
 };
 
-Client::Client(int poll_fd) {
+Client::Client(int poll_fd) : client_len(sizeof(client_addr))
+{
+
 	// struct s_client_event _data;
-	client_len = sizeof(client_addr);
 	int cfd = accept(poll_fd, (struct sockaddr *)&client_addr, &client_len);
 	if (cfd == -1)
 		throw std::runtime_error("accept");
 	this->poll_fd = (pollfd){cfd, POLLIN, 0};
-	connection_status = Http::REQUEST;
+	connection_status = Client::IDLE;
+	to_close = false;
 }
 
 Client::~Client() {
-	// if (body)
-	// 	free(body);
 	close(poll_fd.fd);
 }
 
@@ -154,9 +148,9 @@ void	Client::boundaryParser()
 	this->boundary.endDelimiter = this->boundary.startDelimiter + "--"; //verifier ces valeurs mais en gros c'est ca
 }
 
-bool isAlpha( const std::string& str ) 
+bool isAlpha( const std::string& str )
 {
-    for ( size_t i = 0; i < str.size(); ++i ) 
+    for ( size_t i = 0; i < str.size(); ++i )
 	{
         if ( !std::isalnum(str[i]) && str[i] != '.' && str[i] != '/')
             return false;

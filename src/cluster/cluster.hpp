@@ -75,14 +75,6 @@ private:
 	void	cleanup();
 
 	Client	*accept_or_create_client(int i);
-	void	handle_pollin(int i, Client *client);
-	void	handle_pollout(int i, Client *client);
-	void	handle_anything_else(int i, Client *client);
-	void	remove_closed_conections();
-
-	void	build_error_response(Client *client);
-
-
 	/**
 	 * No "Host" header
 	 *   > Do nothing (will get called again)
@@ -93,6 +85,12 @@ private:
 	 *   > server is set to NULL
 	 */
 	void	match_request_serv(Client &request) const;
+
+	void	handle_pollin(int i, Client *client);
+	void	handle_pollout(int i, Client *client);
+	void	handle_anything_else(int i, Client *client);
+	void	edit_pollfd(int i, short events);
+	void	remove_closed_conections();
 };
 
 #endif // CLUSTER_HPP

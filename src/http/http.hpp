@@ -12,6 +12,9 @@
 
 namespace Http {
 
+	const std::string   &get_status_string(int status);
+
+
 	enum e_method {
 		GET = 0b1,
 		POST = 0b10,

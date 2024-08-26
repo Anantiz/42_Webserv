@@ -138,14 +138,14 @@ void Server::handle_client_request(Client &client)
 
 void Server::build_error_response(Client &client, int status_code)
 {
+    Http::Response &res = client.response;
+
     std::map<int, std::string>::iterator cutom_error_page = _custom_error_pages.find(status_code);
-    if (cutom_error_page != _custom_error_pages.end())
-        client.response.file_path_to_send = cutom_error_page->second;
+    if (cutom_error_page == _custom_error_pages.end())
+        client.error_response("");
     else
-        client.response.file_path_to_send = DEFAULT_ERROR_PAGES_RELATIVE_TO_SERVER + utils::ito_str(status_code) + ".html";
-	client.response.body = "";
-	client.response.status_code = status_code;
-	client.response.headers = "Content-Type: text/html\r\n";
+        client.error_response(cutom_error_page->second);
+
 }
 
 Location &Server::match_best_location(std::string &uri)

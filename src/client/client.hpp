@@ -73,6 +73,9 @@ public:
 							std::string &protocolstr
 						);
 
+	void	error_response( const std::string& custom_page );
+
+
 public:
 	// It's all public because we use this more as a struct than a class
 
@@ -87,7 +90,5 @@ public:
 	enum client_status					connection_status;
 	bool								to_close; // Close the conection after sending the whole
 };
-
-
 
 #endif // CLIENT_EVENT_HPP

@@ -55,8 +55,6 @@ LOCATIONS_FILES:= location.cpp
 SRC_FILES+= 	$(addprefix $(LOCATIONS_PATH)/,$(LOCATIONS_FILES))
 
 
-
-
 SRC_FILES:=		$(addprefix $(SRCDIR)/,$(SRC_FILES))
 SRC_OBJECTS:=	$(patsubst $(SRCDIR)/%.cpp, ${OBJDIR}/%.o,$(SRC_FILES))
 

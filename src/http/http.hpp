@@ -7,8 +7,10 @@
 #include <sys/socket.h>
 #include <string>
 #include <map>
+
 #include <list>
 #include <stdexcept>
+#include <vector>
 
 namespace Http {
 
@@ -54,15 +56,24 @@ namespace Http {
 		std::string							body; // Might be a char* instead, if using cgi(reduces overhead)
 		size_t								body_size;
 	};
-
-	class HttpException: public std::exception
+  
+  class HttpException: public std::exception
 	{
 		private:
 			int _status_code;
 		public:
 			HttpException(int status_code) : _status_code(status_code) {}
 			int get_status_code() { return _status_code; }
+  };
+  
+	// Only when boundary
+	struct Boundary
+	{
+		std::string							startDelimiter;
+		std::string							endDelimiter;
+		std::vector<std::pair<std::map<std::string, std::string>, std::string>>	headBody;
 	};
 }
 
 #endif // HTTP_HPP
+

@@ -58,6 +58,7 @@ void	Cluster::remove_closed_conections()
 	}
 }
 
+
 void	Cluster::edit_pollfd(int i, short events)
 {
 	_poll_fds[i].events = events;

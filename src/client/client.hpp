@@ -60,35 +60,45 @@ public:
 	~Client();
 
 	//response function
-	void	getMethod( void );
-	void	postMethod( void );
-	void	deleteMethod( void );
-	pollfd	&getPollfd();
 
-	bool	parse_request();
-	void	send_response();
-	bool	parseFirstLine( std::string &line,
-							std::string &methodstr,
-							std::string &pathstr,
-							std::string &protocolstr
-						);
 
 	void	error_response( const std::string& custom_page );
+  
+	void				getMethod( void );
+	void				postMethod( void );
+	void				deleteMethod( void );
+	pollfd				&getPollfd();
+	void				parseChunk();
+	void				findBoundary( std::string &line );
+	void				parseHeaders( std::string &line, std::map<std::string, std::string> &headers );
+	void				parseContent( std::string &line );
+	void				boundaryParser();
+	bool				isLine();
 
+	bool				parse_request();
+	void				send_response();
+	bool				parseFirstLine( std::string &line );
+	bool				checkline( std::string &line, std::map<std::string, \
+	 					std::string>	&intermheader );
 
 public:
 	// It's all public because we use this more as a struct than a class
-
-	uint								access_port;
-	sockaddr_in							client_addr;
+	uint								  access_port;
+	sockaddr_in						client_addr;
 	socklen_t							client_len;
 	pollfd								poll_fd;
-	Server*								server;
-
-	Http::Request						request;
-	Http::Response						response;
-	enum client_status					connection_status;
-	bool								to_close; // Close the conection after sending the whole
+    
+	std::map<std::string, std::string>  mainHeader;
+	bool								                multipart;
+  Http::Boundary						          boundary;
+  std::string						              buffer;
+	
+	Server*								              server;
+	ParserState							            state;
+	Http::Request						            request;
+	Http::Response						          response;
+	enum client_status					        connection_status;
+	bool								                to_close; // Close the conection after sending the whole
 };
 
 #endif // CLIENT_EVENT_HPP

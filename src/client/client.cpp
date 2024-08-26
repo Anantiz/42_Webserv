@@ -1,8 +1,15 @@
 #include "client.hpp"
 #include <string>
 
+enum ParserState {
+    PARSING_HEADERS,
+    PARSING_CONTENT,
+    LOOKING_FOR_BOUNDARY
+};
+
 Client::Client(int poll_fd) : client_len(sizeof(client_addr))
 {
+
 	// struct s_client_event _data;
 	int cfd = accept(poll_fd, (struct sockaddr *)&client_addr, &client_len);
 	if (cfd == -1)
@@ -23,62 +30,135 @@ pollfd &Client::getPollfd() {
 
 bool	Client::parse_request()
 {
-	requestKv request;
-	int		isHeader = 0;
-	char	buffer[ 1024 ];
-	pollfd pollFd = getPollfd();
-	ssize_t	bytes_read = recv(poll_fd.fd, buffer, sizeof(buffer) - 1, 0);
-	if ( bytes_read < 0 )
-		; //handle error
-	else if ( bytes_read == 0 )
-		; //handle end or no info
-	else
-	{
-		buffer[ bytes_read ] = '\0';
-		std::string str( buffer );
-		std::string	line;
-		while ( gnlEcoplus( str, line ) )
+	this->multipart = false;
+	requestKv 	rKeyVal;
+	bool		isHeader = true;
+	bool		isFirstLine = false;
+	char		buff[ 212992 ];
+	pollfd 		pollFd = getPollfd();
+	size_t		totalByte = 0;
+	this->state = LOOKING_FOR_BOUNDARY;
+	// while (true)
+	// {
+		ssize_t	bytes_read = recv(pollFd.fd, buff, sizeof(buffer) - 1, 0);
+		if (!bytes_read)
+			;
+		if ( bytes_read < 0 )
+			;
+		buffer += buff;
+
+		if ( size_t endPos = ( buffer.find( "/r/n/r/n" ) != std::string::npos ) && isHeader)
 		{
-			if ( !isHeader )
+			isHeader = false;
+			std::string line;
+			while ( gnlEcoplus( buffer, line ) )
 			{
-				isHeader++;
-				std::string methodstr;
-				std::string pathstr;
-				std::string protocolstr;
-				if (!parseFirstLine(line, methodstr, pathstr, protocolstr))
+				if (!checkline( line,  this->mainHeader ))
 					return false;
 			}
-			else if ( isHeader == 1 )
-			{
-				if (!checkline( line, request ));
-					return false;
-				request.key == "Host";
-				this->request.host = request.value;
-			}
-			else
-			{
-				if (!checkline( line, request ));
-					return false;
-				this->request.body.append(line);
-			}
+			boundaryParser();
+		}
+		if ( !isHeader && this->multipart )
+		{
+			std::pair<std::map<std::string, std::string>, std::string>	headBod;
+			parseChunk();
+		}
+		if ( !isHeader && !this->multipart )
+		{
+			this->request.body += buff;
+			this->request.body_size += bytes_read;
+		}
+	// }
+}
+
+bool	Client::isLine()
+{
+	if ( this->buffer.find( "\r\n" ) != std::string::npos )
+		return true;
+	return false;
+}
+
+void	Client::parseChunk()
+{
+	std::string	line;
+	std::map<std::string, std::string> headers;
+	std::string body;
+	while ( isLine() )
+	{
+		line = buffer.substr(0, ( buffer.find( "\r\n" ) + 2 ));
+		buffer.erase(0, buffer.find( "\r\n" ) + 2 );
+		switch ( this->state )
+		{
+			case LOOKING_FOR_BOUNDARY:
+				findBoundary( line );
+				break;
+			case PARSING_HEADERS:
+				parseHeaders( line, headers  );
+				break;
+			case PARSING_CONTENT:
+				parseContent( line );
+				break;
 		}
 	}
-	return true;
+}
+
+void	Client::findBoundary( std::string &line )
+{
+	if ( line.find( this->boundary.startDelimiter ) != std::string::npos )
+		state = PARSING_HEADERS;
+}
+
+
+void	Client::parseHeaders( std::string &line, std::map<std::string, std::string> &headers )
+{
+	
+	if ( line == "\r\n" )
+	{
+		this->boundary.headBody.push_back(std::make_pair(headers, ""));
+		state = PARSING_CONTENT;
+	}
+	else if ( checkline(line,  headers ) )
+		return;
+}
+
+
+void	Client::parseContent( std::string &line )
+{
+	if ( line.find( this->boundary.endDelimiter ) != std::string::npos )
+	{
+		state = LOOKING_FOR_BOUNDARY;
+	}
+	else
+		this->boundary.headBody.back().second += line;
+}
+
+void	Client::boundaryParser()
+{
+	std::map<std::string, std::string>::iterator it = this->mainHeader.find("Content-Type");
+	if ( it == this->mainHeader.end() )
+		return ;
+	std::string	value;
+	value = it->second;
+	this->multipart = true;
+	size_t pos = value.find("boundary=");
+	std::string	boundary;
+	size_t	enPos = value.find( "\r\n" );
+	boundary = value.substr(pos + 9, enPos - (pos + 9));
+	this->boundary.startDelimiter = "--" + boundary;
+	this->boundary.endDelimiter = this->boundary.startDelimiter + "--"; //verifier ces valeurs mais en gros c'est ca
 }
 
 bool isAlpha( const std::string& str )
 {
     for ( size_t i = 0; i < str.size(); ++i )
 	{
-        if ( !std::isalnum(str[i]) && str[i] != '.' && str[i] != '/ ')
+        if ( !std::isalnum(str[i]) && str[i] != '.' && str[i] != '/')
             return false;
     }
     return true;
 }
 
-bool	Client::parseFirstLine( std::string &line, std::string &methodstr,
-					std::string &pathstr,
-					std::string &protocolstr )
+bool	Client::parseFirstLine( std::string &line )
 {
 	size_t firstSpace = line.find(' ');
 	if (firstSpace == std::string::npos) return false;
@@ -89,9 +169,9 @@ bool	Client::parseFirstLine( std::string &line, std::string &methodstr,
 	if (line.find(' ', secondSpace + 1) != std::string::npos) return false;
 
 
-	methodstr = line.substr(0, firstSpace);
-    pathstr = line.substr(firstSpace + 1, secondSpace - firstSpace - 1);
-    protocolstr = line.substr(secondSpace + 1);
+	std::string methodstr = line.substr(0, firstSpace);
+    std::string pathstr = line.substr(firstSpace + 1, secondSpace - firstSpace - 1);
+    std::string protocolstr = line.substr(secondSpace + 1);
 
    	if (!isAlpha(methodstr) || !isAlpha(pathstr) || !isAlpha(protocolstr))
         return false;
@@ -134,7 +214,7 @@ enum Http::e_method	detectMethode( std::string &method )
 bool	gnlEcoplus( std::string &str, std::string &result )
 {
 	size_t pos;
-	if ( pos = str.find( "\n\r" ) != std::string::npos )
+	if ( (pos = str.find( "\n\r" )) != std::string::npos )
 	{
 		std::string line = str.substr( 0, pos );
 		str.erase( 0, pos + 1 );
@@ -147,15 +227,14 @@ bool	gnlEcoplus( std::string &str, std::string &result )
 
 
 // Detec type of every line of the request
-bool	checkline( std::string &line, requestKv	request )
+bool	Client::checkline( std::string &line, std::map<std::string, std::string>	&intermheader )
 {
 	size_t pos;
-	if ( pos = line.find( ':' ) != std::string::npos && line.size() < pos + 2 )
+	if ( (pos = line.find( ':' )) != std::string::npos && line.size() < pos + 2 )
 	{
 		if (line[pos + 1] != ' ')
 			return false;
-		request.key = line.substr( 0, pos );
-		request.value = line.substr( pos + 2, line.size() );
+		intermheader[line.substr( 0, pos )] = line.substr( pos + 2, line.size() );
 		return true;
 	}
 	else

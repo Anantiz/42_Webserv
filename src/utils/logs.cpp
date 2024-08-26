@@ -17,7 +17,7 @@
 		> all logs are printed to std::cerr
 		> log level is set to defaultLogLevel
 */
-logs::logs() :  _logLevel(logs::defaultLogLevel), _highPriorityOut(&std::cerr), _lowPriorityOut(&std::cerr)
+logs::logs() :  _logLevel(logs::defaultLogLevel)
 {
 }
 
@@ -26,41 +26,12 @@ logs::logs() :  _logLevel(logs::defaultLogLevel), _highPriorityOut(&std::cerr), 
 		> all logs are printed to std::cerr
 		> log level is set to log_level
 */
-logs::logs(const enum logs::LogLevel log_level) : _logLevel(log_level), _highPriorityOut(&std::cerr), _lowPriorityOut(&std::cerr)
+logs::logs(const enum logs::LogLevel log_level) : _logLevel(log_level)
 {
 }
-
-/*
-	Set log level and log files:
-		> logs are printed to std::cerr or log files
-		> log level is set to log_level
-		> log files are set to errLogFileName and infoLogFileName
-*/
-logs::logs(enum logs::LogLevel log_level, const std::string &errLogFileName, const std::string &infoLogFileName) : _logLevel(log_level), _highPriorityOut(&std::cerr), _lowPriorityOut(&std::cerr)
-{
-	// Open log files
-	_errLogFile.open(errLogFileName.c_str(), std::ios::app);
-	_infoLogFile.open(infoLogFileName.c_str(), std::ios::app);
-	if (_errLogFile.is_open())
-		_highPriorityOut = &_errLogFile;
-	else
-		warnLog("Could not open error log file, redirecting to standard error");
-	if (_infoLogFile.is_open())
-		_lowPriorityOut = &_infoLogFile;
-	else
-		warnLog("Could not open info log file, redirecting to standard error");
-}
-
-/*
- ** Destructor
- */
 
 logs::~logs()
 {
-	if (_errLogFile.is_open())
-		_errLogFile.close();
-	if (_infoLogFile.is_open())
-		_infoLogFile.close();
 }
 
 /*
@@ -70,6 +41,12 @@ logs::~logs()
 ██      ██    ██ ██  ██ ██ ██         ██    ██ ██    ██ ██  ██ ██      ██
 ██       ██████  ██   ████  ██████    ██    ██  ██████  ██   ████ ███████
 */
+
+void logs::SdevLog(const std::string &msg)
+{
+	std::cerr << WHITE << "[DEV] " << RESET << msg << std::endl;
+}
+
 
 /*
 	** This function logs a message with a specific level.
@@ -83,19 +60,19 @@ void logs::log(enum logs::LogLevel level, const std::string &msg) const
 	switch (level)
 	{
 	case (DEV):
-		*_lowPriorityOut << WHITE << "[DEV] " << RESET << msg << std::endl;
+		std::cerr << WHITE << "[DEV] " << RESET << msg << std::endl;
 		break;
 	case (DEBUG):
-		*_lowPriorityOut << WHITE << "[DEBUG] " << RESET << msg << std::endl;
+		std::cerr << WHITE << "[DEBUG] " << RESET << msg << std::endl;
 		break;
 	case (INFO):
-		*_highPriorityOut << BLUE "[INFO] " << RESET << msg << std::endl;
+		std::cerr  << BLUE "[INFO] " << RESET << msg << std::endl;
 		break;
 	case (WARNING):
-		*_highPriorityOut << YELLOW "[WARNING] " << RESET << msg << std::endl;
+		std::cerr  << YELLOW "[WARNING] " << RESET << msg << std::endl;
 		break;
 	case (ERROR):
-		*_highPriorityOut << RED "[ERROR] " << RESET << msg << std::endl;
+		std::cerr  << RED "[ERROR] " << RESET << msg << std::endl;
 		break;
 	default:
 		std::cerr << MAGENTA "What the dog doing ? " << RESET << msg << std::endl;

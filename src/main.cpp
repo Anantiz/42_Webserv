@@ -7,7 +7,7 @@ int main(int ac, char **av)
 {
 	const char *config_path;
 	logs		globalLog;
-	bool		crashed = false;
+	int			crash_count = 0;
 
 	if (ac > 1)
 		config_path = av[1];
@@ -16,28 +16,22 @@ int main(int ac, char **av)
 
 	try {
 		Cluster cluster(config_path);
-		signal_handler(); // Graceful shutdown
-		globalLog.infoLog("Starting the server, you can gracefully shut it down with [Ctrl+C] or Kill it with [Ctrl+\\]");
-
-		while (cluster.restart_attempt < 2)
+		while (crash_count < 3)
 		{
 			try {
-				return cluster.start();
+				signal_handler();
+				globalLog.infoLog("Starting the cluster, you can gracefully shut it down with [Ctrl+C] or Kill it with [Ctrl+\\]");
+				cluster.start();
+				return (EXIT_SUCCESS);
+			} catch (std::exception &e) {
+				globalLog.errLog("A crtical error occured, attempting to restart the cluster: " + std::string(e.what()) + "out of 3");
 			}
-			catch (std::exception &e)
-			{
-				crashed = true;
-				cluster.restart_attempt++;
-				globalLog.errLog(e.what());
-				globalLog.errLog("A crtical error occured, attempting to restart the server: Attempt " \
-				+ utils::ito_str(cluster.restart_attempt) + " of 2");
-				cluster.down();
-			}
+			crash_count ++;
 		}
+		return (EXIT_FAILURE);
+
 	} catch (std::exception &e) {
-		globalLog.errLog(e.what());
-		if (crashed)
-			globalLog.errLog("Fatal error, issue could not be resolved, shutting down the server");
+		globalLog.errLog("Could not start cluster: " + std::string(e.what()));
 		return (EXIT_FAILURE);
 	}
 	return (EXIT_SUCCESS);

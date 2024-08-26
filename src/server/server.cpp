@@ -9,8 +9,8 @@ Server::Server()
 
 Server::~Server()
 {
-    for (std::vector<Location *>::iterator it = _locations.begin(); it != _locations.end(); it++)
-        delete *it;
+    for (size_t i=0; i < _locations.size(); i++)
+        delete _locations[i];
 }
 
 void    Server::check_mandatory_directives( void )
@@ -119,11 +119,15 @@ void Server::handle_client_request(Client &client)
 {
     _logger.devLog("Handling client request on server:" + client.request.host);
     try {
-        match_best_location(client.request.uri).build_request_response(client);
+        Location& l = match_best_location(client.request.uri);
+        _logger.devLog("Matched location rooted at: " + l.get_root());
+        l.build_request_response(client);
     } catch (Http::HttpException &e) {
+        _logger.devLog("Caught HttpException: " + utils::ito_str(e.get_status_code()));
         build_error_response(client, e.get_status_code());
         return ;
     } catch (std::exception &e) {
+        _logger.warnLog("Caught exception: " + std::string(e.what()));
         build_error_response(client, 500);
         return ;
     }

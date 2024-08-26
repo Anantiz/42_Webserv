@@ -11,8 +11,10 @@
 #include "http/http.hpp"
 #include "utils/utils.hpp"
 #include "client/client.hpp"
+#include "utils/logs.hpp"
 
-class Location {
+class Location
+{
 private:
 
 	std::string						_location_path;   // Path to match with uri
@@ -43,11 +45,11 @@ public:
 	void						set_dir_listing(bool);
 	void						set_accept_upload(bool);
 	void						set_allowed_methods(int);
-	void						add_index(std::string);
-	void						set_root(std::string);
-	void						set_upload_dir(std::string);
-	void						set_redirect(std::pair<int, std::string>);
-	void						add_cgi(std::pair<std::string, std::string>);
+	void						add_index(const std::string&);
+	void						set_root(const std::string&);
+	void						set_upload_dir(const std::string&);
+	void						set_redirect(std::pair<int, const std::string& >);
+	void						add_cgi(std::pair<const std::string&, const std::string& >);
 
 	// getters
 	bool						get_dir_listing();
@@ -80,8 +82,6 @@ private:
 
 	// Delete
 	void						delete_file(std::string &file_path);
-
-
 };
 
 #endif // LOCATION_HPP

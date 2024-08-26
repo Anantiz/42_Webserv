@@ -17,7 +17,6 @@ Location::Location(std::string &location_path) : _location_path(location_path)
 
 Location::~Location()
 {
-
 }
 
 void Location::check_mandatory_directives( void )
@@ -51,12 +50,12 @@ void Location::set_allowed_methods(int m)
     _allowed_methods = m;
 }
 
-void Location::add_index(std::string i)
+void Location::add_index(const std::string& i)
 {
     _indexes.push_back(i);
 }
 
-void Location::set_root(std::string r)
+void Location::set_root(const std::string& r)
 {
     if (_was_set_root)
         throw std::runtime_error("Duplicate directive: root");
@@ -69,7 +68,7 @@ void Location::set_root(std::string r)
         _upload_dir = r + "/uploads/";
 }
 
-void Location::set_upload_dir(std::string u)
+void Location::set_upload_dir(const std::string& u)
 {
     if (_was_set_upload_dir)
         throw std::runtime_error("Duplicate directive: upload_dir");
@@ -77,7 +76,7 @@ void Location::set_upload_dir(std::string u)
     _upload_dir = u;
 }
 
-void Location::set_redirect(std::pair<int, std::string> r)
+void Location::set_redirect(std::pair<int, const std::string& > r)
 {
     if (_was_set_redirect)
         throw std::runtime_error("Duplicate directive: return");
@@ -85,7 +84,7 @@ void Location::set_redirect(std::pair<int, std::string> r)
     _redirect = r;
 }
 
-void Location::add_cgi(std::pair<std::string, std::string> c)
+void Location::add_cgi(std::pair<const std::string&, const std::string& > c)
 {
     _cgis.push_back(c);
 }
@@ -151,16 +150,18 @@ void   Location::build_request_response(Client &client)
 {
     if ((_allowed_methods & client.request.method) == 0)
         throw Http::HttpException(405);
-
     switch (client.request.method)
     {
         case Http::GET:
+            logs::SdevLog("Handling GET request");
             handle_get_request(client);
             break;
         case Http::POST:
+            logs::SdevLog("Handling POST request");
             handle_post_request(client);
             break;
         case Http::DELETE:
+            logs::SdevLog("Handling DEL request");
             handle_delete_request(client);
             break;
         default:
@@ -239,10 +240,11 @@ void   Location::build_response_get_dir(Client &client, std::string &local_path)
             std::string index_path = local_path + _indexes[i];
             if (utils::what_is_this_path(index_path) == utils::FILE)
             {
+                logs::SdevLog("Get-Dir: Sending Index");
                 client.response.file_path_to_send = index_path;
                 client.response.body = "";
                 client.response.status_code = 200;
-                client.response.headers = "Content-Type: application/octet-stream\r\n";
+                client.response.headers += "Content-Type: application/octet-stream\r\n";
                 return ;
             }
         }
@@ -251,7 +253,7 @@ void   Location::build_response_get_dir(Client &client, std::string &local_path)
     if (_dir_listing == false) {
         throw Http::HttpException(403);
     }
-
+    logs::SdevLog("Get-Dir: Dir listing");
 	client.response.file_path_to_send = "";
 	client.response.body = dir_listing_content(local_path);
 	client.response.status_code = 200;
@@ -277,16 +279,19 @@ void   Location::handle_get_request(Client &client)
     switch (type)
     {
         case utils::FILE:
+            logs::SdevLog("Get-File");
             build_response_get_file(client, local_path);
             break;
         case utils::DIRECTORY:
         {
+            logs::SdevLog("Get-Dir");
             if (_dir_listing) {
                 build_response_get_dir(client, local_path);
                 break;
             }
         }
         default:
+            logs::SdevLog("Get: Not found");
             throw Http::HttpException(404);
     }
 }
@@ -297,6 +302,7 @@ void   Location::handle_get_request(Client &client)
 
 void    Location::download_client_file(Client &client, std::string &file_path)
 {
+    // Many things to change here, this is just a placeholder
     std::ofstream file(file_path.c_str(), std::ios::binary);
 
     if (!file.is_open())
@@ -314,6 +320,8 @@ void    Location::post_to_cgi(Client &client, std::string &local_path)
 void	Location::handle_post_request(Client &client)
 {
     (void)client;
+    // logs::SdevLog("Post: Downloading file");
+    // logs::SdevLog("Post: To CGI");
 }
 
 /**
@@ -331,9 +339,14 @@ void	Location::handle_delete_request(Client &client)
     std::string        local_path = get_local_path(client.request.uri);
     utils::e_path_type type = utils::what_is_this_path(local_path);
 
-    if (type == utils::DIRECTORY)
+    if (type == utils::DIRECTORY) {
+        logs::SdevLog("Deleting dir, not allowed");
         throw Http::HttpException(403);
-    if (type == utils::INVALID)
+    }
+    if (type == utils::INVALID) {
+        logs::SdevLog("Not found");
         throw Http::HttpException(404);
+    }
+    logs::SdevLog("Deleting file");
     delete_file(local_path);
 }

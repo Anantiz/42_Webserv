@@ -56,7 +56,7 @@ void Server::add_location(Location *l)
 void Server::add_custom_error_page(int status_code, std::string path)
 {
     // Check valid code
-    static const int const valid_codes[] = {\
+    static const int valid_codes[] = {\
     400, 401, 402, 403, 404, 405, 406, 407, 408, 409, \
     410, 411, 412, 413, 414, 415, 416, 417, 418, 421, \
     422, 423, 424, 425, 426, 428, 429, 431, 451, 500, \
@@ -117,6 +117,7 @@ size_t &Server::get_max_client_body_size()
 
 void Server::handle_client_request(Client &client)
 {
+    _logger.devLog("Handling client request on server:" + client.request.host);
     try {
         match_best_location(client.request.uri).build_request_response(client);
     } catch (Http::HttpException &e) {
@@ -138,8 +139,6 @@ void Server::handle_client_request(Client &client)
 
 void Server::build_error_response(Client &client, int status_code)
 {
-    Http::Response &res = client.response;
-
     std::map<int, std::string>::iterator cutom_error_page = _custom_error_pages.find(status_code);
     if (cutom_error_page == _custom_error_pages.end())
         client.error_response("");

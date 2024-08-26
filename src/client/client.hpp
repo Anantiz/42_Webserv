@@ -34,6 +34,12 @@ struct requestKv {
 class Client {
 public:
 
+	enum ParserState {
+		PARSING_HEADERS,
+		PARSING_CONTENT,
+		LOOKING_FOR_BOUNDARY
+	};
+
 	enum client_status {
 		IDLE,
 		GETTING_HEADER,
@@ -63,7 +69,7 @@ public:
 
 
 	void	error_response( const std::string& custom_page );
-  
+
 	void				getMethod( void );
 	void				postMethod( void );
 	void				deleteMethod( void );
@@ -83,22 +89,18 @@ public:
 
 public:
 	// It's all public because we use this more as a struct than a class
-	uint								  access_port;
-	sockaddr_in						client_addr;
+	uint								access_port;
+	sockaddr_in							client_addr;
 	socklen_t							client_len;
 	pollfd								poll_fd;
-    
-	std::map<std::string, std::string>  mainHeader;
-	bool								                multipart;
-  Http::Boundary						          boundary;
-  std::string						              buffer;
-	
-	Server*								              server;
-	ParserState							            state;
-	Http::Request						            request;
-	Http::Response						          response;
-	enum client_status					        connection_status;
-	bool								                to_close; // Close the conection after sending the whole
+
+	Server*								server;
+	ParserState							state;
+
+	Http::Request						request;
+	Http::Response						response;
+	enum client_status					connection_status;
+	bool								to_close; // Close the conection after sending the whole
 };
 
 #endif // CLIENT_EVENT_HPP

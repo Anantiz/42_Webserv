@@ -149,7 +149,7 @@ size_t  Location::count_blocks(std::string &uri)
 
 void   Location::build_request_response(Client &client)
 {
-    if (_allowed_methods & client.request.method == 0)
+    if ((_allowed_methods & client.request.method) == 0)
         throw Http::HttpException(405);
 
     switch (client.request.method)
@@ -248,8 +248,10 @@ void   Location::build_response_get_dir(Client &client, std::string &local_path)
         }
     }
 
-    if (_dir_listing == false)
+    if (_dir_listing == false) {
         throw Http::HttpException(403);
+    }
+
 	client.response.file_path_to_send = "";
 	client.response.body = dir_listing_content(local_path);
 	client.response.status_code = 200;
@@ -295,7 +297,8 @@ void   Location::handle_get_request(Client &client)
 
 void    Location::download_client_file(Client &client, std::string &file_path)
 {
-    std::ofstream file(file_path, std::ios::binary);
+    std::ofstream file(file_path.c_str(), std::ios::binary);
+
     if (!file.is_open())
         throw Http::HttpException(500);
     file << client.request.body;

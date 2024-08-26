@@ -8,8 +8,13 @@ static void	signal_handler_sigint(int signum) {
 	Cluster::down();
 }
 
+static void signal_handler_sigquit(int signum) {
+	(void)signum;
+	exit(127);
+}
+
 void	signal_handler(void)
 {
 	signal(SIGINT, signal_handler_sigint);
-	signal(SIGQUIT, signal_handler_sigint);
+	signal(SIGQUIT, signal_handler_sigquit);
 }

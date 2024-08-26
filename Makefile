@@ -22,7 +22,7 @@ SRC_FILES+= 	$(addprefix $(PARSING_PATH)/,$(PARSING_FILES))
 
 ### CLIENT ########## ########## ########## ########## ##########
 CLIENT_PATH:=client
-CLIENT_FILES:= client.cpp
+CLIENT_FILES:= client.cpp client_response.cpp error_response.cpp
 SRC_FILES+= 	$(addprefix $(CLIENT_PATH)/,$(CLIENT_FILES))
 
 

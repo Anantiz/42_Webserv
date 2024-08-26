@@ -17,7 +17,7 @@ int main(int ac, char **av)
 	try {
 		Cluster cluster(config_path);
 		signal_handler(); // Graceful shutdown
-		globalLog.infoLog("Starting the server, you can gracefully shut it down with [Ctrl+C] or [Ctrl+\\]");
+		globalLog.infoLog("Starting the server, you can gracefully shut it down with [Ctrl+C] or Kill it with [Ctrl+\\]");
 
 		while (cluster.restart_attempt < 2)
 		{

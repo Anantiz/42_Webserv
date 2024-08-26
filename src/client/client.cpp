@@ -36,23 +36,26 @@ pollfd &Client::getPollfd() {
 
 bool	Client::parse_request()
 {
+	this->multipart = false;
 	requestKv 	rKeyVal;
 	bool		isHeader = true;
 	bool		isFirstLine = false;
-	char		buff[ 1024 ];
+	char		buff[ 212992 ];
 	pollfd 		pollFd = getPollfd();
 	size_t		totalByte = 0;
 	this->state = LOOKING_FOR_BOUNDARY;
-	while (true)
-	{
+	// while (true)
+	// {
 		ssize_t	bytes_read = recv(pollFd.fd, buff, sizeof(buffer) - 1, 0);
 		if (!bytes_read)
 			;
 		if ( bytes_read < 0 )
 			;
 		buffer += buff;
-		if ( size_t endPos = (buffer.find("/r/n/r/n") != std::string::npos) )
+
+		if ( size_t endPos = ( buffer.find( "/r/n/r/n" ) != std::string::npos ) && isHeader)
 		{
+			isHeader = false;
 			std::string line;
 			while ( gnlEcoplus( buffer, line ) )
 			{
@@ -61,62 +64,88 @@ bool	Client::parse_request()
 			}
 			boundaryParser();
 		}
-		parseChunk();
-	}
+		if ( !isHeader && this->multipart )
+		{
+			std::pair<std::map<std::string, std::string>, std::string>	headBod;
+			parseChunk();
+		}
+		if ( !isHeader && !this->multipart )
+		{
+			this->request.body += buff;
+			this->request.body_size += bytes_read;
+		}
+	// }
+}
+
+bool	Client::isLine()
+{
+	if ( this->buffer.find( "\r\n" ) != std::string::npos )
+		return true;
+	return false;
 }
 
 void	Client::parseChunk()
 {
-	switch ( this->state )
+	std::string	line;
+	std::map<std::string, std::string> headers;
+	std::string body;
+	while ( isLine() )
 	{
-		case LOOKING_FOR_BOUNDARY:
-			findBoundary();
-			break;
-		case PARSING_HEADERS:
-			parseHeaders();
-			break;
-		case PARSING_CONTENT:
-			parseContent();
-			break;
+		line = buffer.substr(0, ( buffer.find( "\r\n" ) + 2 ));
+		buffer.erase(0, buffer.find( "\r\n" ) + 2 );
+		switch ( this->state )
+		{
+			case LOOKING_FOR_BOUNDARY:
+				findBoundary( line );
+				break;
+			case PARSING_HEADERS:
+				parseHeaders( line, headers  );
+				break;
+			case PARSING_CONTENT:
+				parseContent( line );
+				break;
+		}
 	}
 }
 
-void	Client::findBoundary()
+void	Client::findBoundary( std::string &line )
 {
-	if ()
-	{
-
-
+	if ( line.find( this->boundary.startDelimiter ) != std::string::npos )
 		state = PARSING_HEADERS;
-	}
 }
 
 
-void	Client::parseHeaders()
+void	Client::parseHeaders( std::string &line, std::map<std::string, std::string> &headers )
 {
-	if ()
+	
+	if ( line == "\r\n" )
 	{
-
+		this->boundary.headBody.push_back(std::make_pair(headers, ""));
 		state = PARSING_CONTENT;
 	}
+	else if ( checkline(line,  headers ) )
+		return;
 }
 
 
-void	Client::parseContent()
+void	Client::parseContent( std::string &line )
 {
-	if ()
+	if ( line.find( this->boundary.endDelimiter ) != std::string::npos )
 	{
-
 		state = LOOKING_FOR_BOUNDARY;
 	}
+	else
+		this->boundary.headBody.back().second += line;
 }
 
 void	Client::boundaryParser()
 {
 	std::map<std::string, std::string>::iterator it = this->mainHeader.find("Content-Type");
+	if ( it == this->mainHeader.end() )
+		return ;
 	std::string	value;
 	value = it->second;
-
+	this->multipart = true;
 	size_t pos = value.find("boundary=");
 	std::string	boundary;
 	size_t	enPos = value.find( "\r\n" );

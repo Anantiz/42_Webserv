@@ -35,10 +35,11 @@ public:
 	void				deleteMethod( void );
 	pollfd				&getPollfd();
 	void				parseChunk();
-	void				findBoundary();
-	void				parseHeaders();
-	void				parseContent();
+	void				findBoundary( std::string &line );
+	void				parseHeaders( std::string &line, std::map<std::string, std::string> &headers );
+	void				parseContent( std::string &line );
 	void				boundaryParser();
+	bool				isLine();
 
 	bool				parse_request();
 	void				send_response();

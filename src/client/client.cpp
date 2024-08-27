@@ -5,10 +5,10 @@ bool	gnlEcoplus( std::string &str, std::string &result );
 enum Http::e_method	detectMethode( std::string &method );
 enum Http::e_protocol	detectProtocol( std::string &proto );
 
-Client::Client(int poll_fd) : client_len(sizeof(client_addr))
+Client::Client(int arg_poll_fd) : client_len(sizeof(client_addr))
 {
 	// struct s_client_event _data;
-	int cfd = accept(poll_fd, (struct sockaddr *)&client_addr, &client_len);
+	int cfd = accept(arg_poll_fd, (struct sockaddr *)&client_addr, &client_len);
 	if (cfd == -1)
 		throw std::runtime_error("accept");
 	this->poll_fd = (pollfd){cfd, POLLIN, 0};

@@ -23,8 +23,6 @@ void    Server::check_mandatory_directives( void )
 
 void Server::add_port(u_int16_t p)
 {
-    if (p > 65535)
-        throw std::runtime_error("Invalid port number");
     if (std::find(_ports.begin(), _ports.end(), p) != _ports.end())
         _logger.warnLog("Ignoring duplicate server-port");
     else

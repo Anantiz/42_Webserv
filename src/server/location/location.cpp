@@ -76,7 +76,7 @@ void Location::set_upload_dir(const std::string& u)
     _upload_dir = u;
 }
 
-void Location::set_redirect(std::pair<int, const std::string& > r)
+void Location::set_redirect(std::pair<int, const std::string > r)
 {
     if (_was_set_redirect)
         throw std::runtime_error("Duplicate directive: return");
@@ -84,7 +84,7 @@ void Location::set_redirect(std::pair<int, const std::string& > r)
     _redirect = r;
 }
 
-void Location::add_cgi(std::pair<const std::string&, const std::string& > c)
+void Location::add_cgi(std::pair<const std::string, const std::string > c)
 {
     _cgis.push_back(c);
 }
@@ -285,10 +285,8 @@ void   Location::handle_get_request(Client &client)
         case utils::DIRECTORY:
         {
             logs::SdevLog("Get-Dir");
-            if (_dir_listing) {
-                build_response_get_dir(client, local_path);
-                break;
-            }
+            build_response_get_dir(client, local_path);
+            break;
         }
         default:
             logs::SdevLog("Get: Not found");

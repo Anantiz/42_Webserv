@@ -18,9 +18,10 @@ size_t ConfigParser::listen_directive(const std::string &unit, size_t start, Ser
         word = utils::read_word(unit, start, start);
         if (word == "" || word == ";")
             break;
-        server.add_port(utils::str_to_int(word, err));
-        if (err)
+        int n = utils::str_to_int(word, err);
+        if (err || n > 65535 || n < 0)
             throw std::runtime_error("listen: Invalid port " + word);
+        server.add_port(n);
     }
     if (word == "")
         throw std::runtime_error("listen: Unexpected end of file");

@@ -111,7 +111,7 @@ void	Client::parseChunk()
 	{
 		line = request.buffer.substr(0, ( request.buffer.find( "\r\n" ) + 2 ));
 		request.buffer.erase(0, request.buffer.find( "\r\n" ) + 2 );
-		if (this->connection_status = BODY_ALL_RECEIVED)
+		if (this->connection_status == BODY_ALL_RECEIVED)
 			return;
 		switch ( this->state )
 		{
@@ -131,8 +131,10 @@ void	Client::parseChunk()
 void	Client::findBoundary( std::string &line )
 {
 	if ( line.find( this->request.boundary.startDelimiter ) != std::string::npos )
+	{
 		state = PARSING_HEADERS;
 		this->connection_status = GETTING_HEADER;
+	}
 }
 
 

@@ -53,14 +53,14 @@ public:
 		TO_CLOSE,
 	};
 
-	enum end_request {
+	enum EndRequest {
 		CONTENT_LENGTH,
 		ENCODING_CHUNK,
 		CONNECTION,
 		MULTIPART,
 	};
 
-	enum treting_status
+	enum TreatingStatus
 	{
 		NOTHING,
 		AWAITING_HEADERS,
@@ -112,8 +112,9 @@ public:
 
 	Http::Request						request;
 	Http::Response						response;
-	enum end_request					eor;
-	enum client_status					connection_status;
+	enum EndRequest						eor;
+	enum ClientStatus					connection_status;
+	enum TreatingStatus					treating_status;
 	bool								to_close; // Close the conection after sending the whole
 };
 

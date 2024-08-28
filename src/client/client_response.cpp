@@ -2,21 +2,21 @@
 #include <string>
 
 
-bool				Client::end_request( void )
+bool	Client::end_request( void )
 {
 	std::map<std::string, std::string>::iterator it = this->request.mainHeader.find("Content-Length");
 	if ( it == this->request.mainHeader.end() )
 	{
 		std::stringstream ss(it->second);
-		ss >> this->request.body_size;		
+		ss >> this->request.body_size;
 		this->eor = CONTENT_LENGTH;
 	}
-	std::map<std::string, std::string>::iterator it = this->request.mainHeader.find("Transfer-Encoding");
+	it = this->request.mainHeader.find("Transfer-Encoding");
 	if ( it != this->request.mainHeader.end() && it->second == "chunk" )
 	{
 		this->eor = ENCODING_CHUNK;
 	}
-	std::map<std::string, std::string>::iterator it = this->request.mainHeader.find("Connection");
+	it = this->request.mainHeader.find("Connection");
 	if ( it != this->request.mainHeader.end() && it->second == "close" )
 	{
 		this->eor = CONNECTION;
@@ -25,6 +25,7 @@ bool				Client::end_request( void )
 	{
 		this->eor = MULTIPART;
 	}
+	return ( true );
 }
 
 bool	Client::detect_end( void )
@@ -40,12 +41,15 @@ bool	Client::detect_end( void )
 		case ENCODING_CHUNK:
 			return end_encodingchunk();
 	}
+	return false; // Default case I guess
 }
 
 
 bool	Client::end_connection( void )
 {
-	//set variable to aurban
+	this->to_close = true;
+	// Not enough edit this later
+	return ( false ); // Added this to remove warning
 }
 
 bool	Client::end_contentlength( void )
@@ -68,4 +72,15 @@ bool	Client::end_multipart( void )
 {
 	if ( this->request.body.find(this->request.boundary.endDelimiter) != std::string::npos )
 		return ( true );
+	return ( false );
+}
+
+/*
+LORIS:
+	Le fiechier client_response.cpp ne gere meme pas la response, wtf ????
+
+*/
+void	Client::send_response( void )
+{
+	// TODO
 }

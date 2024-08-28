@@ -48,8 +48,8 @@ public:
 	void						add_index(const std::string&);
 	void						set_root(const std::string&);
 	void						set_upload_dir(const std::string&);
-	void						set_redirect(std::pair<int, const std::string& >);
-	void						add_cgi(std::pair<const std::string&, const std::string& >);
+	void						set_redirect(std::pair<int, const std::string >);
+	void						add_cgi(std::pair<const std::string, const std::string >);
 
 	// getters
 	bool						get_dir_listing();

@@ -54,6 +54,13 @@ public:
 		TO_CLOSE,
 	};
 
+	enum end_request {
+		CONTENT_LENGTH,
+		ENCODING_CHUNK,
+		CONNECTION,
+		MULTIPART,
+	};
+
 	enum treting_status
 	{
 		awaiting_headers,
@@ -68,8 +75,8 @@ public:
 	//response function
 
 
-	void	error_response( const std::string& custom_page );
-
+	void				error_response( const std::string& custom_page );
+	bool				end_contentlength( void );
 	void				getMethod( void );
 	void				postMethod( void );
 	void				deleteMethod( void );
@@ -80,12 +87,17 @@ public:
 	void				parseContent( std::string &line );
 	void				boundaryParser();
 	bool				isLine();
-
+	bool				detect_end( void );
 	bool				parse_request();
 	void				send_response();
 	bool				parseFirstLine( std::string &line );
 	bool				checkline( std::string &line, std::map<std::string, \
 	 					std::string>	&intermheader );
+	bool				end_request( void );
+	bool				end_encodingchunk( void );
+	bool				end_multipart( void );
+	bool				end_connection( void );
+
 
 public:
 	// It's all public because we use this more as a struct than a class
@@ -93,12 +105,12 @@ public:
 	sockaddr_in							client_addr;
 	socklen_t							client_len;
 	pollfd								poll_fd;
-
 	Server*								server;
 	ParserState							state;
 
 	Http::Request						request;
 	Http::Response						response;
+	enum end_request					eor;
 	enum client_status					connection_status;
 	bool								to_close; // Close the conection after sending the whole
 };

@@ -27,46 +27,68 @@ pollfd &Client::getPollfd() {
 
 bool	Client::parse_request()
 {
-	this->request.multipart = false;
 	requestKv 	rKeyVal;
 	bool		isHeader = true;
-	// bool		isFirstLine = false;
+	bool		isFirstLine = true;
 	char		buff[ 212992 ];
 	pollfd 		pollFd = getPollfd();
-	// size_t		totalByte = 0;
 	this->state = LOOKING_FOR_BOUNDARY;
-	// while (true)
-	// {
-		ssize_t	bytes_read = recv(pollFd.fd, buff, sizeof(request.buffer) - 1, 0);
-		if (!bytes_read)
-			;
-		if ( bytes_read < 0 )
-			;
-		request.buffer += buff;
 
-		if ( size_t endPos = ( request.buffer.find( "/r/n/r/n" ) != std::string::npos ) && isHeader)
+	ssize_t	bytes_read = recv(pollFd.fd, buff, sizeof(request.buffer) - 1, 0);
+	if (!bytes_read)
+		;
+	if ( bytes_read < 0 )
+		;
+	request.buffer += buff;
+	if ( isHeader || isFirstLine )
+		this->connection_status = GETTING_HEADER;
+	/*
+	*	Wait to get all the header to parse it -> header ends with "/r/n/r/n"
+	*	Check if the content will be multipart
+	*	Then check how the request will end, depend of the header's value
+	*	Then handle the body
+	*/
+	if ( size_t endPos = ( request.buffer.find( "/r/n/r/n" ) != std::string::npos ) && isHeader )
+	{
+		isHeader = false;
+		std::string line;
+		while ( gnlEcoplus( request.buffer, line ) )
 		{
-			isHeader = false;
-			std::string line;
-			while ( gnlEcoplus( request.buffer, line ) )
+			if ( isFirstLine )
 			{
-				if (!checkline( line,  this->request.mainHeader ))
-					return false;
+				parseFirstLine( line );
+				isFirstLine = false;
 			}
-			this->connection_status = HEADER_ALL_RECEIVED;
-			boundaryParser();
+			else if (!checkline( line,  this->request.mainHeader ))
+				return false;
 		}
-		if ( !isHeader && this->request.multipart )
-		{
-			std::pair<std::map<std::string, std::string>, std::string>	headBod;
-			parseChunk();
-		}
-		if ( !isHeader && !this->request.multipart )
-		{
-			this->request.body += buff;
-			this->request.body_size += bytes_read;
-		}
-	// }
+		this->connection_status = HEADER_ALL_RECEIVED;
+		boundaryParser();
+		end_request();
+	}
+	/*
+	*	If multipart parse all part with theyre header with parse chunk
+	*	Multipart storage is as follow
+	*	a list of -> pair(list(header), body)
+	*	and in the body. I add content as soon as i get it from the request.
+	*/
+	if ( !isHeader && this->request.multipart )
+	{
+		std::pair<std::map<std::string, std::string>, std::string>	headBod;
+		parseChunk();
+	}
+	/*
+	*	If not multipart. I only have list(header), body)
+	*	the content is add to the body as soon as i get it from the request
+	*/
+	if ( !isHeader && !this->request.multipart )
+	{
+		this->connection_status = GETTING_BODY;
+		this->request.body += buff;
+		this->request.received_size += bytes_read;
+		if (detect_end())
+			this->connection_status = BODY_ALL_RECEIVED;
+	}
 	return true;
 }
 
@@ -86,6 +108,8 @@ void	Client::parseChunk()
 	{
 		line = request.buffer.substr(0, ( request.buffer.find( "\r\n" ) + 2 ));
 		request.buffer.erase(0, request.buffer.find( "\r\n" ) + 2 );
+		if (this->connection_status = BODY_ALL_RECEIVED)
+			return;
 		switch ( this->state )
 		{
 			case LOOKING_FOR_BOUNDARY:
@@ -105,14 +129,15 @@ void	Client::findBoundary( std::string &line )
 {
 	if ( line.find( this->request.boundary.startDelimiter ) != std::string::npos )
 		state = PARSING_HEADERS;
+		this->connection_status = GETTING_HEADER;
 }
 
 
 void	Client::parseHeaders( std::string &line, std::map<std::string, std::string> &headers )
 {
-
 	if ( line == "\r\n" )
 	{
+		this->connection_status = GETTING_BODY;
 		this->request.boundary.headBody.push_back(std::make_pair(headers, ""));
 		state = PARSING_CONTENT;
 	}
@@ -123,9 +148,13 @@ void	Client::parseHeaders( std::string &line, std::map<std::string, std::string>
 
 void	Client::parseContent( std::string &line )
 {
-	if ( line.find( this->request.boundary.endDelimiter ) != std::string::npos )
+	if ( line.find( this->request.boundary.startDelimiter ) != std::string::npos )
 	{
 		state = LOOKING_FOR_BOUNDARY;
+	}
+	else if ( line.find( this->request.boundary.endDelimiter ) != std::string::npos )
+	{
+		;
 	}
 	else
 		this->request.boundary.headBody.back().second += line;
@@ -135,7 +164,10 @@ void	Client::boundaryParser()
 {
 	std::map<std::string, std::string>::iterator it = this->request.mainHeader.find("Content-Type");
 	if ( it == this->request.mainHeader.end() )
+	{
+		this->request.multipart = false;
 		return ;
+	}
 	std::string	value;
 	value = it->second;
 	this->request.multipart = true;

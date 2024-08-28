@@ -47,6 +47,7 @@ namespace Http {
 		std::string							uri;
 		std::map<std::string, std::string>	headers;
 		size_t								body_size;
+		size_t								received_size;
 		std::string							body;
 
 		std::map<std::string, std::string>	mainHeader;

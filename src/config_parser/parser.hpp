@@ -32,7 +32,7 @@ private:
 	void init_directives_ptr( void );
 	void parse_file( void );
 	size_t server_block(const std::string &unit, size_t start);
-	size_t location_block(const std::string &unit, size_t start);
+	size_t location_block(const std::string &unit, size_t start, Server *serv);
 
     // Server directives
 	static size_t listen_directive(const std::string &unit, size_t start, Server &server);
@@ -62,7 +62,7 @@ public:
 	ConfigParser(const char *path);
 	~ConfigParser();
 
-	std::vector<Server *>	&get_servers( void );
+	std::vector<Server *>	get_servers( void );
 };
 
 #endif // PARSER_HPP

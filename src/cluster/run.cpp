@@ -4,6 +4,7 @@
 
 void	Cluster::handle_pollin(int i, Client *client)
 {
+	_logger.devLog("Pollin:" + utils::ito_str(client->poll_fd.fd));
 	client->parse_request();
 
 	// Close invalid requests, or unexpected connection termination
@@ -11,12 +12,15 @@ void	Cluster::handle_pollin(int i, Client *client)
 		_to_remove.push_back(i);
 		return ;
 	}
-	//
+
 	if (client->server)
 		client->server->handle_client_request(*client);
-	else {
+	else if (client->connection_status == Client::HEADER_ALL_RECEIVED \
+		|| client->connection_status == Client::GETTING_BODY \
+		|| client->connection_status == Client::BODY_ALL_RECEIVED)
+	{
 		match_request_serv(*client);
-		if (!client->server && client->connection_status == Client::HEADER_ALL_RECEIVED)
+		if (!client->server)
 		{
 			_logger.devLog("Client didn't send `host` header, forbidden in Http/1.1, sending 400");
 			client->response.status_code = 400;
@@ -27,6 +31,7 @@ void	Cluster::handle_pollin(int i, Client *client)
 
 void	Cluster::handle_pollout(int i, Client *client)
 {
+	_logger.devLog("Pollout:" + utils::ito_str(client->poll_fd.fd));
 	if (client->connection_status == Client::SENDING_RESPONSE)
 	{
 		client->send_response();
@@ -53,6 +58,7 @@ void	Cluster::handle_pollout(int i, Client *client)
 
 void	Cluster::handle_anything_else(int i, Client *client)
 {
+	_logger.devLog("POLL other:" + utils::ito_str(client->poll_fd.fd));
 	if (_poll_fds[i].revents & POLLHUP || _poll_fds[i].revents & POLLERR)
 	{
 		_logger.devLog("Client disconnected");
@@ -93,7 +99,6 @@ Client *Cluster::accept_or_create_client(int i)
 int	Cluster::run()
 {
 	int error = 0;
-	int ret = 0;
 
 	while (_run) {
 		// Make this loop CPU-friendly for production

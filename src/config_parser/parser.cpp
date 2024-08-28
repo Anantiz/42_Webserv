@@ -38,7 +38,7 @@ void ConfigParser::init_directives_ptr( void )
     location_keywords["upload_dir"] = ConfigParser::upload_dir_directive;
 }
 
-std::vector<Server *>	&ConfigParser::get_servers( void )
+std::vector<Server *>	ConfigParser::get_servers( void )
 {
     return _servers;
 }
@@ -104,7 +104,6 @@ size_t ConfigParser::server_block(const std::string &unit, size_t start)
 {
     start = block_open_bracket(unit, start);
     Server *serv = new Server();
-    _servers.push_back(serv);
     while (true)
     {
         std::string sub_directive = utils::read_word(unit, start, start);
@@ -114,78 +113,109 @@ size_t ConfigParser::server_block(const std::string &unit, size_t start)
         if (sub_directive == "location")
         {
             try {
-                start = location_block(unit, start);
+                start = location_block(unit, start, serv);
             } catch (std::exception &e)
             {
+                delete serv;
                 logger.errLog("Error parsing location block: " + std::string(e.what()));
                 break;
             }
         }
-        else if (sub_directive == "")
+        else if (sub_directive == "") {
+            delete serv;
             throw std::runtime_error("Unexpected end of file: location Server unclosed");
+        }
         else
         {
             std::map<std::string, t_server_directive_ptr>::iterator it = server_keywords.find(sub_directive);
-            if (it == server_keywords.end())
+            if (it == server_keywords.end()) {
+                delete serv;
                 throw std::runtime_error("Invalid directive: " + sub_directive);
+            }
             start = it->second(unit, start, *serv);
         }
-        serv->check_mandatory_directives();
     }
+    try {
+        serv->check_mandatory_directives();
+    } catch (std::exception &e) {
+        delete serv;
+        throw;
+    }
+    _servers.push_back(serv);
     return start;
 }
 
-size_t ConfigParser::location_block(const std::string &unit, size_t start)
+size_t ConfigParser::location_block(const std::string &unit, size_t start, Server *serv)
 {
     std::string location_path = utils::read_path(unit, start, start);
     logger.devLog("\t\tLocation path: " + location_path);
     start = block_open_bracket(unit, start);
+
     Location *location = new Location(location_path);
-    _servers.back()->add_location(location);
     while (true)
     {
         std::string sub_directive = utils::read_word(unit, start, start);
-        if (sub_directive == "}")
-            {logger.devLog("\t\tEnd of Location block");break;}
+        if (sub_directive == "}") {
+            logger.devLog("\t\tEnd of Location block");
+            break;
+        }
         logger.devLog("\t\tDirective: " + sub_directive);
 
-        if (sub_directive == "")
-            {throw std::runtime_error("Unexpected end of file: location block unclosed");break;}
+        if (sub_directive == "") {
+            delete location;
+            throw std::runtime_error("Unexpected end of file: location block unclosed");
+        }
         else
         {
             std::map<std::string, t_location_directive_ptr>::iterator it = location_keywords.find(sub_directive);
-            if (it == location_keywords.end())
+            if (it == location_keywords.end()) {
+                delete location;
                 throw std::runtime_error("Invalid directive: " + sub_directive);
+            }
             start = it->second(unit, start, *location);
         }
     }
-    location->check_mandatory_directives();
+    try {
+        location->check_mandatory_directives();
+    } catch (std::exception &e) {
+        delete location;
+        throw;
+    }
+    serv->add_location(location);
     return start;
 }
 
 void ConfigParser::parse_file( void )
 {
-    while (!_fully_read)
-    {
-        std::string unit = get_next_unit();
-        if (unit == "")
-            {logger.devLog("End of file");break;}
-        logger.devLog("Unit: " + unit);
-        size_t start = 0;
-        std::string directive;
-
-        directive = utils::read_word(unit, start, start);
-        logger.devLog("Directive: " + directive);
-
-        if (directive == "server")
+    try {
+        while (!_fully_read)
         {
-            try {
-                server_block(unit, start);
-            }catch (std::exception &e) {
-                logger.errLog("Error parsing server block: " + std::string(e.what()));
+            std::string unit = get_next_unit();
+            if (unit == "")
+                {logger.devLog("End of file");break;}
+            logger.devLog("Unit: " + unit);
+            size_t start = 0;
+            std::string directive;
+
+            directive = utils::read_word(unit, start, start);
+            logger.devLog("Directive: " + directive);
+
+            if (directive == "server")
+            {
+                try {
+                    server_block(unit, start);
+                }catch (std::exception &e) {
+                    throw std::runtime_error("Error parsing server block: " + std::string(e.what()));
+                }
             }
+            else
+                throw std::runtime_error("Invalid directive: " + directive);
         }
-        else
-            throw std::runtime_error("Invalid directive: " + directive);
+    } catch (std::exception &e) {
+        close(fd);
+        for (std::vector<Server *>::iterator it = _servers.begin(); it != _servers.end(); ++it)
+          delete *it;
+        throw;
     }
+    close(fd);
 }

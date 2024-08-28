@@ -1,17 +1,14 @@
 #include "client.hpp"
 #include <string>
 
-enum ParserState {
-    PARSING_HEADERS,
-    PARSING_CONTENT,
-    LOOKING_FOR_BOUNDARY
-};
+bool	gnlEcoplus( std::string &str, std::string &result );
+enum Http::e_method	detectMethode( std::string &method );
+enum Http::e_protocol	detectProtocol( std::string &proto );
 
-Client::Client(int poll_fd) : client_len(sizeof(client_addr))
+Client::Client(int arg_poll_fd) : client_len(sizeof(client_addr))
 {
-
 	// struct s_client_event _data;
-	int cfd = accept(poll_fd, (struct sockaddr *)&client_addr, &client_len);
+	int cfd = accept(arg_poll_fd, (struct sockaddr *)&client_addr, &client_len);
 	if (cfd == -1)
 		throw std::runtime_error("accept");
 	this->poll_fd = (pollfd){cfd, POLLIN, 0};
@@ -30,50 +27,52 @@ pollfd &Client::getPollfd() {
 
 bool	Client::parse_request()
 {
-	this->multipart = false;
-	requestKv 	rKeyVal;
+	this->request.multipart = false;
+	// requestKv 	rKeyVal;
 	bool		isHeader = true;
-	bool		isFirstLine = false;
+	// bool		isFirstLine = false;
 	char		buff[ 212992 ];
 	pollfd 		pollFd = getPollfd();
-	size_t		totalByte = 0;
+	// size_t		totalByte = 0;
 	this->state = LOOKING_FOR_BOUNDARY;
 	// while (true)
 	// {
-		ssize_t	bytes_read = recv(pollFd.fd, buff, sizeof(buffer) - 1, 0);
+		ssize_t	bytes_read = recv(pollFd.fd, buff, sizeof(request.buffer) - 1, 0);
 		if (!bytes_read)
 			;
 		if ( bytes_read < 0 )
 			;
-		buffer += buff;
+		request.buffer += buff;
 
-		if ( size_t endPos = ( buffer.find( "/r/n/r/n" ) != std::string::npos ) && isHeader)
+		if ( size_t endPos = ( request.buffer.find( "/r/n/r/n" ) != std::string::npos ) && isHeader)
 		{
 			isHeader = false;
 			std::string line;
-			while ( gnlEcoplus( buffer, line ) )
+			while ( gnlEcoplus( request.buffer, line ) )
 			{
-				if (!checkline( line,  this->mainHeader ))
+				if (!checkline( line,  this->request.mainHeader ))
 					return false;
 			}
+			this->connection_status = HEADER_ALL_RECEIVED;
 			boundaryParser();
 		}
-		if ( !isHeader && this->multipart )
+		if ( !isHeader && this->request.multipart )
 		{
 			std::pair<std::map<std::string, std::string>, std::string>	headBod;
 			parseChunk();
 		}
-		if ( !isHeader && !this->multipart )
+		if ( !isHeader && !this->request.multipart )
 		{
 			this->request.body += buff;
 			this->request.body_size += bytes_read;
 		}
 	// }
+	return true;
 }
 
 bool	Client::isLine()
 {
-	if ( this->buffer.find( "\r\n" ) != std::string::npos )
+	if ( this->request.buffer.find( "\r\n" ) != std::string::npos )
 		return true;
 	return false;
 }
@@ -85,8 +84,8 @@ void	Client::parseChunk()
 	std::string body;
 	while ( isLine() )
 	{
-		line = buffer.substr(0, ( buffer.find( "\r\n" ) + 2 ));
-		buffer.erase(0, buffer.find( "\r\n" ) + 2 );
+		line = request.buffer.substr(0, ( request.buffer.find( "\r\n" ) + 2 ));
+		request.buffer.erase(0, request.buffer.find( "\r\n" ) + 2 );
 		switch ( this->state )
 		{
 			case LOOKING_FOR_BOUNDARY:
@@ -104,17 +103,17 @@ void	Client::parseChunk()
 
 void	Client::findBoundary( std::string &line )
 {
-	if ( line.find( this->boundary.startDelimiter ) != std::string::npos )
+	if ( line.find( this->request.boundary.startDelimiter ) != std::string::npos )
 		state = PARSING_HEADERS;
 }
 
 
 void	Client::parseHeaders( std::string &line, std::map<std::string, std::string> &headers )
 {
-	
+
 	if ( line == "\r\n" )
 	{
-		this->boundary.headBody.push_back(std::make_pair(headers, ""));
+		this->request.boundary.headBody.push_back(std::make_pair(headers, ""));
 		state = PARSING_CONTENT;
 	}
 	else if ( checkline(line,  headers ) )
@@ -124,28 +123,28 @@ void	Client::parseHeaders( std::string &line, std::map<std::string, std::string>
 
 void	Client::parseContent( std::string &line )
 {
-	if ( line.find( this->boundary.endDelimiter ) != std::string::npos )
+	if ( line.find( this->request.boundary.endDelimiter ) != std::string::npos )
 	{
 		state = LOOKING_FOR_BOUNDARY;
 	}
 	else
-		this->boundary.headBody.back().second += line;
+		this->request.boundary.headBody.back().second += line;
 }
 
 void	Client::boundaryParser()
 {
-	std::map<std::string, std::string>::iterator it = this->mainHeader.find("Content-Type");
-	if ( it == this->mainHeader.end() )
+	std::map<std::string, std::string>::iterator it = this->request.mainHeader.find("Content-Type");
+	if ( it == this->request.mainHeader.end() )
 		return ;
 	std::string	value;
 	value = it->second;
-	this->multipart = true;
+	this->request.multipart = true;
 	size_t pos = value.find("boundary=");
 	std::string	boundary;
 	size_t	enPos = value.find( "\r\n" );
 	boundary = value.substr(pos + 9, enPos - (pos + 9));
-	this->boundary.startDelimiter = "--" + boundary;
-	this->boundary.endDelimiter = this->boundary.startDelimiter + "--"; //verifier ces valeurs mais en gros c'est ca
+	this->request.boundary.startDelimiter = "--" + boundary;
+	this->request.boundary.endDelimiter = this->request.boundary.startDelimiter + "--"; //verifier ces valeurs mais en gros c'est ca
 }
 
 bool isAlpha( const std::string& str )
@@ -182,6 +181,7 @@ bool	Client::parseFirstLine( std::string &line )
 		return false;
 	return true;
 }
+
 enum Http::e_protocol	detectProtocol( std::string &proto )
 {
 	std::string base;

@@ -15,13 +15,15 @@ Cluster::Cluster(const char *config_file_path) {
 			  used to resolve client request
 	*/
 	ConfigParser p(config_file_path);
-	_logger.devLog("Parsing done");
+
 	_servers = p.get_servers();
-	_logger.devLog("Initializing server ports");
+	if (_servers.size() == 0)
+		throw std::runtime_error("No server found in the config file");
+	_logger.devLog("Parsing Succesful");
 	init_server_ports();
 	_client_count = 0;
-	_max_queue = 10;
-	_max_clients = 100;
+	_max_queue = 30;
+	_max_clients = 300;
 }
 
 Cluster::~Cluster()
@@ -37,13 +39,16 @@ void	Cluster::cleanup()
 	// Close all listen sockets
 	for (size_t i=0; i<_listen_socket_fds.size(); i++)
 		close(_listen_socket_fds[i]);
+
 	// Remove any remaining client
-	for (client_pool_it it = _client_pool.begin(); it != _client_pool.end(); it++)
+	for (client_pool_it it = _client_pool.begin(); it != _client_pool.end(); it++) {
 		delete it->second;
+	}
+
 	// Remove all servers
-	for (size_t i=0; i<_servers.size(); i++)
+	for (size_t i=0; i <_servers.size(); i++)
 	{
-		delete _servers[i];
+		delete (Server *)(_servers[i]);
 		_servers[i] = NULL;
 	}
 }

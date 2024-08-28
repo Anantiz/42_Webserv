@@ -32,6 +32,13 @@ namespace Http {
 		FALSE_PROTOCOL = 0b0,
 	};
 
+	struct Boundary
+	{
+		std::string							startDelimiter;
+		std::string							endDelimiter;
+		std::vector<std::pair<std::map<std::string, std::string>, std::string> >	headBody;
+	};
+
 	struct Request
 	{
 		enum Http::e_method					method;
@@ -39,7 +46,13 @@ namespace Http {
 		std::string							host;
 		std::string							uri;
 		std::map<std::string, std::string>	headers;
-		size_t								total_body_size;
+		size_t								body_size;
+		std::string							body;
+
+		std::map<std::string, std::string>	mainHeader;
+		Http::Boundary						boundary;
+		std::string							buffer;
+		bool								multipart;
 	};
 
 	struct Response
@@ -56,7 +69,7 @@ namespace Http {
 		std::string							body; // Might be a char* instead, if using cgi(reduces overhead)
 		size_t								body_size;
 	};
-  
+
   class HttpException: public std::exception
 	{
 		private:
@@ -65,15 +78,6 @@ namespace Http {
 			HttpException(int status_code) : _status_code(status_code) {}
 			int get_status_code() { return _status_code; }
   };
-  
-	// Only when boundary
-	struct Boundary
-	{
-		std::string							startDelimiter;
-		std::string							endDelimiter;
-		std::vector<std::pair<std::map<std::string, std::string>, std::string>>	headBody;
-	};
 }
 
 #endif // HTTP_HPP
-

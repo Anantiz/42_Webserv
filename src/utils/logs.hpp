@@ -47,8 +47,9 @@ public:
 
 	logs(void);																							  // Default constructor
 	logs(const enum LogLevel log_level);																  // Set log level only
-	logs(enum LogLevel log_level, const std::string &errLogFileName, const std::string &infoLogFileName); // Give log files
+	// logs(enum LogLevel log_level, const std::string &errLogFileName, const std::string &infoLogFileName); // Give log files
 
+	static void SdevLog(const std::string &msg);
 	/*
 	 ** Members
 	 */
@@ -64,14 +65,6 @@ private:
 	const static logs::LogLevel defaultLogLevel = logs::DEV;
 
 	enum LogLevel _logLevel;
-
-	// Output streams
-	std::ostream *_highPriorityOut; // Errors, warnings
-	std::ostream *_lowPriorityOut;	// Info, debug, dev
-
-	// Log files if redirected
-	std::ofstream _errLogFile;	// Errors, warnings
-	std::ofstream _infoLogFile; // Info, debug, dev
 
 	// Lowest level of logs to be displayed
 	// Use warpers instead of calling log directly

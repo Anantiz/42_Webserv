@@ -26,21 +26,26 @@ struct pollfd {
 
 class Server; // Forward declaration
 
-struct requestKv {
-    std::string key;
-    std::string value;
-};
+// struct requestKv {
+//     std::string key;
+//     std::string value;
+// };
 
 class Client {
 public:
 
-	enum client_status {
+	enum ParserState {
+		PARSING_HEADERS,
+		PARSING_CONTENT,
+		LOOKING_FOR_BOUNDARY
+	};
+
+	enum ClientStatus {
 		IDLE,
 		GETTING_HEADER,
 		HEADER_ALL_RECEIVED,
-		GETTING_BODY,       // Can work together
+		GETTING_BODY,
 		BODY_ALL_RECEIVED,
-		TREATING_REQUEST,   // Can work together
 		RESPONSE_READY,
 		SENDING_RESPONSE,
 		RESPONSE_SENT,
@@ -48,12 +53,15 @@ public:
 		TO_CLOSE,
 	};
 
-	enum treting_status
+	enum TreatmentStatus
 	{
-		awaiting_headers,
-		awaiting_body,
-		uploading,
-		waiting_body_chunk,
+		NOTHING,
+		AWAITING_HEADERS,
+		TREATING_HEADERS,
+		AWAITING_BODY,
+		TREATING_BODY,
+		DOWNLOADING_FILE,
+		DONE,
 	};
 
 	Client(int fd);
@@ -63,7 +71,7 @@ public:
 
 
 	void	error_response( const std::string& custom_page );
-  
+
 	void				getMethod( void );
 	void				postMethod( void );
 	void				deleteMethod( void );
@@ -83,22 +91,19 @@ public:
 
 public:
 	// It's all public because we use this more as a struct than a class
-	uint								  access_port;
-	sockaddr_in						client_addr;
+	uint								access_port;
+	sockaddr_in							client_addr;
 	socklen_t							client_len;
 	pollfd								poll_fd;
-    
-	std::map<std::string, std::string>  mainHeader;
-	bool								                multipart;
-  Http::Boundary						          boundary;
-  std::string						              buffer;
-	
-	Server*								              server;
-	ParserState							            state;
-	Http::Request						            request;
-	Http::Response						          response;
-	enum client_status					        connection_status;
-	bool								                to_close; // Close the conection after sending the whole
+
+	Server*								server;
+	ParserState							state;
+
+	Http::Request						request;
+	Http::Response						response;
+	enum ClientStatus					connection_status; // Status of the whole connection
+	enum TreatmentStatus				treatment_status;  // Specific stages of treatment
+	bool								to_close;         // Close the conection after sending the whole
 };
 
 #endif // CLIENT_EVENT_HPP

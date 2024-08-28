@@ -42,7 +42,10 @@ void	Cluster::cleanup()
 		delete it->second;
 	// Remove all servers
 	for (size_t i=0; i<_servers.size(); i++)
+	{
 		delete _servers[i];
+		_servers[i] = NULL;
+	}
 }
 
 bool	*Cluster::get_run_ptr()

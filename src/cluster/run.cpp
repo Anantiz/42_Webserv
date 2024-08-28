@@ -15,7 +15,9 @@ void	Cluster::handle_pollin(int i, Client *client)
 
 	if (client->server)
 		client->server->handle_client_request(*client);
-	else if (client->connection_status == Client::HEADER_ALL_RECEIVED)
+	else if (client->connection_status == Client::HEADER_ALL_RECEIVED \
+		|| client->connection_status == Client::GETTING_BODY \
+		|| client->connection_status == Client::BODY_ALL_RECEIVED)
 	{
 		match_request_serv(*client);
 		if (!client->server)

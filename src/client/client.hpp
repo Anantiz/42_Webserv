@@ -26,10 +26,10 @@ struct pollfd {
 
 class Server; // Forward declaration
 
-struct requestKv {
-    std::string key;
-    std::string value;
-};
+// struct requestKv {
+//     std::string key;
+//     std::string value;
+// };
 
 class Client {
 public:
@@ -40,13 +40,12 @@ public:
 		LOOKING_FOR_BOUNDARY
 	};
 
-	enum client_status {
+	enum ClientStatus {
 		IDLE,
 		GETTING_HEADER,
 		HEADER_ALL_RECEIVED,
-		GETTING_BODY,       // Can work together
+		GETTING_BODY,
 		BODY_ALL_RECEIVED,
-		TREATING_REQUEST,   // Can work together
 		RESPONSE_READY,
 		SENDING_RESPONSE,
 		RESPONSE_SENT,
@@ -63,10 +62,13 @@ public:
 
 	enum treting_status
 	{
-		awaiting_headers,
-		awaiting_body,
-		uploading,
-		waiting_body_chunk,
+		NOTHING,
+		AWAITING_HEADERS,
+		TREATING_HEADERS,
+		AWAITING_BODY,
+		TREATING_BODY,
+		DOWNLOADING_FILE,
+		DONE,
 	};
 
 	Client(int fd);

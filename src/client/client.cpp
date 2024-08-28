@@ -27,7 +27,7 @@ pollfd &Client::getPollfd() {
 
 bool	Client::parse_request()
 {
-	requestKv 	rKeyVal;
+	this->request.multipart = false;
 	bool		isHeader = true;
 	bool		isFirstLine = true;
 	char		buff[ 212992 ];

@@ -78,7 +78,9 @@ Client *Cluster::accept_or_create_client(int i)
 	if (client_it == _client_pool.end())
 	{
 		try {
-			client = new Client(_poll_fds[i].fd);
+			if (i > (int)_ports.size())
+				throw std::runtime_error("Invalid socket, client not in pool and using an invalid socket");
+			client = new Client(_poll_fds[i].fd, _ports[i]);
 			_logger.devLog("New client accepted with fd: " + utils::ito_str(client->getPollfd().fd));
 			_client_pool[client->getPollfd().fd] = client;
 			_poll_fds.push_back(client->getPollfd());

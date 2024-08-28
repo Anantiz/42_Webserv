@@ -5,15 +5,18 @@ bool	gnlEcoplus( std::string &str, std::string &result );
 enum Http::e_method	detectMethode( std::string &method );
 enum Http::e_protocol	detectProtocol( std::string &proto );
 
-Client::Client(int arg_poll_fd) : client_len(sizeof(client_addr))
+Client::Client(int arg_poll_fd, int access_port) : client_len(sizeof(client_addr))
 {
 	// struct s_client_event _data;
 	int cfd = accept(arg_poll_fd, (struct sockaddr *)&client_addr, &client_len);
 	if (cfd == -1)
 		throw std::runtime_error("accept");
+
 	this->poll_fd = (pollfd){cfd, POLLIN, 0};
-	connection_status = Client::IDLE;
-	to_close = false;
+	this->connection_status = Client::IDLE;
+	this->to_close = false;
+	this->server = NULL;
+	this->access_port = access_port; // To match the server
 }
 
 Client::~Client() {
@@ -31,7 +34,7 @@ bool	Client::parse_request()
 	// requestKv 	rKeyVal;
 	bool		isHeader = true;
 	// bool		isFirstLine = false;
-	char		buff[ 212992 ];
+	char		buff[ 212992 ] = {0};
 	pollfd 		pollFd = getPollfd();
 	// size_t		totalByte = 0;
 	this->state = LOOKING_FOR_BOUNDARY;

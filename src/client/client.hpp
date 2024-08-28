@@ -64,7 +64,7 @@ public:
 		DONE,
 	};
 
-	Client(int fd);
+	Client(int arg_poll_fd, int access_port);
 	~Client();
 
 	//response function
@@ -91,7 +91,7 @@ public:
 
 public:
 	// It's all public because we use this more as a struct than a class
-	uint								access_port;
+	int									access_port;
 	sockaddr_in							client_addr;
 	socklen_t							client_len;
 	pollfd								poll_fd;

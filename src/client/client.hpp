@@ -13,7 +13,7 @@
 #include <sys/socket.h> // socket
 #include <sys/poll.h>   // poll
 #include <netinet/in.h> // sockaddr_in
-
+#include <utils/logs.hpp>
 #include "http/http.hpp"
 
 /*
@@ -71,7 +71,7 @@ public:
 		DONE,
 	};
 
-	Client(int arg_poll_fd, int access_port);
+	Client( int arg_poll_fd, int );
 	~Client();
 
 	//response function
@@ -103,12 +103,15 @@ public:
 
 public:
 	// It's all public because we use this more as a struct than a class
+	logs								_logger;
 	int									access_port;
 	sockaddr_in							client_addr;
 	socklen_t							client_len;
 	pollfd								poll_fd;
 	Server*								server;
 	ParserState							state;
+	bool								isHeader;
+	bool								isFirstLine;
 
 	Http::Request						request;
 	Http::Response						response;

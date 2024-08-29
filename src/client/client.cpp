@@ -5,7 +5,7 @@ bool	gnlEcoplus( std::string &str, std::string &result );
 enum Http::e_method	detectMethode( std::string &method );
 enum Http::e_protocol	detectProtocol( std::string &proto );
 
-Client::Client(int arg_poll_fd, int access_port) : client_len(sizeof(client_addr))
+Client::Client(int arg_poll_fd, int arg_access_port) : client_len(sizeof(client_addr))
 {
 	// struct s_client_event _data;
 	int cfd = accept(arg_poll_fd, (struct sockaddr *)&client_addr, &client_len);
@@ -16,7 +16,10 @@ Client::Client(int arg_poll_fd, int access_port) : client_len(sizeof(client_addr
 	this->connection_status = Client::IDLE;
 	this->to_close = false;
 	this->server = NULL;
-	this->access_port = access_port; // To match the server
+	this->access_port = arg_access_port; // To match the server
+	this->isHeader = true;
+	this->isFirstLine = true;
+	this->request.buffer = "";
 }
 
 Client::~Client() {
@@ -30,33 +33,42 @@ pollfd &Client::getPollfd() {
 
 bool	Client::parse_request()
 {
-	this->request.multipart = false;
-	bool		isHeader = true;
-	bool		isFirstLine = true;
-	char		buff[ 212992 ] = {0};
+	std::cout << "one iter" << std::endl;
+	char		buff[ 4096 ] = {0};
 	pollfd 		pollFd = getPollfd();
+
+	if ( isHeader || isFirstLine )
+		this->connection_status = GETTING_HEADER;
+	this->request.multipart = false;
 	this->state = LOOKING_FOR_BOUNDARY;
 
 	ssize_t	bytes_read = recv(pollFd.fd, buff, sizeof(request.buffer) - 1, 0);
 	if (!bytes_read)
-		;
+		return false;
 	if ( bytes_read < 0 )
-		;
+		return false;
+	std::string s = "Client buffer is  = ";
+	// _logger.SdevLog( s + buff);
 	request.buffer += buff;
-	if ( isHeader || isFirstLine )
-		this->connection_status = GETTING_HEADER;
+	_logger.SdevLog( s + request.buffer );
 	/*
 	*	Wait to get all the header to parse it -> header ends with "/r/n/r/n"
 	*	Check if the content will be multipart
 	*	Then check how the request will end, depend of the header's value
 	*	Then handle the body
 	*/
-	if ( size_t endPos = ( request.buffer.find( "/r/n/r/n" ) != std::string::npos ) && isHeader )
+	size_t endpos = request.buffer.find("\r\n\r\n");
+	if (endpos != std::string::npos && isHeader)
 	{
+		std::string global_header = request.buffer.substr( 0, endpos );
+		_logger.SdevLog( s + global_header);
+		request.buffer.erase( 0, endpos + 4 );
+
 		isHeader = false;
 		std::string line;
 		while ( gnlEcoplus( request.buffer, line ) )
 		{
+			std::cout << "Header line : " << line << std::endl;
 			if ( isFirstLine )
 			{
 				parseFirstLine( line );

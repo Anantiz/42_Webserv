@@ -15,7 +15,9 @@ void	Cluster::handle_pollin(int i, Client *client)
 	}
 
 	if (client->server)
+	{
 		client->server->handle_client_request(*client);
+	}
 	else if (client->connection_status == Client::HEADER_ALL_RECEIVED \
 		|| client->connection_status == Client::GETTING_BODY \
 		|| client->connection_status == Client::BODY_ALL_RECEIVED)
@@ -26,8 +28,11 @@ void	Cluster::handle_pollin(int i, Client *client)
 			_logger.devLog("Client didn't send `host` header, forbidden in Http/1.1, sending 400");
 			client->response.status_code = 400;
 			client->error_response("");
+			// throw error
+			return ; // for now
 		}
 		_logger.devLog("Client request matched with server");
+		client->server->handle_client_request(*client);
 	}
 	else
 	{
@@ -131,6 +136,7 @@ int	Cluster::run()
 
 		for (size_t i = 0; i < _poll_fds.size(); i++)
 		{
+			std::cout << "NEW TURN OF GETTING DATA INTO BUFFER" << std::endl;
 			Client *client = NULL;
 			try {
 				client = accept_or_create_client(i);

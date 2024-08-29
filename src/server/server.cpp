@@ -115,13 +115,16 @@ size_t &Server::get_max_client_body_size()
 
 void Server::handle_client_request(Client &client)
 {
-    _logger.devLog("Handling client request on server:" + client.request.host);
+    _logger.devLog("Handling client request on server:" + client.server->get_names()[0]);
+    if (client.request.uri.empty()) // Cuz parsing just discard it
+        client.request.uri = "/";
     try {
         Location& l = match_best_location(client.request.uri);
         _logger.devLog("Matched location rooted at: " + l.get_root());
         l.build_request_response(client);
     } catch (Http::HttpException &e) {
         _logger.devLog("Caught HttpException: " + utils::ito_str(e.get_status_code()));
+        client.response.status_code = e.get_status_code();
         build_error_response(client, e.get_status_code());
         return ;
     } catch (std::exception &e) {
@@ -139,9 +142,9 @@ void Server::handle_client_request(Client &client)
 ██      ██   ██ ██   ████   ██   ██    ██    ███████
 */
 
-void Server::build_error_response(Client &client, int status_code)
+void Server::build_error_response(Client &client, int status_code) const
 {
-    std::map<int, std::string>::iterator cutom_error_page = _custom_error_pages.find(status_code);
+    std::map<int, std::string>::const_iterator cutom_error_page = _custom_error_pages.find(status_code);
     if (cutom_error_page == _custom_error_pages.end())
         client.error_response("");
     else
@@ -149,21 +152,22 @@ void Server::build_error_response(Client &client, int status_code)
 
 }
 
-Location &Server::match_best_location(std::string &uri)
+Location &Server::match_best_location(const std::string &uri) const
 {
-    Location *best_location = *_locations.end();
+    Location *best_location = NULL;
     size_t best_score = 0;
 
-    for (std::vector<Location *>::iterator it = _locations.begin(); it != _locations.end(); it++)
+    for (std::vector<Location *>::const_iterator it = _locations.begin(); it != _locations.end(); it++)
     {
         size_t score = (*it)->count_blocks(uri);
+        logs::SdevLog("Location Match Score with: " + uri + " is " + utils::anything_to_str(score));
         if (score > best_score)
         {
             best_score = score;
             best_location = *it;
         }
     }
-    if (best_location == *_locations.end())
+    if (best_location == NULL)
         throw Http::HttpException(404);
     return *best_location;
 }

@@ -132,13 +132,20 @@ std::pair<int, std::string> &Location::get_redirect()
 ██       ██████  ██████  ███████ ██  ██████
 */
 
-size_t  Location::count_blocks(std::string &uri)
+
+/*
+    Count the number of blocks in common with this location
+*/
+size_t  Location::count_blocks(const std::string &uri) const
 {
     size_t  count = 0;
     size_t  i = 0;
 
-    while (i < uri.size())
+    // Just learned today that cpp support english words for logical operators
+    while (i < uri.size() and i < _location_path.size())
     {
+        if (_location_path[i] != uri[i])
+            break;
         if (uri[i] == '/')
             count++;
         i++;
@@ -273,23 +280,23 @@ void Location::build_response_get_file(Client &client, std::string &local_path)
 
 void   Location::handle_get_request(Client &client)
 {
-    std::string        local_path = get_local_path(client.request.uri);
-    utils::e_path_type type = utils::what_is_this_path(local_path);
+    std::string        uri_asked_file = get_local_path(client.request.uri);
+    utils::e_path_type type = utils::what_is_this_path(uri_asked_file);
 
     switch (type)
     {
         case utils::FILE:
             logs::SdevLog("Get-File");
-            build_response_get_file(client, local_path);
+            build_response_get_file(client, uri_asked_file);
             break;
         case utils::DIRECTORY:
         {
             logs::SdevLog("Get-Dir");
-            build_response_get_dir(client, local_path);
+            build_response_get_dir(client, uri_asked_file);
             break;
         }
         default:
-            logs::SdevLog("Get: Not found");
+            logs::SdevLog("Get: Not found: " + uri_asked_file);
             throw Http::HttpException(404);
     }
 }

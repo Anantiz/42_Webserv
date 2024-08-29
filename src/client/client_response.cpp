@@ -5,7 +5,7 @@
 bool	Client::end_request( void )
 {
 	std::map<std::string, std::string>::iterator it = this->request.mainHeader.find("Content-Length");
-	if ( it == this->request.mainHeader.end() )
+	if ( it != this->request.mainHeader.end() )
 	{
 		std::stringstream ss(it->second);
 		ss >> this->request.body_size;
@@ -40,8 +40,10 @@ bool	Client::detect_end( void )
 			return end_multipart();
 		case ENCODING_CHUNK:
 			return end_encodingchunk();
+		default:
+			return true; // NOT SURE ABOUT THAT, NOT MY CODE
 	}
-	return false; // Default case I guess
+	return true; // Default case I guess
 }
 
 

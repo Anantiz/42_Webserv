@@ -62,7 +62,8 @@ public:
 
 	// Methods
 	void						build_request_response(Client &client);
-	size_t						count_blocks(std::string &uri);
+	size_t 						count_blocks(const std::string &uri) const;
+
 
 private:
 

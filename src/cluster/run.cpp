@@ -4,12 +4,12 @@
 
 void	Cluster::handle_pollin(int i, Client *client)
 {
-	char buff[4096] = {0};
+	// char buff[4096] = {0};
 	_logger.devLog("Pollin on fd:" + utils::ito_str(client->poll_fd.fd));
-	// client->parse_request();
-	ssize_t red = recv(client->poll_fd.fd, buff, 4096, 0);
-	_logger.devLog("Bytes read: " + utils::ito_str(red) + " content: " + std::string(buff));
-	client->connection_status = Client::TO_CLOSE;
+	client->parse_request();
+	// ssize_t red = recv(client->poll_fd.fd, buff, 4096, 0);
+	// _logger.devLog("Bytes read: " + utils::ito_str(red) + " content: " + std::string(buff));
+	// client->connection_status = Client::TO_CLOSE;
 	// Close invalid requests, or unexpected connection termination
 	if (client->connection_status == Client::TO_CLOSE) {
 		_logger.devLog("Error Killing conection: " + utils::ito_str(client->poll_fd.fd));
@@ -125,7 +125,8 @@ int	Cluster::run()
 			sleep(1);
 		#endif
 
-		_logger.devLog("\n_poll_fds length: " + utils::ito_str(_poll_fds.size()));
+		printf("\n");
+		_logger.devLog("_poll_fds length: " + utils::ito_str(_poll_fds.size()));
 		int events_count = poll(_poll_fds.data(), _poll_fds.size(), 0);
 		if (!events_count)
 			continue;
@@ -142,7 +143,7 @@ int	Cluster::run()
 
 		for (size_t i = 0; i < _poll_fds.size(); i++)
 		{
-			std::cout << "NEW TURN OF GETTING DATA INTO BUFFER" << std::endl;
+			// std::cout << "NEW TURN OF GETTING DATA INTO BUFFER" << std::endl;
 			Client *client = NULL;
 			try {
 				client = accept_or_create_client(i);

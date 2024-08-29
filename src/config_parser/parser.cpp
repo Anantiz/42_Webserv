@@ -118,7 +118,7 @@ size_t ConfigParser::server_block(const std::string &unit, size_t start)
             {
                 delete serv;
                 logger.errLog("Error parsing location block: " + std::string(e.what()));
-                break;
+                throw std::runtime_error("Unexpected end of file: location Server unclosed");
             }
         }
         else if (sub_directive == "") {
@@ -136,7 +136,10 @@ size_t ConfigParser::server_block(const std::string &unit, size_t start)
         }
     }
     try {
-        serv->check_mandatory_directives();
+        if (serv)
+            serv->check_mandatory_directives();
+        else
+            throw std::runtime_error("We messed up");
     } catch (std::exception &e) {
         delete serv;
         throw;
@@ -176,7 +179,10 @@ size_t ConfigParser::location_block(const std::string &unit, size_t start, Serve
         }
     }
     try {
-        location->check_mandatory_directives();
+        if (location)
+            location->check_mandatory_directives();
+        else
+            throw std::runtime_error("Unknown error");
     } catch (std::exception &e) {
         delete location;
         throw;

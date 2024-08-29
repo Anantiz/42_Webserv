@@ -43,13 +43,14 @@ void	Cluster::cleanup()
 	// Remove any remaining client
 	for (client_pool_it it = _client_pool.begin(); it != _client_pool.end(); it++) {
 		delete it->second;
+		it->second = NULL; // Cuz apparently it doubles-free otherwise
 	}
 
 	// Remove all servers
 	for (size_t i=0; i <_servers.size(); i++)
 	{
 		delete (Server *)(_servers[i]);
-		_servers[i] = NULL;
+		_servers[i] = NULL; // Cuz apparently it doubles-free otherwise
 	}
 }
 
@@ -76,7 +77,10 @@ void Cluster::init_server_ports()
 		std::vector<u_int16_t> p = s->get_ports();
 		for (size_t j=0; j < p.size(); j++){
 			if (!utils::in_ports(p[j], _ports))
+			{
+				_logger.devLog("Adding port: " + utils::ito_str(p[j]));
 				_ports.push_back(p[j]);
+			}
 		}
 	}
 	//#### --End of _ports vector initialization
@@ -97,9 +101,7 @@ void Cluster::init_server_ports()
 		uint16_t port = _ports[i];
 		std::vector< std::pair<std::string, Server* > >	vec_name_ptr;
 		pair_port_vec_nptr.first = port;              // Port
-		pair_port_vec_nptr.second = vec_name_ptr;     // Vector[ServerName-ServerPtr]
-		_servers_ports.push_back(pair_port_vec_nptr); // You can already push, the parser ensure there will
-		                                              // be at least one server listening to the port
+
 
 		/**
 		 * For each server in _servers, if the server is listening to the port
@@ -128,5 +130,16 @@ void Cluster::init_server_ports()
 				}
 			}
 		}
+		for (size_t itk=0; itk<vec_name_ptr.size(); itk++)
+		{
+			std::cout << vec_name_ptr[itk].first << " " << vec_name_ptr[itk].second << std::endl;
+		}
+		if (vec_name_ptr.size() == 0)
+		{
+			std::cout << "No server for port: " << port << " That's not normal" << std::endl;
+		}
+		pair_port_vec_nptr.second = vec_name_ptr;     // Vector[ServerName-ServerPtr]
+		_servers_ports.push_back(pair_port_vec_nptr); // You can already push, the parser ensure there will
+		                                              // be at least one server listening to the port
 	}
 }

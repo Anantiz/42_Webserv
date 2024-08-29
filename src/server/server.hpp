@@ -14,8 +14,6 @@
 #include "utils/logs.hpp"
 #include "utils/utils.hpp"
 
-#define DEFAULT_ERROR_PAGES_RELATIVE_TO_SERVER "../../http_error_pages/"
-
 class Server {
 private:
 	std::vector<u_int16_t>			_ports;                 // All ports to which the server listens to
@@ -53,8 +51,8 @@ public:
 
 private:
 
-	Location						&match_best_location(std::string &uri);
-	void 							build_error_response(Client &client, int status_code);
+	Location						&match_best_location(const std::string &uri) const;
+	void 							build_error_response(Client &client, int status_code) const;
 };
 
 #endif // SERVER_HPP

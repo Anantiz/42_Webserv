@@ -54,6 +54,7 @@ public:
 	};
 
 	enum EndRequest {
+		DONT,
 		CONTENT_LENGTH,
 		ENCODING_CHUNK,
 		CONNECTION,

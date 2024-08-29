@@ -7,14 +7,6 @@ const std::string	utils::ito_str(int i)
 	return ss.str();
 }
 
-template <typename T>
-const std::string utils::anything_to_str(T i)
-{
-	std::stringstream ss;
-	ss << i;
-	return ss.str();
-}
-
 int utils::str_to_int(const std::string &str, int &error)
 {
 	std::string str2 = str.substr(0, str.find_first_of(" \t\n\r"));

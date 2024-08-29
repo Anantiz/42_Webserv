@@ -13,7 +13,7 @@ void	Cluster::match_request_serv(Client &client) const
 		if (client.access_port == _servers_ports[p].first) {
 			// If no host is provided, use the first server
 			if (client.request.host.empty()) {
-				client.server = _servers_ports[p].second[0].second;
+				client.server = (((_servers_ports[p]).second)[0]).second;
 				return;
 			}
 			// RFC 2616, section 3.2.3, states that the host is case-insensitive

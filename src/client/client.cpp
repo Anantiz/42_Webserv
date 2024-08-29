@@ -2,7 +2,7 @@
 #include <string>
 
 bool	gnlEcoplus( std::string &str, std::string &result );
-enum Http::e_method	detectMethode( std::string &method );
+enum Http::e_method	detectMethod( std::string &method );
 enum Http::e_protocol	detectProtocol( std::string &proto );
 
 Client::Client(int arg_poll_fd, int arg_access_port) : client_len(sizeof(client_addr))
@@ -19,7 +19,12 @@ Client::Client(int arg_poll_fd, int arg_access_port) : client_len(sizeof(client_
 	this->access_port = arg_access_port; // To match the server
 	this->isHeader = true;
 	this->isFirstLine = true;
+	this->eor = DONT; // Default value
+
+	this->request.method = Http::GET;
 	this->request.buffer = "";
+	
+	this->response.status_code = 200; // Default , assume there was no error
 }
 
 Client::~Client() {
@@ -58,7 +63,7 @@ bool	Client::parse_request()
 	*	Then handle the body
 	*/
 	size_t endpos = request.buffer.find("\r\n\r\n");
-	if (endpos != std::string::npos && isHeader)
+	if (endpos != std::string::npos && isHeader) // This doesn't work so ParseFirstline is never called.
 	{
 		std::string global_header = request.buffer.substr( 0, endpos );
 		_logger.SdevLog( s + global_header);
@@ -101,6 +106,8 @@ bool	Client::parse_request()
 		this->connection_status = GETTING_BODY;
 		this->request.body += buff;
 		this->request.received_size += bytes_read;
+		// NOT  SURE ABOUT THAT<
+
 		if (detect_end())
 			this->connection_status = BODY_ALL_RECEIVED;
 	}
@@ -208,6 +215,7 @@ bool isAlpha( const std::string& str )
 
 bool	Client::parseFirstLine( std::string &line )
 {
+	logs::SdevLog("Parse First Line called");
 	size_t firstSpace = line.find(' ');
 	if (firstSpace == std::string::npos) return false;
 
@@ -223,8 +231,15 @@ bool	Client::parseFirstLine( std::string &line )
 
    	if (!isAlpha(methodstr) || !isAlpha(pathstr) || !isAlpha(protocolstr))
         return false;
-	this->request.method = detectMethode( methodstr );
+	logs::SdevLog("Parse First Line setting attributes");
+	this->request.method = detectMethod( methodstr );
 	this->request.uri = pathstr;
+	// SAFETY NET, LORIS FIX THIS BUG
+	// SAFETY NET, LORIS FIX THIS BUG
+	if (this->request.uri == "") // Actually that doesn't even work
+		this->request.uri = "/";
+	// SAFETY NET, LORIS FIX THIS BUG
+	// SAFETY NET, LORIS FIX THIS BUG
 	this->request.protocol = detectProtocol( protocolstr );
 	if (this->request.method == Http::UNKNOWN_METHOD || this->request.protocol == Http::FALSE_PROTOCOL)
 		return false;
@@ -247,7 +262,7 @@ enum Http::e_protocol	detectProtocol( std::string &proto )
 		return Http::Others;
 }
 
-enum Http::e_method	detectMethode( std::string &method )
+enum Http::e_method	detectMethod( std::string &method )
 {
 	if (method == "GET")
 		return Http::GET;

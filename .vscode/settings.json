@@ -71,6 +71,13 @@
 		"semaphore": "cpp",
 		"csignal": "cpp",
 		"any": "cpp",
-		"*.ipp": "cpp"
+		"*.ipp": "cpp",
+		"forward_list": "cpp",
+		"unordered_set": "cpp",
+		"hash_map": "cpp",
+		"hash_set": "cpp",
+		"slist": "cpp",
+		"shared_mutex": "cpp",
+		"valarray": "cpp"
 	}
 }

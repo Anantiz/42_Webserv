@@ -44,8 +44,10 @@ void	Cluster::remove_closed_conections()
 
 	// Now remove
 	while (_to_remove.size()) {
+		_logger.devLog("Removing fd: " + utils::ito_str(_poll_fds[_to_remove.back()].fd));
 		int i = _to_remove.back();
 
+		close(_poll_fds[i].fd);
 		_to_remove.pop_back();
 		_poll_fds.erase(_poll_fds.begin() + i);
 

@@ -9,6 +9,7 @@ void	Cluster::handle_pollin(int i, Client *client)
 
 	// Close invalid requests, or unexpected connection termination
 	if (client->connection_status == Client::TO_CLOSE) {
+		_logger.devLog("Error Killing conection: " + utils::ito_str(client->poll_fd.fd));
 		_to_remove.push_back(i);
 		return ;
 	}
@@ -26,6 +27,11 @@ void	Cluster::handle_pollin(int i, Client *client)
 			client->response.status_code = 400;
 			client->error_response("");
 		}
+		_logger.devLog("Client request matched with server");
+	}
+	else
+	{
+		_logger.devLog("Client request not ready to be matched with server");
 	}
 }
 
@@ -108,7 +114,7 @@ int	Cluster::run()
 			sleep(1);
 		#endif
 
-		int events_count = poll(_poll_fds.data(), _poll_fds.size(), 0); // 0 for non-blocking
+		int events_count = poll(_poll_fds.data(), _poll_fds.size(), 0);
 		if (!events_count)
 			continue;
 		if (events_count == -1)

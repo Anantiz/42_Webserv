@@ -319,6 +319,8 @@ void	Location::handle_post_request(Client &client)
 {
     (void)client;
     // logs::SdevLog("Post: Downloading file");
+    // if (download_client_file)
+        // download_client_file(client, get_local_path(client.request.uri));
     // logs::SdevLog("Post: To CGI");
 }
 

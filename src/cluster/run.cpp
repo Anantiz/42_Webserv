@@ -4,9 +4,12 @@
 
 void	Cluster::handle_pollin(int i, Client *client)
 {
-	_logger.devLog("Pollin:" + utils::ito_str(client->poll_fd.fd));
-	client->parse_request();
-
+	char buff[4096] = {0};
+	_logger.devLog("Pollin on fd:" + utils::ito_str(client->poll_fd.fd));
+	// client->parse_request();
+	ssize_t red = recv(client->poll_fd.fd, buff, 4096, 0);
+	_logger.devLog("Bytes read: " + utils::ito_str(red) + " content: " + std::string(buff));
+	client->connection_status = Client::TO_CLOSE;
 	// Close invalid requests, or unexpected connection termination
 	if (client->connection_status == Client::TO_CLOSE) {
 		_logger.devLog("Error Killing conection: " + utils::ito_str(client->poll_fd.fd));
@@ -78,7 +81,9 @@ Client *Cluster::accept_or_create_client(int i)
 {
 	Client *client = NULL;
 
-	_logger.devLog("New Event on socket " + utils::ito_str(_poll_fds[i].fd));
+	if (_poll_fds[i].revents == 0)
+		return NULL;
+	_logger.devLog("Event on socket with fd: " + utils::ito_str(_poll_fds[i].fd));
 	client_pool_it client_it = _client_pool.find(_poll_fds[i].fd);
 
 	if (client_it == _client_pool.end())
@@ -98,7 +103,7 @@ Client *Cluster::accept_or_create_client(int i)
 	else
 	{
 		client = client_it->second;
-		_logger.devLog("Client already in pool with fd: " + utils::ito_str(client->getPollfd().fd));
+		_logger.devLog("Reusing client from pool with fd: " + utils::ito_str(client->getPollfd().fd));
 	}
 	return client;
 }
@@ -106,6 +111,7 @@ Client *Cluster::accept_or_create_client(int i)
 #define DEBUG_PROD
 int	Cluster::run()
 {
+	_logger.infoLog("Cluster started");
 	int error = 0;
 
 	while (_run) {
@@ -114,6 +120,7 @@ int	Cluster::run()
 			sleep(1);
 		#endif
 
+		_logger.devLog("\n_poll_fds length: " + utils::ito_str(_poll_fds.size()));
 		int events_count = poll(_poll_fds.data(), _poll_fds.size(), 0);
 		if (!events_count)
 			continue;
@@ -125,7 +132,6 @@ int	Cluster::run()
 			error++;
 			continue;
 		}
-		_logger.devLog("\n");
 		_logger.devLog("Clients count: " + utils::ito_str(_client_count));
 		_logger.devLog("Events count: " + utils::ito_str(events_count));
 
@@ -136,9 +142,9 @@ int	Cluster::run()
 				client = accept_or_create_client(i);
 			} catch (const std::exception &e) {
 				_logger.debugLog("Error client conection: " + std::string(e.what()));
-				return 1;
+				continue;
 			}
-			if (!client)
+			if (!client || i < _ports.size())
 				continue;
 			if (_poll_fds[i].revents & POLLIN)
 				handle_pollin(i, client);

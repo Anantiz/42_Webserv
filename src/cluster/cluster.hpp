@@ -89,7 +89,7 @@ private:
 	void	handle_pollin(int i, Client *client);
 	void	handle_pollout(int i, Client *client);
 	void	handle_anything_else(int i, Client *client);
-	void	edit_pollfd(int i, short events);
+	void	edit_pollfd(int i, short events, Client *client);
 	void	remove_closed_conections();
 };
 

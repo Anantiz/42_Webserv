@@ -23,7 +23,7 @@ Client::Client(int arg_poll_fd, int arg_access_port) : client_len(sizeof(client_
 
 	this->request.method = Http::GET;
 	this->request.buffer = "";
-	
+	this->response_status = NONE;
 	this->response.status_code = 200; // Default , assume there was no error
 }
 
@@ -38,8 +38,8 @@ pollfd &Client::getPollfd() {
 
 bool	Client::parse_request()
 {
-	std::cout << "one iter" << std::endl;
-	char		buff[ 4096 ] = {0};
+	// std::cout << "one iter" << std::endl;
+	char		buff[ 40096 ] = {0};
 	pollfd 		pollFd = getPollfd();
 
 	if ( isHeader || isFirstLine )

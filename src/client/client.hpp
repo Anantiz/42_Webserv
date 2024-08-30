@@ -72,6 +72,15 @@ public:
 		DONE,
 	};
 
+	enum ResponseStatus {
+		NONE,
+		SENDING_HEADER,
+		HEADER_SENT,
+		SENDING_FROM_FILE,
+		SENDING_FROM_BUFFER,
+		DONE_SENDING,
+	};
+
 	Client( int arg_poll_fd, int );
 	~Client();
 
@@ -101,6 +110,9 @@ public:
 	bool				end_multipart( void );
 	bool				end_connection( void );
 
+	void    			finalize_response( void );
+
+	void    			cleanup_for_next_request( void );
 
 public:
 	// It's all public because we use this more as a struct than a class
@@ -119,6 +131,7 @@ public:
 	enum EndRequest						eor;
 	enum ClientStatus					connection_status;
 	enum TreatingStatus					treating_status;
+	enum ResponseStatus					response_status;
 	bool								to_close; // Close the conection after sending the whole
 };
 

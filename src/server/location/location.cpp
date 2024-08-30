@@ -251,7 +251,9 @@ void   Location::build_response_get_dir(Client &client, std::string &local_path)
                 client.response.file_path_to_send = index_path;
                 client.response.body = "";
                 client.response.status_code = 200;
-                client.response.headers += "Content-Type: application/octet-stream\r\n";
+	            client.response.headers = Http::get_status_string(200);
+                client.response.headers += "Content-Type: text/html\r\n";
+                client.response.headers += utils::get_file_length_header(index_path);
                 return ;
             }
         }
@@ -264,7 +266,9 @@ void   Location::build_response_get_dir(Client &client, std::string &local_path)
 	client.response.file_path_to_send = "";
 	client.response.body = dir_listing_content(local_path);
 	client.response.status_code = 200;
-	client.response.body_size = client.response.body.size();
+	client.response.headers = Http::get_status_string(200);
+
+    client.response.body_size = client.response.body.size();
 	client.response.headers = \
 		"Content-Type: text/html\r\n"\
 		"Content-Length: " + utils::ito_str(client.response.body_size) + "\r\n";
@@ -274,8 +278,11 @@ void Location::build_response_get_file(Client &client, std::string &local_path)
 {
 	client.response.file_path_to_send = local_path;
 	client.response.body = "";
-	client.response.status_code = 200;
-	client.response.headers = "Content-Type: application/octet-stream\r\n";
+
+    client.response.status_code = 200;
+	client.response.headers = Http::get_status_string(200);
+    std::string content_type = "text/html"; // FOR NOW
+    client.response.headers += "Content-Type:" + content_type + "\r\n";
 }
 
 void   Location::handle_get_request(Client &client)
@@ -288,11 +295,13 @@ void   Location::handle_get_request(Client &client)
         case utils::FILE:
             logs::SdevLog("Get-File");
             build_response_get_file(client, uri_asked_file);
+            client.connection_status = Client::RESPONSE_READY;
             break;
         case utils::DIRECTORY:
         {
             logs::SdevLog("Get-Dir");
             build_response_get_dir(client, uri_asked_file);
+            client.connection_status = Client::RESPONSE_READY;
             break;
         }
         default:

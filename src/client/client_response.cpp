@@ -1,7 +1,6 @@
 #include "client.hpp"
 #include <string>
 
-
 bool	Client::end_request( void )
 {
 	std::map<std::string, std::string>::iterator it = this->request.mainHeader.find("Content-Length");
@@ -82,7 +81,3 @@ LORIS:
 	Le fiechier client_response.cpp ne gere meme pas la response, wtf ????
 
 */
-void	Client::send_response( void )
-{
-	// TODO
-}

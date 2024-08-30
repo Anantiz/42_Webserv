@@ -52,6 +52,8 @@ namespace utils
 	std::string 			as_lower(const std::string &str);
 	const std::string		build_error_page(int error);
 
+	const std::string		get_file_length_header(const std::string& file_path);
+
 } // namespace utils
 
 #endif // UTILS_HPP

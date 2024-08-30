@@ -13,7 +13,6 @@ void	Cluster::handle_pollin(int i, Client *client)
 	// Close invalid requests, or unexpected connection termination
 	if (client->connection_status == Client::TO_CLOSE) {
 		_logger.devLog("Error Killing conection: " + utils::ito_str(client->poll_fd.fd));
-		_to_remove.push_back(i);
 		return ;
 	}
 
@@ -31,42 +30,28 @@ void	Cluster::handle_pollin(int i, Client *client)
 			_logger.devLog("Client didn't send `host` header, forbidden in Http/1.1, sending 400");
 			client->response.status_code = 400;
 			client->error_response("");
-			// throw error
-			return ; // for now
+			client->connection_status = Client::RESPONSE_READY;
+			client->to_close = true; // Close once answer is sent
+
+		} else {
+			_logger.devLog("Client request matched with server");
+			client->server->handle_client_request(*client);
 		}
-		_logger.devLog("Client request matched with server");
-		client->server->handle_client_request(*client);
 	}
 	else
-	{
 		_logger.devLog("Client request not ready to be matched with server");
+
+	if (client->connection_status == Client::RESPONSE_READY) {
+		edit_pollfd(i, POLLOUT, client);
 	}
 }
 
 void	Cluster::handle_pollout(int i, Client *client)
 {
+	(void)i;
 	_logger.devLog("Pollout:" + utils::ito_str(client->poll_fd.fd));
-	if (client->connection_status == Client::SENDING_RESPONSE)
-	{
+	if (client->connection_status == Client::RESPONSE_READY or client->connection_status == Client::SENDING_RESPONSE)
 		client->send_response();
-		if (client->connection_status == Client::RESPONSE_SENT)
-		{
-			if (client->to_close)
-			{
-				client->connection_status = Client::TO_CLOSE;
-				_to_remove.push_back(i);
-			}
-			else
-				client->connection_status = Client::KEEP_ALIVE;
-		}
-	}
-
-	// Technically, we should never reach this point, but just in case
-	if (client->connection_status == Client::TO_CLOSE)
-	{
-		_logger.devLog("Run.cpp Handle_pollout: Closing connection, Shouldn't be here");
-		_to_remove.push_back(i);
-	}
 	return ;
 }
 
@@ -113,7 +98,7 @@ Client *Cluster::accept_or_create_client(int i)
 	return client;
 }
 
-#define DEBUG_PROD
+// #define DEBUG_PROD
 int	Cluster::run()
 {
 	_logger.infoLog("Cluster started");
@@ -122,11 +107,11 @@ int	Cluster::run()
 	while (_run) {
 		// Make this loop CPU-friendly for production
 		#ifdef DEBUG_PROD
-			sleep(1);
+			usleep(50000);
 		#endif
 
-		printf("\n");
-		_logger.devLog("_poll_fds length: " + utils::ito_str(_poll_fds.size()));
+		// printf("\n");
+		// _logger.devLog("_poll_fds length: " + utils::ito_str(_poll_fds.size()));
 		int events_count = poll(_poll_fds.data(), _poll_fds.size(), 0);
 		if (!events_count)
 			continue;
@@ -159,6 +144,15 @@ int	Cluster::run()
 				handle_pollout(i, client);
 			if (_poll_fds[i].revents & ~(POLLIN | POLLOUT))
 				handle_anything_else(i, client);
+
+			if (client->connection_status == Client::TO_CLOSE) {
+				_logger.devLog("Closing client: " + utils::ito_str(client->getPollfd().fd));
+				_to_remove.push_back(i);
+			}
+			else if (client->connection_status == Client::KEEP_ALIVE) {
+				edit_pollfd(i, POLLIN, client);
+				client->connection_status = Client::IDLE;
+			}
 		}
 		remove_closed_conections(); // Remove after the loop to avoid iterator invalidation
 		error = 0; // Error where resolved if we reached this point

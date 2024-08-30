@@ -61,7 +61,8 @@ void	Cluster::remove_closed_conections()
 }
 
 
-void	Cluster::edit_pollfd(int i, short events)
+void	Cluster::edit_pollfd(int i, short events, Client *client)
 {
 	_poll_fds[i].events = events;
+	client->poll_fd.events = events; // This data is useless, but just keep it consistent
 }

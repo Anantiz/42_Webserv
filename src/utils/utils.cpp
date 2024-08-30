@@ -211,3 +211,14 @@ std::string utils::as_lower(const std::string &str)
 		ret[i] = std::tolower(ret[i]);
 	return ret;
 }
+
+const std::string		utils::get_file_length_header(const std::string& file_path)
+{
+	struct stat file_stat;
+	if (::stat(file_path.c_str(), &file_stat))
+		return "";
+	std::string ret = "Content-Length: ";
+	ret += utils::ito_str(file_stat.st_size);
+	ret += "\r\n";
+	return ret;
+}

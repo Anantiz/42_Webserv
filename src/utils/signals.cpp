@@ -17,4 +17,5 @@ void	signal_handler(void)
 {
 	signal(SIGINT, signal_handler_sigint);
 	signal(SIGQUIT, signal_handler_sigquit);
+	signal(SIGPIPE, SIG_IGN);
 }

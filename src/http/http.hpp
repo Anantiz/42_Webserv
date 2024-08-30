@@ -18,18 +18,18 @@ namespace Http {
 
 
 	enum e_method {
+		UNKNOWN_METHOD = 0b0,
 		GET = 0b1,
 		POST = 0b10,
 		DELETE = 0b100,
-		UNKNOWN_METHOD = 0b0,
 	};
 
 	enum e_protocol {
 		Others,
+		FALSE_PROTOCOL = 0b0,
 		HTTP_1_0 = 0b1,
 		HTTP_1_1 = 0b10,
 		HTTP_2_0 = 0b100,
-		FALSE_PROTOCOL = 0b0,
 	};
 
 	struct Boundary
@@ -69,6 +69,11 @@ namespace Http {
 		int									file_fd;
 		std::string							body; // Might be a char* instead, if using cgi(reduces overhead)
 		size_t								body_size;
+
+		// File buffer
+		std::string							buffer;
+		ssize_t								last_read;
+		size_t								offset;
 	};
 
   class HttpException: public std::exception

@@ -59,6 +59,7 @@ public:
 	std::string					&get_root();
 	std::string					&get_upload_dir();
 	std::pair<int, std::string>	&get_redirect();
+	std::string					&get_location_path();
 
 	// Methods
 	void						build_request_response(Client &client);

@@ -38,6 +38,7 @@ pollfd &Client::getPollfd() {
 
 bool	Client::parse_request()
 {
+	this->request.method = Http::GET; // temporary
 	// std::cout << "one iter" << std::endl;
 	char		buff[ 40096 ] = {0};
 	pollfd 		pollFd = getPollfd();
@@ -62,6 +63,7 @@ bool	Client::parse_request()
 	*	Then check how the request will end, depend of the header's value
 	*	Then handle the body
 	*/
+	// isHeader = true;
 	size_t endpos = request.buffer.find("\r\n\r\n");
 	if (endpos != std::string::npos && isHeader) // This doesn't work so ParseFirstline is never called.
 	{

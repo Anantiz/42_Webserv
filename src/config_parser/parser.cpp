@@ -151,6 +151,12 @@ size_t ConfigParser::server_block(const std::string &unit, size_t start)
 size_t ConfigParser::location_block(const std::string &unit, size_t start, Server *serv)
 {
     std::string location_path = utils::read_path(unit, start, start);
+    if (location_path == "")
+        throw std::runtime_error("location: Unexpected end of file");
+    if (location_path[0] != '/')
+        throw std::runtime_error("location: Invalid path, path must start with '/': " + location_path);
+    if (location_path[location_path.size() - 1] != '/')
+        location_path += "/";
     logger.devLog("\t\tLocation path: " + location_path);
     start = block_open_bracket(unit, start);
 

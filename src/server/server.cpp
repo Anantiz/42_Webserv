@@ -48,6 +48,22 @@ void Server::set_protocol(Http::e_protocol p)
 
 void Server::add_location(Location *l)
 {
+    // 1. Check duplicates
+    // 2. Sort by path length
+
+    for (std::vector<Location *>::iterator it = _locations.begin(); it != _locations.end(); it++)
+    {
+        if ((*it)->get_location_path() == l->get_location_path())
+            throw std::runtime_error("Duplicate location: " + l->get_location_path());
+    }
+    for (std::vector<Location *>::iterator it = _locations.begin(); it != _locations.end(); it++)
+    {
+        if ((*it)->get_location_path().size() > l->get_location_path().size())
+        {
+            _locations.insert(it, l);
+            return ;
+        }
+    }
     _locations.push_back(l);
 }
 
@@ -157,10 +173,11 @@ Location &Server::match_best_location(const std::string &uri) const
     Location *best_location = NULL;
     size_t best_score = 0;
 
+    logs::SdevLog("Matching location for uri: " + uri);
     for (std::vector<Location *>::const_iterator it = _locations.begin(); it != _locations.end(); it++)
     {
         size_t score = (*it)->count_blocks(uri);
-        logs::SdevLog("Location Match Score with: " + uri + " is " + utils::anything_to_str(score));
+        logs::SdevLog("Location Match Score with: " + (*it)->get_location_path() + " is " + utils::anything_to_str(score));
         if (score > best_score)
         {
             best_score = score;

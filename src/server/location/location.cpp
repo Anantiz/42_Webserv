@@ -124,6 +124,11 @@ std::pair<int, std::string> &Location::get_redirect()
     return _redirect;
 }
 
+std::string &Location::get_location_path()
+{
+    return _location_path;
+}
+
 /*
 ██████  ██    ██ ██████  ██      ██  ██████
 ██   ██ ██    ██ ██   ██ ██      ██ ██
@@ -278,10 +283,11 @@ void Location::build_response_get_file(Client &client, std::string &local_path)
 {
 	client.response.file_path_to_send = local_path;
 	client.response.body = "";
-
     client.response.status_code = 200;
 	client.response.headers = Http::get_status_string(200);
     std::string content_type = "text/html"; // FOR NOW
+    if (local_path.find(".png") != std::string::npos)
+        content_type = "image/png";
     client.response.headers += "Content-Type:" + content_type + "\r\n";
 }
 

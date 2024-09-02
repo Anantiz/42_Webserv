@@ -55,7 +55,7 @@ bool	Client::parse_request()
 		return false;
 	std::string s = "Client buffer is  = ";
 	// _logger.SdevLog( s + buff);
-	request.buffer += buff;
+	request.buffer.append(buff);
 	_logger.SdevLog( s + request.buffer );
 	/*
 	*	Wait to get all the header to parse it -> header ends with "/r/n/r/n"
@@ -67,6 +67,7 @@ bool	Client::parse_request()
 	size_t endpos = request.buffer.find("\r\n\r\n");
 	if (endpos != std::string::npos && isHeader) // This doesn't work so ParseFirstline is never called.
 	{
+		std::cout << "alalalalalalalalalalalal" << std::endl;
 		std::string global_header = request.buffer.substr( 0, endpos );
 		_logger.SdevLog( s + global_header);
 		request.buffer.erase( 0, endpos + 4 );
@@ -96,6 +97,7 @@ bool	Client::parse_request()
 	*/
 	if ( !isHeader && this->request.multipart )
 	{
+		std::cout << "alalalalalalalalalalalal" << std::endl;
 		std::pair<std::map<std::string, std::string>, std::string>	headBod;
 		parseChunk();
 	}
@@ -105,6 +107,7 @@ bool	Client::parse_request()
 	*/
 	if ( !isHeader && !this->request.multipart )
 	{
+		std::cout << "alalalalalalalalalalalal" << std::endl;
 		this->connection_status = GETTING_BODY;
 		this->request.body += buff;
 		this->request.received_size += bytes_read;

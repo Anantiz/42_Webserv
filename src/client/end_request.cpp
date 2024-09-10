@@ -1,7 +1,7 @@
 #include "client.hpp"
 #include <string>
 
-bool	Client::end_request( void )
+bool	Client::set_end_request( void )
 {
 	std::map<std::string, std::string>::iterator it = this->request.mainHeader.find("Content-Length");
 	if ( it != this->request.mainHeader.end() )
@@ -24,6 +24,7 @@ bool	Client::end_request( void )
 	{
 		this->eor = MULTIPART;
 	}
+	this->connection_status = GETTING_BODY;
 	return ( true );
 }
 
@@ -39,8 +40,6 @@ bool	Client::detect_end( void )
 			return end_multipart();
 		case ENCODING_CHUNK:
 			return end_encodingchunk();
-		default:
-			return true; // NOT SURE ABOUT THAT, NOT MY CODE
 	}
 	return true; // Default case I guess
 }
@@ -75,9 +74,3 @@ bool	Client::end_multipart( void )
 		return ( true );
 	return ( false );
 }
-
-/*
-LORIS:
-	Le fiechier client_response.cpp ne gere meme pas la response, wtf ????
-
-*/

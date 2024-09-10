@@ -52,6 +52,13 @@ public:
 		KEEP_ALIVE,
 		TO_CLOSE,
 	};
+	
+	enum Boundarystatus {
+		GETTING_HEADER_B,
+		HEADER_ALL_RECEIVED_B,
+		GETTING_BODY_B,
+		BODY_ALL_RECEIVED_B
+	};
 
 	enum EndRequest {
 		DONT,
@@ -85,6 +92,24 @@ public:
 	~Client();
 
 	//response function
+	//new clean parsing
+
+	void				receive_request_data();
+	//Handle header
+	bool				get_header();
+	bool				parse_header();
+	bool				parseFirstLine();
+	void				parsefirstheader();
+	std::string			getFirstLine();
+	bool				extract_headers( std::string &line );
+	void				set_request_end_type();				
+	bool				set_end_request( void );
+	void				set_header_info();
+
+	//Handle content
+	bool				parse_content();
+	void				parseChunk();
+	void				parseBody();
 
 
 	void				error_response( const std::string& custom_page );
@@ -93,7 +118,6 @@ public:
 	void				postMethod( void );
 	void				deleteMethod( void );
 	pollfd				&getPollfd();
-	void				parseChunk();
 	void				findBoundary( std::string &line );
 	void				parseHeaders( std::string &line, std::map<std::string, std::string> &headers );
 	void				parseContent( std::string &line );
@@ -102,10 +126,6 @@ public:
 	bool				detect_end( void );
 	bool				parse_request();
 	void				send_response();
-	bool				parseFirstLine( std::string &line );
-	bool				checkline( std::string &line, std::map<std::string, \
-	 					std::string>	&intermheader );
-	bool				end_request( void );
 	bool				end_encodingchunk( void );
 	bool				end_multipart( void );
 	bool				end_connection( void );
@@ -125,7 +145,8 @@ public:
 	ParserState							state;
 	bool								isHeader;
 	bool								isFirstLine;
-
+	char								buff[4096];
+	std::vector<Http::Request>			request_boundary;
 	Http::Request						request;
 	Http::Response						response;
 	enum EndRequest						eor;

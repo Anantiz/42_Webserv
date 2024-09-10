@@ -25,7 +25,7 @@ namespace Http {
 	};
 
 	enum e_protocol {
-		Others,
+		Others = 5,
 		FALSE_PROTOCOL = 0b0,
 		HTTP_1_0 = 0b1,
 		HTTP_1_1 = 0b10,

@@ -4,12 +4,12 @@
 
 void	Cluster::handle_pollin(int i, Client *client)
 {
-	char buff[4096] = {0};
-	// _logger.devLog("Pollin on fd:" + utils::ito_str(client->poll_fd.fd));
+	// char buff[4096] = {0};
+	_logger.devLog("Parse request called on fd:" + utils::ito_str(client->poll_fd.fd));
 	client->parse_request();
-	ssize_t red = recv(client->poll_fd.fd, buff, 4096, 0);
+	// ssize_t red = recv(client->poll_fd.fd, buff, 4096, 0);
 	// _logger.devLog("Bytes read: " + utils::ito_str(red) + " content: " + std::string(buff));
-	client->connection_status = Client::TO_CLOSE;
+	// client->connection_status = Client::TO_CLOSE;
 	// Close invalid requests, or unexpected connection termination
 	if (client->connection_status == Client::TO_CLOSE) {
 		_logger.devLog("Error Killing conection: " + utils::ito_str(client->poll_fd.fd));

@@ -15,6 +15,7 @@
 #include <netinet/in.h> // sockaddr_in
 #include <utils/logs.hpp>
 #include "http/http.hpp"
+#include <cstring>  // for strlen
 
 /*
 struct pollfd {
@@ -23,6 +24,9 @@ struct pollfd {
             short revents;  --> returned events
         };
 */
+
+bool	gnlEcoplus( std::string &str, std::string &result );
+
 
 class Server; // Forward declaration
 
@@ -57,7 +61,8 @@ public:
 		GETTING_HEADER_B,
 		HEADER_ALL_RECEIVED_B,
 		GETTING_BODY_B,
-		BODY_ALL_RECEIVED_B
+		BODY_ALL_RECEIVED_B,
+		SEARCH_BOUNDARY_FIRST_LINE
 	};
 
 	enum EndRequest {
@@ -93,7 +98,7 @@ public:
 
 	//response function
 	//new clean parsing
-
+	void				print_request();
 	void				receive_request_data();
 	//Handle header
 	bool				get_header();
@@ -105,12 +110,21 @@ public:
 	void				set_request_end_type();				
 	bool				set_end_request( void );
 	void				set_header_info();
-
+	void				clean_first_boundary_b();
+		
 	//Handle content
 	bool				parse_content();
 	void				parseChunk();
 	void				parseBody();
-
+	//multipart content
+	enum Boundarystatus	status_switch( std::string &line );
+	bool				get_header_b();
+	bool				parse_header_b();
+	bool				parseFirstLine_b();
+	void				parsefirstheader_b();
+	std::string			getFirstLine_b();
+	bool				extract_headers_b( std::string &line );
+	void				parse_content_b();
 
 	void				error_response( const std::string& custom_page );
 	bool				end_contentlength( void );
@@ -136,6 +150,7 @@ public:
 
 public:
 	// It's all public because we use this more as a struct than a class
+	Http::Request						b_request;
 	logs								_logger;
 	int									access_port;
 	sockaddr_in							client_addr;
@@ -145,12 +160,14 @@ public:
 	ParserState							state;
 	bool								isHeader;
 	bool								isFirstLine;
+	bool								isFirstLine_b;
 	char								buff[4096];
 	std::vector<Http::Request>			request_boundary;
 	Http::Request						request;
 	Http::Response						response;
 	enum EndRequest						eor;
 	enum ClientStatus					connection_status;
+	enum Boundarystatus					b_connection_status;
 	enum TreatingStatus					treating_status;
 	enum ResponseStatus					response_status;
 	bool								to_close; // Close the conection after sending the whole

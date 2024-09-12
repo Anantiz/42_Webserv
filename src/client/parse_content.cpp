@@ -1,15 +1,20 @@
 #include "client.hpp"
-#include <cstring>  // for strlen
 
-void				Client::parseChunk()
+void				Client::clean_first_boundary_b()
 {
-	Http::Request	b_request;
-	size_t end_line_pos = this->request.buffer.find( "\r\n" );
-	if ( end_line_pos != std::string::npos )
+	size_t endpos = this->request.buffer.find( "\r\n" );
+	if ( endpos != std::string::npos )
 	{
-		//detect the limiter -> handle header and content like usual (redo all function for multi)
-		this->request_boundary.push_back(b_request);
+		std::string boundary = this->request.buffer.substr( 0, endpos );
+		if ( boundary == this->request.boundary.startDelimiter )
+		{
+		_logger.SdevLog( "Delimiter found start partsing header" );
+
+			this->b_connection_status = GETTING_HEADER_B;
+			this->request.buffer.erase( 0, endpos + 2 );
+		}
 	}
+	//else error
 }
 
 void				Client::parseBody()
@@ -27,6 +32,7 @@ void				Client::parseBody()
 	{
 		_logger.SdevLog( "End detected" );
 		this->connection_status = BODY_ALL_RECEIVED;
+		print_request();
 	}
 }
 

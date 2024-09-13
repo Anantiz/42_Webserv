@@ -1,6 +1,6 @@
 CXX:=c++
 INCLUDES:= -I./src
-CPPFLAGS:= -std=c++98 -Wall -Wextra -Wshadow $(INCLUDES) -g3
+CPPFLAGS:= -std=c++98 -Wall -Wextra -Werror -Wshadow $(INCLUDES) -g3
 # CPPFLAGS+= -fsanitize=address
 # -Werror //
 

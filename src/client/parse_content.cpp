@@ -37,7 +37,7 @@ void				Client::parseBody()
 }
 
 
-bool				Client::parse_content()
+void				Client::parse_content()
 {
 	_logger.SdevLog( "Start parsing the content (select chunk of default)" );
 	if (this->eor == MULTIPART)

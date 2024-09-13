@@ -83,7 +83,7 @@ void	Client::boundaryParser()
 	}
 }
 
-bool	Client::parse_header_b()
+void	Client::parse_header_b()
 {
 	parsefirstheader_b();
 }
@@ -102,7 +102,7 @@ bool	Client::get_header_b()
 	return true;
 }
 
-bool	Client::extract_headers_b( std::string &line )
+void	Client::extract_headers_b( std::string &line )
 {
 	size_t pos;
 	pos = line.find( ':' );
@@ -157,18 +157,18 @@ void	Client::print_request()
 	if ( this->request.multipart )
 	{
 		_logger.SdevLog( "----------------------- MULTIPART -----------------------");
-		std::vector<Http::Request>::iterator	it = this->request_boundary.begin();
-		while ( it !=  this->request_boundary.end() )
+		std::vector<Http::Request>::iterator	iit = this->request_boundary.begin();
+		while ( iit !=  this->request_boundary.end() )
 		{
 			_logger.SdevLog( "----------------------- NEW PART -----------------------");
-			std::map<std::string, std::string>::iterator	itt = it->mainHeader.begin();
-			while ( itt != it->mainHeader.end() )
+			std::map<std::string, std::string>::iterator	itt = iit->mainHeader.begin();
+			while ( itt != iit->mainHeader.end() )
 			{
 				_logger.SdevLog( "KEY :" + utils::anything_to_str( itt->first ) + " || VALUE :" + utils::anything_to_str( itt->second ) );
 				itt++;
 			}
-			_logger.SdevLog( "BODY :" + utils::anything_to_str( it->body ) );
-			it++;
+			_logger.SdevLog( "BODY :" + utils::anything_to_str( iit->body ) );
+			iit++;
 		}
 	}
 	else

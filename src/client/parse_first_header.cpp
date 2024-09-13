@@ -37,15 +37,15 @@ std::string		Client::getFirstLine()
 	return ret;
 }
 
-bool	Client::parseFirstLine()
+void	Client::parseFirstLine()
 {
 	std::string first_line = getFirstLine();
 
 	size_t firstSpace = first_line.find(' ');
-	if (firstSpace == std::string::npos) return false;
+	// if (firstSpace == std::string::npos) return false;
 
     size_t secondSpace = first_line.find(' ', firstSpace + 1);
-    if (secondSpace == std::string::npos) return false;
+    // if (secondSpace == std::string::npos) return false;
 
 	std::string methodstr = first_line.substr(0, firstSpace);
     std::string pathstr = first_line.substr(firstSpace + 1, secondSpace - firstSpace - 1);
@@ -76,7 +76,7 @@ bool	gnlEcoplus( std::string &str, std::string &result )
 	}
 	return false;
 }
-bool	Client::extract_headers( std::string &line )
+void	Client::extract_headers( std::string &line )
 {
 	size_t pos;
 	pos = line.find( ':' );

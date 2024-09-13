@@ -102,41 +102,29 @@ public:
 	void				receive_request_data();
 	//Handle header
 	bool				get_header();
-	bool				parse_header();
-	bool				parseFirstLine();
+	void				parse_header();
+	void				parseFirstLine();
 	void				parsefirstheader();
 	std::string			getFirstLine();
-	bool				extract_headers( std::string &line );
-	void				set_request_end_type();				
+	void				extract_headers( std::string &line );
 	bool				set_end_request( void );
-	void				set_header_info();
 	void				clean_first_boundary_b();
 		
 	//Handle content
-	bool				parse_content();
+	void				parse_content();
 	void				parseChunk();
 	void				parseBody();
 	//multipart content
-	enum Boundarystatus	status_switch( std::string &line );
 	bool				get_header_b();
-	bool				parse_header_b();
-	bool				parseFirstLine_b();
+	void				parse_header_b();
 	void				parsefirstheader_b();
-	std::string			getFirstLine_b();
-	bool				extract_headers_b( std::string &line );
+	void				extract_headers_b( std::string &line );
 	void				parse_content_b();
 
 	void				error_response( const std::string& custom_page );
 	bool				end_contentlength( void );
-	void				getMethod( void );
-	void				postMethod( void );
-	void				deleteMethod( void );
 	pollfd				&getPollfd();
-	void				findBoundary( std::string &line );
-	void				parseHeaders( std::string &line, std::map<std::string, std::string> &headers );
-	void				parseContent( std::string &line );
 	void				boundaryParser();
-	bool				isLine();
 	bool				detect_end( void );
 	bool				parse_request();
 	void				send_response();

@@ -62,7 +62,7 @@ bool Client::parse_request()
 	return true;
 }
 
-bool	Client::parse_header()
+void	Client::parse_header()
 {
 	parseFirstLine();
 	parsefirstheader();

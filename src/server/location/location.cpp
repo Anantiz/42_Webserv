@@ -289,6 +289,7 @@ void Location::build_response_get_file(Client &client, std::string &local_path)
     if (local_path.find(".png") != std::string::npos)
         content_type = "image/png";
     client.response.headers += "Content-Type:" + content_type + "\r\n";
+    client.response.headers += utils::get_file_length_header(local_path);
 }
 
 void   Location::handle_get_request(Client &client)

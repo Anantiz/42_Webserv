@@ -12,7 +12,8 @@ void	Cluster::handle_pollin(int i, Client *client)
 	// client->connection_status = Client::TO_CLOSE;
 	// Close invalid requests, or unexpected connection termination
 	if (client->connection_status == Client::TO_CLOSE) {
-		_logger.devLog("Error Killing conection: " + utils::anything_to_str(client->poll_fd.fd));
+		_logger.devLog("\033[91mError\033[0m pollin on terminated conection Killing conection: " + utils::anything_to_str(client->poll_fd.fd));
+		client->to_close = true; // Cirtical error, don't try to send response nor keep alive
 		return ;
 	}
 
@@ -123,12 +124,12 @@ int	Cluster::run()
 			error++;
 			continue;
 		}
-		_logger.devLog("Clients count: " + utils::anything_to_str(_client_count));
-		_logger.devLog("Events count: " + utils::anything_to_str(events_count));
+		std::cout << "\n\n";
+		_logger.devLog("\033[95mLoop:\033[0m\n  Clients count: " + utils::anything_to_str(_client_count) + "\n  Events count: " + utils::anything_to_str(events_count));
+		_logger.devLog("");
 
 		for (size_t i = 0; i < _poll_fds.size(); i++)
 		{
-			std::cout << "NEW TURN OF GETTING DATA INTO BUFFER" << std::endl;
 			Client *client = NULL;
 			try {
 				client = accept_or_create_client(i);

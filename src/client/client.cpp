@@ -9,24 +9,46 @@ Client::Client(int arg_poll_fd, int arg_access_port) : client_len(sizeof(client_
 		throw std::runtime_error("accept");
 
 	memset(buff, 0, sizeof(buff));
-	this->response.file_fd = -1;
-	this->request.body_size = 0;
-	this->request.received_size = 0;
-	this->request.multipart = false;
+
 	this->poll_fd = (pollfd){cfd, POLLIN, 0};
 	this->connection_status = Client::GETTING_HEADER;
-	this->b_connection_status = Client::SEARCH_BOUNDARY_FIRST_LINE;
-	this->to_close = false;
-	this->server = NULL;
 	this->access_port = arg_access_port; // To match the server
+	this->server = NULL;
+	this->to_close = true;
+	this->b_connection_status = Client::SEARCH_BOUNDARY_FIRST_LINE;
+	this->response_status = NONE;
+
 	this->isHeader = true;
 	this->isFirstLine = true;
 	this->eor = DONT; // Default value
 	this->isFirstLine_b = true;
-	this->request.method = Http::GET;
-	this->request.buffer = "";
-	this->response_status = NONE;
-	this->response.status_code = 200; // Default , assume there was no error
+	// this->request.method = Http::GET;
+
+    this->response.file_fd = -1;
+    this->request.method = Http::UNKNOWN_METHOD;
+    this->request.protocol = Http::FALSE_PROTOCOL;
+    this->request.host.clear();
+    this->request.uri.clear();
+    this->request.headers.clear();
+    this->request.body_size = 0;
+    this->request.received_size = 0;
+    this->request.body.clear();
+    this->request.mainHeader.clear();
+    this->request.boundary.startDelimiter.clear();
+    this->request.boundary.endDelimiter.clear();
+    this->request.boundary.headBody.clear();
+    this->request.buffer.clear();
+    this->request.multipart = false;
+
+	this->response.method = Http::UNKNOWN_METHOD;
+    this->response.status_code = 200;
+    this->response.headers.clear();
+    this->response.file_path_to_send.clear();
+    this->response.body.clear();
+    this->response.body_size = 0;
+    this->response.buffer.clear();
+    this->response.last_read = 0;
+    this->response.offset = 0;
 }
 
 Client::~Client() {

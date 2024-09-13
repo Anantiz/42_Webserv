@@ -139,12 +139,12 @@ void Server::handle_client_request(Client &client)
         _logger.devLog("Matched location rooted at: " + l.get_root());
         l.build_request_response(client);
     } catch (Http::HttpException &e) {
-        _logger.devLog("Caught HttpException: " + utils::anything_to_str(e.get_status_code()));
+        _logger.warnLog("Server Caught HttpException: " + utils::anything_to_str(e.get_status_code()));
         client.response.status_code = e.get_status_code();
         build_error_response(client, e.get_status_code());
         return ;
     } catch (std::exception &e) {
-        _logger.warnLog("Caught exception: " + std::string(e.what()));
+        _logger.warnLog("Server Caught exception: " + std::string(e.what()));
         build_error_response(client, 500);
         return ;
     }
@@ -163,9 +163,10 @@ void Server::build_error_response(Client &client, int status_code) const
     std::map<int, std::string>::const_iterator cutom_error_page = _custom_error_pages.find(status_code);
     if (cutom_error_page == _custom_error_pages.end())
         client.error_response("");
-    else
+    else {
+        // _logger.devLog("Custom error page found for status code: " + utils::anything_to_str(status_code) + "Path is: " + cutom_error_page->second);
         client.error_response(cutom_error_page->second);
-
+    }
 }
 
 Location &Server::match_best_location(const std::string &uri) const

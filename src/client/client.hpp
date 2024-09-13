@@ -56,7 +56,7 @@ public:
 		KEEP_ALIVE,
 		TO_CLOSE,
 	};
-	
+
 	enum Boundarystatus {
 		GETTING_HEADER_B,
 		HEADER_ALL_RECEIVED_B,
@@ -89,7 +89,7 @@ public:
 		SENDING_HEADER,
 		HEADER_SENT,
 		SENDING_FROM_FILE,
-		SENDING_FROM_BUFFER,
+		SENDING_PRE_FILLED_BODY,
 		DONE_SENDING,
 	};
 
@@ -109,7 +109,7 @@ public:
 	void				extract_headers( std::string &line );
 	bool				set_end_request( void );
 	void				clean_first_boundary_b();
-		
+
 	//Handle content
 	void				parse_content();
 	void				parseChunk();

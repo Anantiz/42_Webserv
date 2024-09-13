@@ -209,7 +209,7 @@ const std::string		utils::get_file_length_header(const std::string& file_path)
 {
 	struct stat file_stat;
 	if (::stat(file_path.c_str(), &file_stat))
-		return "";
+		return "Content-Length: 0\r\n"; // Should never happen
 	std::string ret = "Content-Length: ";
 	ret += utils::anything_to_str(file_stat.st_size);
 	ret += "\r\n";

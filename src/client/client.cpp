@@ -7,8 +7,9 @@ Client::Client(int arg_poll_fd, int arg_access_port) : client_len(sizeof(client_
 	int cfd = accept(arg_poll_fd, (struct sockaddr *)&client_addr, &client_len);
 	if (cfd == -1)
 		throw std::runtime_error("accept");
-	
+
 	memset(buff, 0, sizeof(buff));
+	this->response.file_fd = -1;
 	this->request.body_size = 0;
 	this->request.received_size = 0;
 	this->request.multipart = false;
@@ -67,7 +68,6 @@ void	Client::parse_header()
 	parseFirstLine();
 	parsefirstheader();
 	set_end_request();
-	return true;
 }
 
 bool	Client::get_header()

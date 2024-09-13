@@ -60,7 +60,6 @@ void	Client::parseFirstLine()
 	_logger.SdevLog( "Method = " + utils::anything_to_str(this->request.method));
 	_logger.SdevLog( "Uri = " + utils::anything_to_str(this->request.uri));
 	_logger.SdevLog( "Protocol = " + utils::anything_to_str(this->request.protocol));
-	return true;
 }
 
 bool	gnlEcoplus( std::string &str, std::string &result )
@@ -86,7 +85,6 @@ void	Client::extract_headers( std::string &line )
 	{
 		this->request.mainHeader[line.substr( 0, pos )] = line.substr( pos + 2, line.size() - 2 );
 	}
-	return true;
 }
 
 void	Client::parsefirstheader()

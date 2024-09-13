@@ -7,16 +7,21 @@ Client::Client(int arg_poll_fd, int arg_access_port) : client_len(sizeof(client_
 	int cfd = accept(arg_poll_fd, (struct sockaddr *)&client_addr, &client_len);
 	if (cfd == -1)
 		throw std::runtime_error("accept");
-
+	
+	memset(buff, 0, sizeof(buff));
+	this->request.body_size = 0;
+	this->request.received_size = 0;
+	this->request.multipart = false;
 	this->poll_fd = (pollfd){cfd, POLLIN, 0};
 	this->connection_status = Client::GETTING_HEADER;
+	this->b_connection_status = Client::SEARCH_BOUNDARY_FIRST_LINE;
 	this->to_close = false;
 	this->server = NULL;
 	this->access_port = arg_access_port; // To match the server
 	this->isHeader = true;
 	this->isFirstLine = true;
 	this->eor = DONT; // Default value
-
+	this->isFirstLine_b = true;
 	this->request.method = Http::GET;
 	this->request.buffer = "";
 	this->response_status = NONE;

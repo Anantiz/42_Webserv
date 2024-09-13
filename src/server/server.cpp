@@ -139,7 +139,7 @@ void Server::handle_client_request(Client &client)
         _logger.devLog("Matched location rooted at: " + l.get_root());
         l.build_request_response(client);
     } catch (Http::HttpException &e) {
-        _logger.devLog("Caught HttpException: " + utils::ito_str(e.get_status_code()));
+        _logger.devLog("Caught HttpException: " + utils::anything_to_str(e.get_status_code()));
         client.response.status_code = e.get_status_code();
         build_error_response(client, e.get_status_code());
         return ;

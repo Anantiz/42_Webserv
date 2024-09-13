@@ -5,14 +5,14 @@
 void	Cluster::handle_pollin(int i, Client *client)
 {
 	// char buff[4096] = {0};
-	_logger.devLog("Parse request called on fd:" + utils::ito_str(client->poll_fd.fd));
+	_logger.devLog("Parse request called on fd:" + utils::anything_to_str(client->poll_fd.fd));
 	client->parse_request();
 	// ssize_t red = recv(client->poll_fd.fd, buff, 4096, 0);
-	// _logger.devLog("Bytes read: " + utils::ito_str(red) + " content: " + std::string(buff));
+	// _logger.devLog("Bytes read: " + utils::anything_to_str(red) + " content: " + std::string(buff));
 	// client->connection_status = Client::TO_CLOSE;
 	// Close invalid requests, or unexpected connection termination
 	if (client->connection_status == Client::TO_CLOSE) {
-		_logger.devLog("Error Killing conection: " + utils::ito_str(client->poll_fd.fd));
+		_logger.devLog("Error Killing conection: " + utils::anything_to_str(client->poll_fd.fd));
 		return ;
 	}
 
@@ -49,7 +49,7 @@ void	Cluster::handle_pollin(int i, Client *client)
 void	Cluster::handle_pollout(int i, Client *client)
 {
 	(void)i;
-	_logger.devLog("Pollout:" + utils::ito_str(client->poll_fd.fd));
+	_logger.devLog("Pollout:" + utils::anything_to_str(client->poll_fd.fd));
 	if (client->connection_status == Client::RESPONSE_READY or client->connection_status == Client::SENDING_RESPONSE)
 		client->send_response();
 	return ;
@@ -57,7 +57,7 @@ void	Cluster::handle_pollout(int i, Client *client)
 
 void	Cluster::handle_anything_else(int i, Client *client)
 {
-	_logger.devLog("POLL other:" + utils::ito_str(client->poll_fd.fd));
+	_logger.devLog("POLL other:" + utils::anything_to_str(client->poll_fd.fd));
 	if (_poll_fds[i].revents & POLLHUP || _poll_fds[i].revents & POLLERR)
 	{
 		_logger.devLog("Client disconnected");
@@ -73,7 +73,7 @@ Client *Cluster::accept_or_create_client(int i)
 
 	if (_poll_fds[i].revents == 0)
 		return NULL;
-	_logger.devLog("Event on socket with fd: " + utils::ito_str(_poll_fds[i].fd));
+	_logger.devLog("Event on socket with fd: " + utils::anything_to_str(_poll_fds[i].fd));
 	client_pool_it client_it = _client_pool.find(_poll_fds[i].fd);
 
 	if (client_it == _client_pool.end())
@@ -82,7 +82,7 @@ Client *Cluster::accept_or_create_client(int i)
 			if (i > (int)_ports.size())
 				throw std::runtime_error("Invalid socket, client not in pool and using an invalid socket");
 			client = new Client(_poll_fds[i].fd, _ports[i]);
-			_logger.devLog("New client accepted with fd: " + utils::ito_str(client->getPollfd().fd));
+			_logger.devLog("New client accepted with fd: " + utils::anything_to_str(client->getPollfd().fd));
 			_client_pool[client->getPollfd().fd] = client;
 			_poll_fds.push_back(client->getPollfd());
 			_client_count++;
@@ -93,7 +93,7 @@ Client *Cluster::accept_or_create_client(int i)
 	else
 	{
 		client = client_it->second;
-		_logger.devLog("Reusing client from pool with fd: " + utils::ito_str(client->getPollfd().fd));
+		_logger.devLog("Reusing client from pool with fd: " + utils::anything_to_str(client->getPollfd().fd));
 	}
 	return client;
 }
@@ -111,7 +111,7 @@ int	Cluster::run()
 		#endif
 
 		// printf("\n");
-		// _logger.devLog("_poll_fds length: " + utils::ito_str(_poll_fds.size()));
+		// _logger.devLog("_poll_fds length: " + utils::anything_to_str(_poll_fds.size()));
 		int events_count = poll(_poll_fds.data(), _poll_fds.size(), 0);
 		if (!events_count)
 			continue;
@@ -123,8 +123,8 @@ int	Cluster::run()
 			error++;
 			continue;
 		}
-		_logger.devLog("Clients count: " + utils::ito_str(_client_count));
-		_logger.devLog("Events count: " + utils::ito_str(events_count));
+		_logger.devLog("Clients count: " + utils::anything_to_str(_client_count));
+		_logger.devLog("Events count: " + utils::anything_to_str(events_count));
 
 		for (size_t i = 0; i < _poll_fds.size(); i++)
 		{
@@ -146,7 +146,7 @@ int	Cluster::run()
 				handle_anything_else(i, client);
 
 			if (client->connection_status == Client::TO_CLOSE) {
-				_logger.devLog("Closing client: " + utils::ito_str(client->getPollfd().fd));
+				_logger.devLog("Closing client: " + utils::anything_to_str(client->getPollfd().fd));
 				_to_remove.push_back(i);
 			}
 			else if (client->connection_status == Client::KEEP_ALIVE) {

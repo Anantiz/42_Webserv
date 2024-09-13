@@ -38,4 +38,5 @@ bool				Client::parse_content()
 		parseChunk();
 	else
 		parseBody();
+	return true;
 }

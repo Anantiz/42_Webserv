@@ -62,6 +62,7 @@ bool	Client::parse_header()
 	parseFirstLine();
 	parsefirstheader();
 	set_end_request();
+	return true;
 }
 
 bool	Client::get_header()
@@ -74,7 +75,7 @@ bool	Client::get_header()
 
 		// // factoriser ce bordel (permet de recuperer ce quón recoit en plus du header une fois le header recu)
 		// size_t length = this->request.buffer.length() - (end_pos + 4);
-		// if (length > sizeof(this->buff) - 1) 
+		// if (length > sizeof(this->buff) - 1)
 		// {
     	// 	length = sizeof(this->buff) - 1;  // Leave space for the null terminator
 		// }

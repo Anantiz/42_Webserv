@@ -1,12 +1,5 @@
 #include "utils.hpp"
 
-const std::string	utils::ito_str(int i)
-{
-	std::stringstream ss;
-	ss << i;
-	return ss.str();
-}
-
 int utils::str_to_int(const std::string &str, int &error)
 {
 	std::string str2 = str.substr(0, str.find_first_of(" \t\n\r"));
@@ -218,7 +211,7 @@ const std::string		utils::get_file_length_header(const std::string& file_path)
 	if (::stat(file_path.c_str(), &file_stat))
 		return "";
 	std::string ret = "Content-Length: ";
-	ret += utils::ito_str(file_stat.st_size);
+	ret += utils::anything_to_str(file_stat.st_size);
 	ret += "\r\n";
 	return ret;
 }

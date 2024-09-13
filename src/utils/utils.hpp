@@ -32,7 +32,6 @@ namespace utils
 		return ss.str();
 	}
 
-	const std::string		ito_str(int i);
 	int						str_to_int(const std::string &str, int &error);
 
 

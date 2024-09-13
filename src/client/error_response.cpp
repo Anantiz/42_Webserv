@@ -33,7 +33,7 @@ void Client::error_response( const std::string& custom_page )
         response.body = custom_page;
     response.headers = Http::get_status_string(response.status_code) + "Content-Type: text/html\r\n";
     try {
-        response.headers += "Content-Length: " + utils::ito_str(response.body.size()) + "\r\n\r\n";
+        response.headers += "Content-Length: " + utils::anything_to_str(response.body.size()) + "\r\n\r\n";
     }
     catch (std::exception &e) {
         response.headers += "Content-Length: 0\r\n\r\n";

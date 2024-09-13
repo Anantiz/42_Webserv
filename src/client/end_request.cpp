@@ -40,6 +40,8 @@ bool	Client::detect_end( void )
 			return end_multipart();
 		case ENCODING_CHUNK:
 			return end_encodingchunk();
+		default:
+			break;
 	}
 	return true; // Default case I guess
 }

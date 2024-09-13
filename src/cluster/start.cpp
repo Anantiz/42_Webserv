@@ -44,7 +44,7 @@ void	Cluster::init_sockets()
 		if (listen(sfd, 10) == -1)
 			throw std::runtime_error("listen:" + std::string(::strerror(errno)));
 		_listen_socket_fds.push_back(sfd);
-		_logger.debugLog("Listening on port " + utils::ito_str(_ports[i]));
+		_logger.debugLog("Listening on port " + utils::anything_to_str(_ports[i]));
 	}
 }
 

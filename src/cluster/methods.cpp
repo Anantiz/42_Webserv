@@ -9,6 +9,8 @@
  */
 void	Cluster::match_request_serv(Client &client) const
 {
+	// If in for name:port, cut the port
+	client.request.host = client.request.host.substr(0, client.request.host.find(':'));
 	for (size_t p = 0; p < _servers_ports.size(); p++) {
 		if (client.access_port == _servers_ports[p].first) {
 			// If no host is provided, use the first server
@@ -44,7 +46,7 @@ void	Cluster::remove_closed_conections()
 
 	// Now remove
 	while (_to_remove.size()) {
-		_logger.devLog("Removing fd: " + utils::ito_str(_poll_fds[_to_remove.back()].fd));
+		_logger.devLog("Removing fd: " + utils::anything_to_str(_poll_fds[_to_remove.back()].fd));
 		int i = _to_remove.back();
 
 		close(_poll_fds[i].fd);

@@ -276,7 +276,7 @@ void   Location::build_response_get_dir(Client &client, std::string &local_path)
     client.response.body_size = client.response.body.size();
 	client.response.headers = \
 		"Content-Type: text/html\r\n"\
-		"Content-Length: " + utils::ito_str(client.response.body_size) + "\r\n";
+		"Content-Length: " + utils::anything_to_str(client.response.body_size) + "\r\n";
 }
 
 void Location::build_response_get_file(Client &client, std::string &local_path)

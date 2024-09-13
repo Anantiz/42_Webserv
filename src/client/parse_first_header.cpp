@@ -4,7 +4,7 @@ enum Http::e_protocol	detectProtocol( std::string &proto )
 {
 	std::string base;
 	base = proto.substr(0, 5);
-	
+
 	if ( base != "HTTP/" || !std::isdigit(proto[5]) || !(proto[6] == '.') || !(std::isdigit(proto[7])))
 		return Http::FALSE_PROTOCOL;
 	if (proto == "HTTP/1.0")
@@ -57,9 +57,10 @@ bool	Client::parseFirstLine()
 
 
 	_logger.SdevLog( "HEADER FIRST LINE PARSED SUCCESFULLY" );
-	_logger.SdevLog( "Method = " + utils::ito_str(this->request.method));
-	_logger.SdevLog( "Uri = " + utils::anything_to_str((this->request.uri)));
-	_logger.SdevLog( "Protocol = " + utils::ito_str(this->request.protocol));
+	_logger.SdevLog( "Method = " + utils::anything_to_str(this->request.method));
+	_logger.SdevLog( "Uri = " + utils::anything_to_str(this->request.uri));
+	_logger.SdevLog( "Protocol = " + utils::anything_to_str(this->request.protocol));
+	return true;
 }
 
 bool	gnlEcoplus( std::string &str, std::string &result )
@@ -81,10 +82,11 @@ bool	Client::extract_headers( std::string &line )
 	pos = line.find( ':' );
 	//There is a ':' and a second part after this that is at least 1 char long
 	//Next char after ':' is a space
-	if ( (pos != std::string::npos) && (line.size() > (pos + 2)) && (line[pos + 1] == ' '))
+	if ( pos != std::string::npos && line.size() > pos + 2 && line[pos + 1] == ' ')
 	{
 		this->request.mainHeader[line.substr( 0, pos )] = line.substr( pos + 2, line.size() - 2 );
 	}
+	return true;
 }
 
 void	Client::parsefirstheader()
@@ -103,7 +105,7 @@ void	Client::parsefirstheader()
 	boundaryParser();
 	_logger.SdevLog( " Is it multipart ? : " + utils::anything_to_str(this->request.multipart) );
 
-	//Print all header KEY =   / VALUE = 
+	//Print all header KEY =   / VALUE =
 	_logger.SdevLog( "HEADER EXTRACTED SUCCESFULLY" );
 
 	std::map<std::string, std::string>::iterator it = this->request.mainHeader.begin();

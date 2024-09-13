@@ -139,12 +139,12 @@ void Server::handle_client_request(Client &client)
         _logger.devLog("Matched location rooted at: " + l.get_root());
         l.build_request_response(client);
     } catch (Http::HttpException &e) {
-        _logger.devLog("Caught HttpException: " + utils::ito_str(e.get_status_code()));
+        _logger.devLog("Server Caught HttpException: " + utils::ito_str(e.get_status_code()));
         client.response.status_code = e.get_status_code();
         build_error_response(client, e.get_status_code());
         return ;
     } catch (std::exception &e) {
-        _logger.warnLog("Caught exception: " + std::string(e.what()));
+        _logger.warnLog("Server Caught exception: " + std::string(e.what()));
         build_error_response(client, 500);
         return ;
     }

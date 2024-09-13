@@ -162,6 +162,8 @@ void   Location::build_request_response(Client &client)
 {
     if ((_allowed_methods & client.request.method) == 0)
         throw Http::HttpException(405);
+    else
+        logs::SdevLog("Allowed method");
     switch (client.request.method)
     {
         case Http::GET:

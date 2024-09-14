@@ -4,13 +4,9 @@
 
 void	Cluster::handle_pollin(int i, Client *client)
 {
-	// char buff[4096] = {0};
+	(void)i;
 	_logger.devLog("Parse request called on fd:" + utils::anything_to_str(client->poll_fd.fd));
 	client->parse_request();
-	// ssize_t red = recv(client->poll_fd.fd, buff, 4096, 0);
-	// _logger.devLog("Bytes read: " + utils::anything_to_str(red) + " content: " + std::string(buff));
-	// client->connection_status = Client::TO_CLOSE;
-	// Close invalid requests, or unexpected connection termination
 	if (client->connection_status == Client::TO_CLOSE) {
 		_logger.devLog("\033[91mError\033[0m pollin on terminated conection Killing conection: " + utils::anything_to_str(client->poll_fd.fd));
 		client->to_close = true; // Cirtical error, don't try to send response nor keep alive
@@ -26,8 +22,7 @@ void	Cluster::handle_pollin(int i, Client *client)
 		|| client->connection_status == Client::BODY_ALL_RECEIVED)
 	{
 		match_request_serv(*client);
-		if (!client->server)
-		{
+		if (!client->server) {
 			_logger.devLog("Client didn't send `host` header, forbidden in Http/1.1, sending 400");
 			client->response.status_code = 400;
 			client->error_response("");
@@ -42,9 +37,9 @@ void	Cluster::handle_pollin(int i, Client *client)
 	else
 		_logger.devLog("Client request not ready to be matched with server");
 
-	if (client->connection_status == Client::RESPONSE_READY) {
-		edit_pollfd(i, POLLOUT, client);
-	}
+	// if (client->connection_status == Client::RESPONSE_READY) {
+	// 	edit_pollfd(i, POLLOUT, client);
+	// }
 }
 
 void	Cluster::handle_pollout(int i, Client *client)
@@ -99,7 +94,7 @@ Client *Cluster::accept_or_create_client(int i)
 	return client;
 }
 
-// #define DEBUG_PROD
+#define DEBUG_PROD
 int	Cluster::run()
 {
 	_logger.infoLog("Cluster started");
@@ -111,8 +106,6 @@ int	Cluster::run()
 			usleep(50000);
 		#endif
 
-		// printf("\n");
-		// _logger.devLog("_poll_fds length: " + utils::anything_to_str(_poll_fds.size()));
 		int events_count = poll(_poll_fds.data(), _poll_fds.size(), 0);
 		if (!events_count)
 			continue;
@@ -155,10 +148,10 @@ int	Cluster::run()
 				client->connection_status = Client::IDLE;
 			}
 		}
-		remove_closed_conections(); // Remove after the loop to avoid iterator invalidation
+		remove_closed_conections(); // Remove after thed this pointe loop to avoid iterator invalidation
+
 		error = 0; // Error where resolved if we reached this point
 		this->restart_attempt = 0; // The server is running fine, reset the counter
 	}
-	cleanup();
 	return EXIT_SUCCESS;
 }

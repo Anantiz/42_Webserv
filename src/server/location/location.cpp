@@ -205,7 +205,7 @@ std::string   Location::get_local_path(std::string &uri)
 /*
 	Returns an extremelly basic html page with a list of files in the directory
 */
-std::string Location::dir_listing_content(const std::string &dir_path)
+std::string Location::dir_listing_content(std::string &dir_path, std::string &relative_uri)
 {
 	static const std::string header = "<!DOCTYPE html>\n<html>\n<head>\n<title>Directory listing</title>\n</head>\n<body>\n";
 	static const std::string footer = "</body>\n</html>\n";
@@ -222,6 +222,11 @@ std::string Location::dir_listing_content(const std::string &dir_path)
 	dir = opendir(dir_path.c_str());
 	if (!dir)
 		return (ret + "Error opening directory" + footer);
+    if (relative_uri[relative_uri.size() - 1] != '/')
+        relative_uri += "/";
+    if (dir_path[dir_path.size() - 1] != '/')
+        dir_path += "/";
+    logs::SdevLog("Dir opened: " + dir_path + " relative uri: " + relative_uri);
 	while (true)
 	{
 		entry = readdir(dir);
@@ -230,13 +235,14 @@ std::string Location::dir_listing_content(const std::string &dir_path)
 		if (entry->d_name[0] == '.') // Skip hidden files
 			continue ;
 		const std::string entry_str = std::string(entry->d_name);
+        logs::SdevLog("Entry: " + entry_str);
 
 		utils::e_path_type type = utils::what_is_this_path(dir_path + entry_str);
 		if (type == utils::FILE)
 			ret += "File: ";
 		else if (type == utils::DIRECTORY)
 			ret += "Directory: ";
-		ret += href_open + entry_str + "\">" + entry_str + href_close + br;
+		ret += href_open + relative_uri + entry_str + "\">" + entry_str + href_close + br;
 	}
 	closedir(dir);
 	ret += footer;
@@ -268,13 +274,14 @@ void   Location::build_response_get_dir(Client &client, std::string &local_path)
         throw Http::HttpException(403);
     }
     logs::SdevLog("Get-Dir: Dir listing");
-	client.response.file_path_to_send = "";
-	client.response.body = dir_listing_content(local_path);
+	client.response.file_path_to_send.clear();
+	client.response.body = dir_listing_content(local_path, client.request.uri);
 	client.response.status_code = 200;
 	client.response.headers = Http::get_status_string(200);
 
     client.response.body_size = client.response.body.size();
-	client.response.headers = \
+    client.response.headers = Http::get_status_string(200);
+	client.response.headers += \
 		"Content-Type: text/html\r\n"\
 		"Content-Length: " + utils::anything_to_str(client.response.body_size) + "\r\n";
 }
@@ -282,7 +289,7 @@ void   Location::build_response_get_dir(Client &client, std::string &local_path)
 void Location::build_response_get_file(Client &client, std::string &local_path)
 {
 	client.response.file_path_to_send = local_path;
-	client.response.body = "";
+	client.response.body.clear();
     client.response.status_code = 200;
 	client.response.headers = Http::get_status_string(200);
     std::string content_type = "text/html"; // FOR NOW

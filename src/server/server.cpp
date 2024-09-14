@@ -19,6 +19,10 @@ void    Server::check_mandatory_directives( void )
         throw std::runtime_error("No port specified for server, cannot start server without a port");
     if (_locations.size() == 0)
         throw std::runtime_error("No location specified for server, have at least one location");
+    if (_names.size() == 0) {
+        _logger.warnLog("No server-name specified, will use the default server-name");
+        _names.push_back("default_server");
+    }
 }
 
 void Server::add_port(u_int16_t p)
@@ -140,7 +144,6 @@ void Server::handle_client_request(Client &client)
         l.build_request_response(client);
     } catch (Http::HttpException &e) {
         _logger.warnLog("Server Caught HttpException: " + utils::anything_to_str(e.get_status_code()));
-        client.response.status_code = e.get_status_code();
         build_error_response(client, e.get_status_code());
         return ;
     } catch (std::exception &e) {
@@ -160,6 +163,7 @@ void Server::handle_client_request(Client &client)
 
 void Server::build_error_response(Client &client, int status_code) const
 {
+    client.response.status_code = status_code;
     std::map<int, std::string>::const_iterator cutom_error_page = _custom_error_pages.find(status_code);
     if (cutom_error_page == _custom_error_pages.end())
         client.error_response("");

@@ -10,7 +10,7 @@ Client::Client(int arg_poll_fd, int arg_access_port) : client_len(sizeof(client_
 
 	memset(buff, 0, sizeof(buff));
 
-	this->poll_fd = (pollfd){cfd, POLLIN, 0};
+	this->poll_fd = (pollfd){cfd, POLLIN | POLLOUT, 0};
 	this->connection_status = Client::GETTING_HEADER;
 	this->access_port = arg_access_port; // To match the server
 	this->server = NULL;

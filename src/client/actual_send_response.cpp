@@ -146,6 +146,7 @@ void    Client::finalize_response( void )
         logs::SdevLog("\033[91mError\033[0m sending end of response, client closed connection");
         this->to_close = true;
         cleanup_for_next_request();
+        return ;
     }
     this->response.offset += sent;
     if (this->response.offset == 1)
@@ -161,7 +162,7 @@ void    Client::cleanup_for_next_request( void )
 {
     if (this->response.file_fd != -1)
         close(this->response.file_fd);
-    if (this->to_close) {
+    if (this->to_close or this->connection_status == TO_CLOSE) {
         this->connection_status = Client::TO_CLOSE;
         return ;
     }

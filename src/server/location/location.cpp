@@ -84,50 +84,23 @@ void Location::set_redirect(std::pair<int, const std::string > r)
     _redirect = r;
 }
 
-void Location::add_cgi(std::pair<const std::string, const std::string > c)
-{
-    _cgis.push_back(c);
-}
+void Location::add_cgi(std::pair<const std::string, const std::string > c) { _cgis.push_back(c); }
 
-bool Location::get_dir_listing()
-{
-    return _dir_listing;
-}
+bool Location::get_dir_listing() { return _dir_listing; }
 
-bool Location::get_accept_upload()
-{
-    return _accept_upload;
-}
+bool Location::get_accept_upload() { return _accept_upload; }
 
-int Location::get_allowed_methods()
-{
-    return _allowed_methods;
-}
+int Location::get_allowed_methods() { return _allowed_methods; }
 
-std::vector<std::string> &Location::get_indexes()
-{
-    return _indexes;
-}
+std::vector<std::string> &Location::get_indexes() { return _indexes; }
 
-std::string &Location::get_root()
-{
-    return _root;
-}
+std::string &Location::get_root() { return _root; }
 
-std::string &Location::get_upload_dir()
-{
-    return _upload_dir;
-}
+std::string &Location::get_upload_dir() { return _upload_dir; }
 
-std::pair<int, std::string> &Location::get_redirect()
-{
-    return _redirect;
-}
+std::pair<int, std::string> &Location::get_redirect() { return _redirect; }
 
-std::string &Location::get_location_path()
-{
-    return _location_path;
-}
+std::string &Location::get_location_path() { return _location_path; }
 
 /*
 ██████  ██    ██ ██████  ██      ██  ██████
@@ -195,6 +168,8 @@ std::string   Location::get_local_path(std::string &uri)
 	// _location_path = /image/chats
 	// _root          = /var/www/images
 	// local_path     = root + (uri - location_path) = /var/www/images/1.jpg
+    logs::SdevLog("Composing local path for uri: " + uri);
+    logs::SdevLog("Local path: " + _root + " + " + uri.substr(_location_path.size(), uri.size()));
 	return _root + uri.substr(_location_path.size(), uri.size());
 }
 
@@ -292,9 +267,14 @@ void Location::build_response_get_file(Client &client, std::string &local_path)
 	client.response.body.clear();
     client.response.status_code = 200;
 	client.response.headers = Http::get_status_string(200);
-    std::string content_type = "text/html"; // FOR NOW
+
+    // Rudimentary way to determine content type for now
+    std::string content_type = "text/html";
     if (local_path.find(".png") != std::string::npos)
         content_type = "image/png";
+    else if (local_path.find(".jpg") != std::string::npos
+        || local_path.find(".jpeg") != std::string::npos )
+        content_type = "image/jpeg";
     client.response.headers += "Content-Type:" + content_type + "\r\n";
     client.response.headers += utils::get_file_length_header(local_path);
 }

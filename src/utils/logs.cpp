@@ -44,7 +44,9 @@ logs::~logs()
 
 void logs::SdevLog(const std::string &msg)
 {
-	std::cerr << WHITE << "[DEV] " << RESET << msg << std::endl;
+	(void)msg;
+	if (logs::defaultLogLevel == logs::DEV)
+		std::cerr << WHITE << "[DEV] " << RESET << msg << std::endl;
 }
 
 

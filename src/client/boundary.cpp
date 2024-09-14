@@ -142,6 +142,7 @@ void	Client::parsefirstheader_b()
 
 void	Client::print_request()
 {
+	return; 
 	_logger.SdevLog( "\n\n ----------------------- \n REQUEST \n -----------------------");
 	_logger.SdevLog( "------------------------------------------------------------------");
 	_logger.SdevLog( "Method :" + utils::anything_to_str( this->request.method ) );

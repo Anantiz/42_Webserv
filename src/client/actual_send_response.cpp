@@ -51,8 +51,10 @@ void	Client::send_response( void )
             }
             this->response.offset += tmp;
         }
-        else if (this->response_status == DONE_SENDING)
+        else if (this->response_status == DONE_SENDING) {
             finalize_response();
+            return ;
+        }
 
         if (this->response_status == HEADER_SENT)
         {
@@ -83,6 +85,7 @@ void	Client::send_response( void )
             if (this->response.offset == this->response.body.size()) {
                 this->response.offset = 0;
                 finalize_response();
+                return ;
             }
             ssize_t tmp = send(\
                 this->poll_fd.fd, \
@@ -116,7 +119,6 @@ void	Client::send_response( void )
                     finalize_response();
                     return ;
                 }
-                logs::SdevLog("File Content: " + this->response.buffer);
             }
             // Write
             ssize_t tmp = send(\
@@ -130,6 +132,7 @@ void	Client::send_response( void )
                 this->to_close = true;
                 cleanup_for_next_request();
             }
+            logs::SdevLog("Sent: " + utils::anything_to_str(tmp) + " bytes");
             this->response.offset += tmp;
         }
     }
@@ -145,8 +148,6 @@ void    Client::finalize_response( void )
     if (sent <= 0) {
         logs::SdevLog("\033[91mError\033[0m sending end of response, client closed connection");
         this->to_close = true;
-        cleanup_for_next_request();
-        return ;
     }
     this->response.offset += sent;
     if (this->response.offset == 1)
@@ -156,6 +157,7 @@ void    Client::finalize_response( void )
         else
             cleanup_for_next_request();
     }
+    logs::SdevLog("\033[96mResponse sent\033[0m");
 }
 
 void    Client::cleanup_for_next_request( void )

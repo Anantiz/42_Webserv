@@ -1,12 +1,12 @@
 #include "client.hpp"
 #include <cstring>
 
-Client::Client(int arg_poll_fd, int arg_access_port) : client_len(sizeof(client_addr))
+Client::Client(int entry_socket_fd, int arg_access_port) : client_len(sizeof(client_addr))
 {
 	// struct s_client_event _data;
-	int cfd = accept(arg_poll_fd, (struct sockaddr *)&client_addr, &client_len);
+	int cfd = accept(entry_socket_fd, (struct sockaddr *)&client_addr, &client_len);
 	if (cfd == -1)
-		throw std::runtime_error("accept");
+		throw std::runtime_error("Runtime error: " + std::string(::strerror(errno)));
 
 	memset(buff, 0, sizeof(buff));
 

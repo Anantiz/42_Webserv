@@ -1,4 +1,4 @@
-#pragma once
+// #pragma once
 #ifndef CLIENT_EVENT_HPP
 #define CLIENT_EVENT_HPP
 
@@ -93,7 +93,7 @@ public:
 		DONE_SENDING,
 	};
 
-	Client( int arg_poll_fd, int );
+	Client( int entry_socket_fd, int arg_access_port);
 	~Client();
 
 	//response function

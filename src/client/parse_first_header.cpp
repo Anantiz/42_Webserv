@@ -106,12 +106,11 @@ void	Client::parsefirstheader()
 	//Print all header KEY =   / VALUE =
 	_logger.SdevLog( "HEADER EXTRACTED SUCCESFULLY" );
 
-	std::map<std::string, std::string>::iterator it = this->request.mainHeader.begin();
-
-	while (it != this->request.mainHeader.end())
-	{
-		_logger.SdevLog( "KEY = " + utils::anything_to_str(it->first) );
-		_logger.SdevLog( "VALUE = " + utils::anything_to_str(it->second) );
-		it++;
-	}
+	// std::map<std::string, std::string>::iterator it = this->request.mainHeader.begin();
+	// while (it != this->request.mainHeader.end())
+	// {
+	// 	_logger.SdevLog( "KEY = " + utils::anything_to_str(it->first) );
+	// 	_logger.SdevLog( "VALUE = " + utils::anything_to_str(it->second) );
+	// 	it++;
+	// }
 }

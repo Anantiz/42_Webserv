@@ -5,7 +5,13 @@
 void	Cluster::handle_pollin(int i, Client *client)
 {
 	(void)i;
-	_logger.devLog("Parse request called on fd:" + utils::anything_to_str(client->poll_fd.fd));
+	if (client->connection_status >= Client::RESPONSE_READY)
+	{
+		_logger.devLog("Client already has a response ready, ignoring \033[95mpollin\033[0m");
+		return ;
+	}
+
+	_logger.devLog("\033[95mPollin\033[0m on fd: " + utils::anything_to_str(client->poll_fd.fd));
 	client->parse_request();
 	if (client->connection_status == Client::TO_CLOSE) {
 		_logger.devLog("\033[91mError\033[0m pollin on terminated conection Killing conection: " + utils::anything_to_str(client->poll_fd.fd));
@@ -45,7 +51,15 @@ void	Cluster::handle_pollin(int i, Client *client)
 void	Cluster::handle_pollout(int i, Client *client)
 {
 	(void)i;
-	_logger.devLog("Pollout:" + utils::anything_to_str(client->poll_fd.fd));
+	if (client->connection_status == Client::TO_CLOSE) {
+		_logger.devLog("Client is to close, ignoring \033[96mpollout\033[0m");
+		return ;
+	} else if (client->connection_status < Client::RESPONSE_READY) {
+		_logger.devLog("Response not ready, ignoring \033[96mpollout\033[0m");
+		return ;
+	}
+
+	_logger.devLog("\033[96mPollout\033[0m on fd: " + utils::anything_to_str(client->poll_fd.fd));
 	if (client->connection_status == Client::RESPONSE_READY or client->connection_status == Client::SENDING_RESPONSE)
 		client->send_response();
 	return ;
@@ -53,7 +67,7 @@ void	Cluster::handle_pollout(int i, Client *client)
 
 void	Cluster::handle_anything_else(int i, Client *client)
 {
-	_logger.devLog("POLL other:" + utils::anything_to_str(client->poll_fd.fd));
+	_logger.devLog("\033[101mPoll-other\033[0m:" + utils::anything_to_str(client->poll_fd.fd));
 	if (_poll_fds[i].revents & POLLHUP || _poll_fds[i].revents & POLLERR)
 	{
 		_logger.devLog("Client disconnected");
@@ -69,27 +83,24 @@ Client *Cluster::accept_or_create_client(int i)
 
 	if (_poll_fds[i].revents == 0)
 		return NULL;
-	_logger.devLog("Event on socket with fd: " + utils::anything_to_str(_poll_fds[i].fd));
-	client_pool_it client_it = _client_pool.find(_poll_fds[i].fd);
+	_logger.devLog("Event on socket with fd: " + utils::anything_to_str(_poll_fds[i].fd) + ", i=" + utils::anything_to_str(i));
 
-	if (client_it == _client_pool.end())
-	{
-		try {
-			if (i > (int)_ports.size())
-				throw std::runtime_error("Invalid socket, client not in pool and using an invalid socket");
-			client = new Client(_poll_fds[i].fd, _ports[i]);
-			_logger.devLog("New client accepted with fd: " + utils::anything_to_str(client->getPollfd().fd));
-			_client_pool[client->getPollfd().fd] = client;
-			_poll_fds.push_back(client->getPollfd());
-			_client_count++;
-		} catch (const std::exception &e) {
-			_logger.warnLog("Error accepting connection: " + std::string(e.what()));
-		}
+	if (i < (int)_ports.size()) { // New client
+		client = new Client(_poll_fds[i].fd, _ports[i]);
+		_logger.devLog("New client accepted with fd: " + utils::anything_to_str(client->getPollfd().fd));
+		_client_pool[client->getPollfd().fd] = client;
+		_poll_fds.push_back(client->getPollfd());
+		_client_count++;
 	}
 	else
 	{
-		client = client_it->second;
-		_logger.devLog("Reusing client from pool with fd: " + utils::anything_to_str(client->getPollfd().fd));
+		client_pool_it client_it = _client_pool.find(_poll_fds[i].fd);
+		if (client_it != _client_pool.end()) {
+			client = client_it->second;
+			_logger.devLog("Reusing client from pool with fd: " + utils::anything_to_str(client->getPollfd().fd));
+		} else {
+			throw std::runtime_error("Invalid socket, client not in pool and using an invalid socket");
+		}
 	}
 	return client;
 }
@@ -117,7 +128,7 @@ int	Cluster::run()
 			error++;
 			continue;
 		}
-		std::cout << "\n\n";
+		_logger.devLog("\n\n");
 		_logger.devLog("\033[95mLoop:\033[0m\n  Clients count: " + utils::anything_to_str(_client_count) + "\n  Events count: " + utils::anything_to_str(events_count));
 		_logger.devLog("");
 
@@ -126,12 +137,16 @@ int	Cluster::run()
 			Client *client = NULL;
 			try {
 				client = accept_or_create_client(i);
+				if (!client) // No event on this pollfd
+					continue;
 			} catch (const std::exception &e) {
-				_logger.debugLog("Error client conection: " + std::string(e.what()));
+				_logger.warnLog("\033[91mSocket Error\033[0m: " + std::string(e.what()));
+				_to_remove.push_back(i);
 				continue;
 			}
-			if (!client || i < _ports.size())
+			if (i < _ports.size()) // Skip the listen sockets
 				continue;
+
 			if (_poll_fds[i].revents & POLLIN)
 				handle_pollin(i, client);
 			if (_poll_fds[i].revents & POLLOUT)

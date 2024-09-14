@@ -40,25 +40,30 @@ void	Cluster::match_request_serv(Client &client) const
  */
 void	Cluster::remove_closed_conections()
 {
-	// First remove duplicates:
-	std::sort(_to_remove.begin(), _to_remove.end());
-	_to_remove.erase(std::unique(_to_remove.begin(), _to_remove.end()), _to_remove.end());
+	std::vector<int> removed; // To avoid double-removal
 
 	// Now remove
 	while (_to_remove.size()) {
 		_logger.devLog("Removing fd: " + utils::anything_to_str(_poll_fds[_to_remove.back()].fd));
 		int i = _to_remove.back();
-
-		close(_poll_fds[i].fd);
 		_to_remove.pop_back();
-		_poll_fds.erase(_poll_fds.begin() + i);
+		if (std::find(removed.begin(), removed.end(), i) != removed.end()) {
+			continue;
+		}
 
-		Cluster::client_pool_it ret = _client_pool.find(_poll_fds[i].fd);
-		if (ret != _client_pool.end()) {
-			delete ret->second;
+		// Remove from client pool
+		Cluster::client_pool_it client_it = _client_pool.find(_poll_fds[i].fd);
+		if (client_it != _client_pool.end()) {
+			delete client_it->second;
 			_client_pool.erase(_poll_fds[i].fd);
 			_client_count--;
 		}
+
+		// Remove from poll
+		close(_poll_fds[i].fd);
+		_poll_fds.erase(_poll_fds.begin() + i);
+		
+		removed.push_back(i);
 	}
 }
 

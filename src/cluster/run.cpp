@@ -105,7 +105,6 @@ Client *Cluster::accept_or_create_client(int i)
 	return client;
 }
 
-#define DEBUG_PROD
 int	Cluster::run()
 {
 	_logger.infoLog("Cluster started");

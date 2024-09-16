@@ -50,6 +50,7 @@ namespace utils
 	char					**map_to_envp(const std::map<std::string, std::string> &map);
 	std::string 			as_lower(const std::string &str);
 	const std::string		build_error_page(int error);
+	const std::string		get_content_type(const std::string &file);
 
 	const std::string		get_file_length_header(const std::string& file_path);
 

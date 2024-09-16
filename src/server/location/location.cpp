@@ -234,12 +234,7 @@ void   Location::build_response_get_dir(Client &client, std::string &local_path)
             if (utils::what_is_this_path(index_path) == utils::FILE)
             {
                 logs::SdevLog("Get-Dir: Sending Index");
-                client.response.file_path_to_send = index_path;
-                client.response.body = "";
-                client.response.status_code = 200;
-	            client.response.headers = Http::get_status_string(200);
-                client.response.headers += "Content-Type: text/html\r\n";
-                client.response.headers += utils::get_file_length_header(index_path);
+                build_response_get_file(client, index_path);
                 return ;
             }
         }
@@ -252,31 +247,25 @@ void   Location::build_response_get_dir(Client &client, std::string &local_path)
 	client.response.file_path_to_send.clear();
 	client.response.body = dir_listing_content(local_path, client.request.uri);
 	client.response.status_code = 200;
-	client.response.headers = Http::get_status_string(200);
 
     client.response.body_size = client.response.body.size();
-    client.response.headers = Http::get_status_string(200);
+    client.response.headers = Http::get_status_string(client.response.status_code);
 	client.response.headers += \
 		"Content-Type: text/html\r\n"\
 		"Content-Length: " + utils::anything_to_str(client.response.body_size) + "\r\n";
 }
+
+
 
 void Location::build_response_get_file(Client &client, std::string &local_path)
 {
 	client.response.file_path_to_send = local_path;
 	client.response.body.clear();
     client.response.status_code = 200;
-	client.response.headers = Http::get_status_string(200);
 
-    // Rudimentary way to determine content type for now
-    std::string content_type = "text/html";
-    if (local_path.find(".png") != std::string::npos)
-        content_type = "image/png";
-    else if (local_path.find(".jpg") != std::string::npos
-        || local_path.find(".jpeg") != std::string::npos )
-        content_type = "image/jpeg";
-    client.response.headers += "Content-Type:" + content_type + "\r\n";
+    client.response.headers = Http::get_status_string(client.response.status_code);
     client.response.headers += utils::get_file_length_header(local_path);
+    client.response.headers += utils::get_content_type(local_path);
 }
 
 void   Location::handle_get_request(Client &client)

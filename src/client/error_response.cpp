@@ -34,11 +34,8 @@ void Client::error_response( const std::string& custom_page )
     else {
         response.body.clear();
         response.file_path_to_send = custom_page;
-
-        std::string content_type = "text/html"; // FOR NOW
-        if (custom_page.find(".png") != std::string::npos)
-            content_type = "image/png";
-        response.headers += "Content-Type:" + content_type + "\r\n";
+        response.headers = Http::get_status_string(response.status_code);
+        response.headers += utils::get_content_type(custom_page);
         response.headers += utils::get_file_length_header(custom_page);
     }
     connection_status = RESPONSE_READY;

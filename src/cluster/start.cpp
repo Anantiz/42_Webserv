@@ -38,11 +38,11 @@ void	Cluster::init_sockets()
 
 		int yes = 1;
 		if (setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &yes, sizeof(yes)) == -1)
-			throw std::runtime_error("setsockopt:" + std::string(::strerror(errno)));
+			throw std::runtime_error("using port " + utils::anything_to_str(_ports[i]) + ": "  + std::string(::strerror(errno)));
 		if (bind(sfd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
-			throw std::runtime_error("bind:" + std::string(::strerror(errno)));
+			throw std::runtime_error("using port " + utils::anything_to_str(_ports[i]) + ": " + std::string(::strerror(errno)));
 		if (listen(sfd, 10) == -1)
-			throw std::runtime_error("listen:" + std::string(::strerror(errno)));
+			throw std::runtime_error("using port " + utils::anything_to_str(_ports[i]) + ": " + std::string(::strerror(errno)));
 		_listen_socket_fds.push_back(sfd);
 		_logger.debugLog("Listening on port " + utils::anything_to_str(_ports[i]));
 	}
@@ -53,7 +53,7 @@ int	Cluster::start()
 	try {
 		init_sockets();
 	} catch (const std::exception &e) {
-		_logger.errLog("Error initializing sockets:" + std::string(e.what()));
+		_logger.errLog("Error initializing sockets: " + std::string(e.what()));
 		return EXIT_FAILURE;
 	}
 

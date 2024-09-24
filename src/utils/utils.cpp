@@ -280,9 +280,5 @@ const std::string utils::get_content_type(const std::string &file)
 		return "Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\r\n";
 	if (file.find(".pptm") != std::string::npos)
 		return "Content-type: application/vnd.ms-powerpoint.presentation.macroEnabled.12\r\n";
- 	return "Content-type: text/plain\r\n";
+	return "Content-type: text/plain\r\n";
 }
-
-
-
-

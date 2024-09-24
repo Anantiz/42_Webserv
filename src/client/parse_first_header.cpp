@@ -54,7 +54,10 @@ void	Client::parseFirstLine()
 	this->request.method = detectMethod( methodstr );
 	this->request.uri = pathstr;
 	this->request.protocol = detectProtocol( protocolstr );
-
+	if (this->request.protocol != Http::HTTP_1_1) {
+		_logger.SdevLog( "\033[91mRejecting client, Protocol not supported\033[0m" );
+		throw Http::HttpException(505);
+	}
 
 	_logger.SdevLog( "HEADER FIRST LINE PARSED SUCCESFULLY" );
 	_logger.SdevLog( "Method = " + utils::anything_to_str(this->request.method));

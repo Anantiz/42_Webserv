@@ -10,6 +10,7 @@
             background-color: #f8f8f8;
             color: #333;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -25,19 +26,30 @@
         p {
             font-size: 1.5em;
         }
+        .image-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px; /* Space between the images */
+            margin-top: 20px;
+        }
+        img {
+            width: 400px; /* Adjust size of the images */
+            height: auto;
+            border-radius: 10px; /* Slightly round the image corners */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add a shadow effect */
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Welcome to Bob's server</h1>
-        </br>
-        <p>I like bananas</p>
-        </br>
-        <p>Port: 6030</p>
+        <p>Bob likes shrimps</p>
+        <p>Be like Bob</p>
     </div>
-    <div>
-        <img src=/images/shrimp/blue.jpg>
-        <img src=/images/shrimp/red.png>
+    <div class="image-container">
+        <img rel="preload" src="/images/shrimp/red.png" alt="Red Shrimp">
+        <img rel="preload" src="/images/shrimp/green.jpeg" alt="Green Shrimp">
+        <img rel="preload" src="/images/shrimp/blue.jpg" alt="Blue Shrimp">
     </div>
 </body>
 </html>

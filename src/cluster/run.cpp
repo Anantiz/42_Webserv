@@ -5,14 +5,30 @@
 void	Cluster::handle_pollin(int i, Client *client)
 {
 	(void)i;
-	if (client->connection_status >= Client::RESPONSE_READY)
-	{
+	if (client->connection_status >= Client::RESPONSE_READY) {
 		_logger.devLog("Client already has a response ready, ignoring \033[95mpollin\033[0m");
 		return ;
 	}
 
 	_logger.devLog("\033[95mPollin\033[0m on fd: " + utils::anything_to_str(client->poll_fd.fd));
-	client->parse_request();
+	try {
+		client->parse_request();
+	} catch (const Http::HttpException &e) {
+		_logger.devLog("\033[91mError\033[0m: " + std::string(e.what()));
+		client->response.status_code = e.get_status_code();
+		client->error_response("");
+		client->connection_status = Client::RESPONSE_READY;
+		client->to_close = true; // Close once answer is sent
+		return ;
+	} catch (const std::exception &e) {
+		_logger.devLog("\033[91mError\033[0m: " + std::string(e.what()));
+		client->response.status_code = 500;
+		client->error_response("");
+		client->connection_status = Client::RESPONSE_READY;
+		client->to_close = true; // Close once answer is sent
+		return ;
+	}
+
 	if (client->connection_status == Client::TO_CLOSE) {
 		_logger.devLog("\033[91mError\033[0m pollin on terminated conection Killing conection: " + utils::anything_to_str(client->poll_fd.fd));
 		client->to_close = true; // Cirtical error, don't try to send response nor keep alive
@@ -20,9 +36,7 @@ void	Cluster::handle_pollin(int i, Client *client)
 	}
 
 	if (client->server)
-	{
 		client->server->handle_client_request(*client);
-	}
 	else if (client->connection_status == Client::HEADER_ALL_RECEIVED \
 		|| client->connection_status == Client::GETTING_BODY \
 		|| client->connection_status == Client::BODY_ALL_RECEIVED)
@@ -111,10 +125,12 @@ int	Cluster::run()
 	int error = 0;
 
 	while (_run) {
+
+		// SOMEHOW, causes issue with firefox which close the conection if the server is too slow (Even if it's not)
 		// Make this loop CPU-friendly for production
-		#ifdef DEBUG_PROD
-			usleep(50000);
-		#endif
+		// #ifdef DEBUG_PROD
+		// 	usleep(10000);
+		// #endif
 
 		int events_count = poll(_poll_fds.data(), _poll_fds.size(), 0);
 		if (!events_count)

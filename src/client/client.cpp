@@ -64,10 +64,11 @@ void	Client::receive_request_data()
 		pollfd 		pollFd = getPollfd();
 		ssize_t	bytes_read = recv(pollFd.fd, buff, sizeof(request.buffer) - 1, 0);
 		_logger.SdevLog( "Getting data from fd : " + utils::anything_to_str(poll_fd.fd) );
-		if (!bytes_read)
+		if ( bytes_read <= 0 ) {
+			this->connection_status = Client::TO_CLOSE;
+			logs::SdevLog( "Client did some bullshit, pollin with no bytes to read" );
 			return ;
-		if ( bytes_read < 0 )
-			return ;
+		}
 		_logger.SdevLog( "New content to add : " + utils::anything_to_str(buff) );
 		request.buffer.append(buff);
 		memset(buff, 0, sizeof(buff));

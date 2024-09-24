@@ -82,7 +82,7 @@ namespace Http {
 			int _status_code;
 		public:
 			HttpException(int status_code) : _status_code(status_code) {}
-			int get_status_code() { return _status_code; }
+			int get_status_code() const { return _status_code; }
   };
 }
 

@@ -19,6 +19,10 @@ void    Server::check_mandatory_directives( void )
         throw std::runtime_error("No port specified for server, cannot start server without a port");
     if (_locations.size() == 0)
         throw std::runtime_error("No location specified for server, have at least one location");
+    if (_names.size() == 0) {
+        _logger.warnLog("No server-name specified, will use the default server-name");
+        _names.push_back("default_server");
+    }
 }
 
 void Server::add_port(u_int16_t p)
@@ -96,30 +100,15 @@ void Server::set_max_client_body_size(size_t s)
     _max_client_body_size = s;
 }
 
-std::vector<u_int16_t> &Server::get_ports()
-{
-    return _ports;
-}
+std::vector<u_int16_t> &Server::get_ports() { return _ports; }
 
-std::vector<std::string> &Server::get_names()
-{
-    return _names;
-}
+std::vector<std::string> &Server::get_names() { return _names; }
 
-Http::e_protocol &Server::get_protocol()
-{
-    return _protocols;
-}
+Http::e_protocol &Server::get_protocol() { return _protocols; }
 
-std::map<int, std::string> &Server::get_custom_error_pages()
-{
-    return _custom_error_pages;
-}
+std::map<int, std::string> &Server::get_custom_error_pages() { return _custom_error_pages; }
 
-size_t &Server::get_max_client_body_size()
-{
-    return _max_client_body_size;
-}
+size_t &Server::get_max_client_body_size() { return _max_client_body_size; }
 
 /*
 ██████  ██    ██ ██████  ██      ██  ██████
@@ -131,20 +120,24 @@ size_t &Server::get_max_client_body_size()
 
 void Server::handle_client_request(Client &client)
 {
+    // Keep it as this for now,
+    // Later, allow processing even if not all data is received
+    if (client.connection_status < Client::BODY_ALL_RECEIVED)
+        return ;
+
     _logger.devLog("Handling client request on server:" + client.server->get_names()[0]);
-    if (client.request.uri.empty()) // Cuz parsing just discard it
+    if (client.request.uri.empty()) // Cuz parsing just discard it if it's empty
         client.request.uri = "/";
     try {
         Location& l = match_best_location(client.request.uri);
         _logger.devLog("Matched location rooted at: " + l.get_root());
         l.build_request_response(client);
     } catch (Http::HttpException &e) {
-        _logger.devLog("Caught HttpException: " + utils::ito_str(e.get_status_code()));
-        client.response.status_code = e.get_status_code();
+        _logger.devLog("Server Caught HttpException: " + utils::anything_to_str(e.get_status_code()));
         build_error_response(client, e.get_status_code());
         return ;
     } catch (std::exception &e) {
-        _logger.warnLog("Caught exception: " + std::string(e.what()));
+        _logger.warnLog("Server Caught exception: " + std::string(e.what()));
         build_error_response(client, 500);
         return ;
     }
@@ -160,12 +153,12 @@ void Server::handle_client_request(Client &client)
 
 void Server::build_error_response(Client &client, int status_code) const
 {
+    client.response.status_code = status_code;
     std::map<int, std::string>::const_iterator cutom_error_page = _custom_error_pages.find(status_code);
     if (cutom_error_page == _custom_error_pages.end())
         client.error_response("");
     else
         client.error_response(cutom_error_page->second);
-
 }
 
 Location &Server::match_best_location(const std::string &uri) const

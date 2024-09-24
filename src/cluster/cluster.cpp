@@ -78,7 +78,7 @@ void Cluster::init_server_ports()
 		for (size_t j=0; j < p.size(); j++){
 			if (!utils::in_ports(p[j], _ports))
 			{
-				_logger.devLog("Adding port: " + utils::ito_str(p[j]));
+				_logger.devLog("Adding port: " + utils::anything_to_str(p[j]));
 				_ports.push_back(p[j]);
 			}
 		}
@@ -132,7 +132,7 @@ void Cluster::init_server_ports()
 		}
 		for (size_t itk=0; itk<vec_name_ptr.size(); itk++)
 		{
-			std::cout << vec_name_ptr[itk].first << " " << vec_name_ptr[itk].second << std::endl;
+			std::cout << "Open ports:" << vec_name_ptr[itk].first << " " << vec_name_ptr[itk].second << std::endl;
 		}
 		if (vec_name_ptr.size() == 0)
 		{

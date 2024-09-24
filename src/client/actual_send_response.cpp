@@ -18,10 +18,20 @@ void	Client::send_response( void )
         {
             this->response.last_read = 0;
             this->response.offset = 0;
+
+            if (!this->response.file_path_to_send.empty() && access(this->response.file_path_to_send.c_str(), R_OK) == -1)
+            {
+                logs::SdevLog("\033[91mError\033[0m accessing file to send, local error file path : " + this->response.file_path_to_send);
+                this->response.status_code = 500;
+                this->response.body.clear();
+                this->response.file_path_to_send.clear();
+                this->error_response("");
+            }
+
             this->response_status = SENDING_HEADER;
             this->connection_status = SENDING_RESPONSE;
             this->response.headers += "\r\n";
-            logs::SdevLog("Headers: " + this->response.headers);
+            logs::SdevLog("Headers: \n" + this->response.headers);
         }
 
         if (this->response_status == SENDING_HEADER)
@@ -35,62 +45,59 @@ void	Client::send_response( void )
                 this->response.headers.size() - this->response.offset, 0
                 );
             if (tmp <= 0) {
-                logs::SdevLog("Error sending headers, client closed connection");
+                logs::SdevLog("\033[91mError\033[0m sending headers, client closed connection");
                 this->to_close = true;
                 cleanup_for_next_request();
             }
             this->response.offset += tmp;
         }
-        else if (this->response_status == DONE_SENDING)
+        else if (this->response_status == DONE_SENDING) {
             finalize_response();
+            return ;
+        }
 
         if (this->response_status == HEADER_SENT)
         {
             this->response.last_read = 0;
             this->response.offset = 0;
 
-            // Send by file or by buffer ?
-            if (this->response.file_path_to_send.empty()) // Send body
-                this->response_status = SENDING_FROM_BUFFER;
+            // Send by file or by pre-filled-body ?
+            if (this->response.file_path_to_send.empty()) // No file path, send the pre-filled body
+                this->response_status = SENDING_PRE_FILLED_BODY;
             else // Send file
             {
                 this->response.buffer.clear();
                 this->response.buffer.reserve(LOCAL_FILE_READ_CHUNK_SIZE);
                 this->response_status = SENDING_FROM_FILE;
                 this->response.file_fd = open(this->response.file_path_to_send.c_str(), O_RDONLY);
-                if (this->response.file_fd == -1)
-                { // Not sure if that will work
-                    logs::SdevLog("Error opening file to send, local error");
-                    this->response.status_code = 500;
-                    this->response.body.clear();
-                    this->response.file_path_to_send.clear();
-                    this->error_response("");
-                    this->response_status = SENDING_FROM_BUFFER;
+                if (this->response.file_fd == -1) {
+                    logs::SdevLog("\033[91mDouble Error\033[0m opening file to send, local error file path : " + this->response.file_path_to_send);
+                    this->connection_status = TO_CLOSE;
+                    return ;
                 } else {
                     logs::SdevLog("Sending file: " + this->response.file_path_to_send);
                 }
-
             }
         }
 
-        if (this->response_status == SENDING_FROM_BUFFER)
+        if (this->response_status == SENDING_PRE_FILLED_BODY)
         {
-            if (this->response.offset == this->response.buffer.size()) {
+            if (this->response.offset == this->response.body.size()) {
                 this->response.offset = 0;
                 finalize_response();
+                return ;
             }
             ssize_t tmp = send(\
                 this->poll_fd.fd, \
-                this->response.buffer.c_str() + this->response.offset, \
-                this->response.buffer.size() - this->response.offset, 0
+                this->response.body.c_str() + this->response.offset, \
+                this->response.body.size() - this->response.offset, 0
                 );
             if (tmp <= 0) {
-                logs::SdevLog("Error sending body, client closed connection");
+                logs::SdevLog("\033[91mError\033[0m sending body, client closed connection");
                 this->to_close = true;
                 cleanup_for_next_request();
             }
             this->response.offset += tmp;
-
         }
         else if (this->response_status == SENDING_FROM_FILE)
         {
@@ -99,12 +106,12 @@ void	Client::send_response( void )
                 this->response.offset = 0;
                 this->response.last_read = read(this->response.file_fd, (char *)this->response.buffer.c_str(), LOCAL_FILE_READ_CHUNK_SIZE);
                 if (this->response.last_read < 0) {
-                    logs::SdevLog("Error reading body file, local error");
+                    logs::SdevLog("\033[91mError\033[0m reading body file, local error");
                     this->response.status_code = 500;
                     this->response.body.clear();
                     this->response.file_path_to_send.clear();
                     this->error_response("");
-                    this->response_status = SENDING_FROM_BUFFER;
+                    this->response_status = SENDING_PRE_FILLED_BODY;
                 }
                 else if (this->response.last_read == 0) {
                     logs::SdevLog("EOF on file, sending end of response");
@@ -112,7 +119,6 @@ void	Client::send_response( void )
                     finalize_response();
                     return ;
                 }
-                logs::SdevLog("File Content: " + this->response.buffer);
             }
             // Write
             ssize_t tmp = send(\
@@ -122,10 +128,11 @@ void	Client::send_response( void )
                 MSG_DONTWAIT
                 );
             if (tmp <= 0) {
-                logs::SdevLog("Error sending body file, client closed connection");
+                logs::SdevLog("\033[91mError\033[0m sending body file, client closed connection");
                 this->to_close = true;
                 cleanup_for_next_request();
             }
+            logs::SdevLog("Sent: " + utils::anything_to_str(tmp) + " bytes");
             this->response.offset += tmp;
         }
     }
@@ -139,9 +146,8 @@ void    Client::finalize_response( void )
     this->response.file_fd = -1;
     ssize_t sent = send(this->poll_fd.fd, "\0", 1, MSG_DONTWAIT);
     if (sent <= 0) {
-        logs::SdevLog("Error sending end of response, client closed connection");
+        logs::SdevLog("\033[91mError\033[0m sending end of response, client closed connection");
         this->to_close = true;
-        cleanup_for_next_request();
     }
     this->response.offset += sent;
     if (this->response.offset == 1)
@@ -151,13 +157,14 @@ void    Client::finalize_response( void )
         else
             cleanup_for_next_request();
     }
+    logs::SdevLog("\033[96mResponse sent\033[0m");
 }
 
 void    Client::cleanup_for_next_request( void )
 {
     if (this->response.file_fd != -1)
         close(this->response.file_fd);
-    if (this->to_close) {
+    if (this->to_close or this->connection_status == TO_CLOSE) {
         this->connection_status = Client::TO_CLOSE;
         return ;
     }

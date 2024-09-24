@@ -1,7 +1,6 @@
 # Travail restant: ✅
 
     - Config Parser:                               ✅
-
     - Client:
         . Implement Client::parse_request()        ✅
             > Handle Errors accurately

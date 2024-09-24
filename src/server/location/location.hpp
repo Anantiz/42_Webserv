@@ -74,7 +74,7 @@ private:
 
 	// Get
 	std::string					get_local_path(std::string &uri);
-	std::string					dir_listing_content(const std::string &dir_path );
+	std::string					dir_listing_content(std::string &dir_path, std::string &uri);
 	void						build_response_get_file(Client &client, std::string &local_path);
 	void						build_response_get_dir(Client &client, std::string &local_path);
 

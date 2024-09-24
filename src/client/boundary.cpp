@@ -38,7 +38,7 @@ void				Client::parse_content_b()
 			this->b_connection_status = SEARCH_BOUNDARY_FIRST_LINE;
 			this->request_boundary.push_back( this->b_request );
 			this->b_request.body.erase();
-			
+
 		}
 		else if ( boundary == this->request.boundary.endDelimiter )
 		{
@@ -67,7 +67,7 @@ void	Client::boundaryParser()
 		if (it->first == "Content-Type")
 		{
 			_logger.SdevLog( "CONTENT LENGTH DETECTED" 	);
-			
+
 			size_t pos = it->second.find("boundary=");
 			if ( pos != std::string::npos )
 			{
@@ -127,7 +127,7 @@ void	Client::parsefirstheader_b()
 		extract_headers_b( line );
 
 	this->b_connection_status = GETTING_BODY_B;
-	//Print all header KEY =   / VALUE = 
+	//Print all header KEY =   / VALUE =
 	_logger.SdevLog( "[Boundary] HEADER EXTRACTED SUCCESFULLY" );
 
 	std::map<std::string, std::string>::iterator it = b_request.mainHeader.begin();
@@ -142,6 +142,7 @@ void	Client::parsefirstheader_b()
 
 void	Client::print_request()
 {
+	return; 
 	_logger.SdevLog( "\n\n ----------------------- \n REQUEST \n -----------------------");
 	_logger.SdevLog( "------------------------------------------------------------------");
 	_logger.SdevLog( "Method :" + utils::anything_to_str( this->request.method ) );
@@ -174,7 +175,8 @@ void	Client::print_request()
 	else
 	{
 		_logger.SdevLog( "----------------------- NORMAL -----------------------");
-
 		_logger.SdevLog( "BODY :" + utils::anything_to_str( this->request.body ) );
+		_logger.SdevLog( "----------------------- DONE  -----------------------");
+
 	}
 }

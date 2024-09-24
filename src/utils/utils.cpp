@@ -1,12 +1,5 @@
 #include "utils.hpp"
 
-const std::string	utils::ito_str(int i)
-{
-	std::stringstream ss;
-	ss << i;
-	return ss.str();
-}
-
 int utils::str_to_int(const std::string &str, int &error)
 {
 	std::string str2 = str.substr(0, str.find_first_of(" \t\n\r"));
@@ -216,9 +209,76 @@ const std::string		utils::get_file_length_header(const std::string& file_path)
 {
 	struct stat file_stat;
 	if (::stat(file_path.c_str(), &file_stat))
-		return "";
+		return "Content-Length: 0\r\n"; // Should never happen
 	std::string ret = "Content-Length: ";
-	ret += utils::ito_str(file_stat.st_size);
+	ret += utils::anything_to_str(file_stat.st_size);
 	ret += "\r\n";
 	return ret;
+}
+
+const std::string utils::get_content_type(const std::string &file)
+{
+	if (file.find(".html") != std::string::npos)
+		return "Content-type: text/html\r\n";
+	if (file.find(".png") != std::string::npos)
+		return "Content-type: image/png\r\n";
+	if (file.find(".jpg") != std::string::npos || file.find(".jpeg") != std::string::npos)
+		return "Content-type: image/jpeg\r\n";
+	if (file.find(".webp") != std::string::npos)
+		return "Content-type: image/webp\r\n";
+	if (file.find(".gif") != std::string::npos)
+		return "Content-type: image/gif\r\n";
+	if (file.find(".bmp") != std::string::npos)
+		return "Content-type: image/bmp\r\n";
+	if (file.find(".ico") != std::string::npos)
+		return "Content-type: image/x-icon\r\n";
+	if (file.find(".svg") != std::string::npos)
+		return "Content-type: image/svg+xml\r\n";
+	if (file.find(".css") != std::string::npos)
+		return "Content-type: text/css\r\n";
+	if (file.find(".js") != std::string::npos)
+		return "Content-type: application/javascript\r\n";
+	if (file.find(".txt") != std::string::npos)
+		return "Content-type: text/plain\r\n";
+	if (file.find(".pdf") != std::string::npos)
+		return "Content-type: application/pdf\r\n";
+	if (file.find(".zip") != std::string::npos)
+		return "Content-type: application/zip\r\n";
+	if (file.find(".tar") != std::string::npos)
+		return "Content-type: application/x-tar\r\n";
+	if (file.find(".gz") != std::string::npos)
+		return "Content-type: application/gzip\r\n";
+	if (file.find(".mp3") != std::string::npos)
+		return "Content-type: audio/mpeg\r\n";
+	if (file.find(".mp4") != std::string::npos)
+		return "Content-type: video/mp4\r\n";
+	if (file.find(".avi") != std::string::npos)
+		return "Content-type: video/x-msvideo\r\n";
+	if (file.find(".mpeg") != std::string::npos)
+		return "Content-type: video/mpeg\r\n";
+	if (file.find(".webm") != std::string::npos)
+		return "Content-type: video/webm\r\n";
+	if (file.find(".ogg") != std::string::npos)
+		return "Content-type: video/ogg\r\n";
+	if (file.find(".json") != std::string::npos)
+		return "Content-type: application/json\r\n";
+	if (file.find(".xml") != std::string::npos)
+		return "Content-type: application/xml\r\n";
+	if (file.find(".csv") != std::string::npos)
+		return "Content-type: text/csv\r\n";
+	if (file.find(".doc") != std::string::npos)
+		return "Content-type: application/msword\r\n";
+	if (file.find(".ppt") != std::string::npos)
+		return "Content-type: application/vnd.ms-powerpoint\r\n";
+	if (file.find(".xls") != std::string::npos)
+		return "Content-type: application/vnd.ms-excel\r\n";
+	if (file.find(".pptx") != std::string::npos)
+		return "Content-type: application/vnd.openxmlformats-officedocument.presentationml.presentation\r\n";
+	if (file.find(".docx") != std::string::npos)
+		return "Content-type: application/vnd.openxmlformats-officedocument.wordprocessingml.document\r\n";
+	if (file.find(".xlsx") != std::string::npos)
+		return "Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\r\n";
+	if (file.find(".pptm") != std::string::npos)
+		return "Content-type: application/vnd.ms-powerpoint.presentation.macroEnabled.12\r\n";
+	return "Content-type: text/plain\r\n";
 }

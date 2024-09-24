@@ -1,31 +1,54 @@
 #include "client.hpp"
 #include <cstring>
 
-Client::Client(int arg_poll_fd, int arg_access_port) : client_len(sizeof(client_addr))
+Client::Client(int entry_socket_fd, int arg_access_port) : client_len(sizeof(client_addr))
 {
 	// struct s_client_event _data;
-	int cfd = accept(arg_poll_fd, (struct sockaddr *)&client_addr, &client_len);
+	int cfd = accept(entry_socket_fd, (struct sockaddr *)&client_addr, &client_len);
 	if (cfd == -1)
-		throw std::runtime_error("accept");
-	
+		throw std::runtime_error("Runtime error: " + std::string(::strerror(errno)));
+
 	memset(buff, 0, sizeof(buff));
-	this->request.body_size = 0;
-	this->request.received_size = 0;
-	this->request.multipart = false;
-	this->poll_fd = (pollfd){cfd, POLLIN, 0};
+
+	this->poll_fd = (pollfd){cfd, POLLIN | POLLOUT, 0};
 	this->connection_status = Client::GETTING_HEADER;
-	this->b_connection_status = Client::SEARCH_BOUNDARY_FIRST_LINE;
-	this->to_close = false;
-	this->server = NULL;
 	this->access_port = arg_access_port; // To match the server
+	this->server = NULL;
+	this->to_close = true;
+	this->b_connection_status = Client::SEARCH_BOUNDARY_FIRST_LINE;
+	this->response_status = NONE;
+
 	this->isHeader = true;
 	this->isFirstLine = true;
 	this->eor = DONT; // Default value
 	this->isFirstLine_b = true;
-	this->request.method = Http::GET;
-	this->request.buffer = "";
-	this->response_status = NONE;
-	this->response.status_code = 200; // Default , assume there was no error
+	// this->request.method = Http::GET;
+
+    this->response.file_fd = -1;
+    this->request.method = Http::UNKNOWN_METHOD;
+    this->request.protocol = Http::FALSE_PROTOCOL;
+    this->request.host.clear();
+    this->request.uri.clear();
+    this->request.headers.clear();
+    this->request.body_size = 0;
+    this->request.received_size = 0;
+    this->request.body.clear();
+    this->request.mainHeader.clear();
+    this->request.boundary.startDelimiter.clear();
+    this->request.boundary.endDelimiter.clear();
+    this->request.boundary.headBody.clear();
+    this->request.buffer.clear();
+    this->request.multipart = false;
+
+	this->response.method = Http::UNKNOWN_METHOD;
+    this->response.status_code = 200;
+    this->response.headers.clear();
+    this->response.file_path_to_send.clear();
+    this->response.body.clear();
+    this->response.body_size = 0;
+    this->response.buffer.clear();
+    this->response.last_read = 0;
+    this->response.offset = 0;
 }
 
 Client::~Client() {
@@ -41,10 +64,11 @@ void	Client::receive_request_data()
 		pollfd 		pollFd = getPollfd();
 		ssize_t	bytes_read = recv(pollFd.fd, buff, sizeof(request.buffer) - 1, 0);
 		_logger.SdevLog( "Getting data from fd : " + utils::anything_to_str(poll_fd.fd) );
-		if (!bytes_read)
+		if ( bytes_read <= 0 ) {
+			this->connection_status = Client::TO_CLOSE;
+			logs::SdevLog( "Client did some bullshit, pollin with no bytes to read" );
 			return ;
-		if ( bytes_read < 0 )
-			return ;
+		}
 		_logger.SdevLog( "New content to add : " + utils::anything_to_str(buff) );
 		request.buffer.append(buff);
 		memset(buff, 0, sizeof(buff));
@@ -79,7 +103,7 @@ bool	Client::get_header()
 
 		// // factoriser ce bordel (permet de recuperer ce quón recoit en plus du header une fois le header recu)
 		// size_t length = this->request.buffer.length() - (end_pos + 4);
-		// if (length > sizeof(this->buff) - 1) 
+		// if (length > sizeof(this->buff) - 1)
 		// {
     	// 	length = sizeof(this->buff) - 1;  // Leave space for the null terminator
 		// }

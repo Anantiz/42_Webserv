@@ -84,50 +84,23 @@ void Location::set_redirect(std::pair<int, const std::string > r)
     _redirect = r;
 }
 
-void Location::add_cgi(std::pair<const std::string, const std::string > c)
-{
-    _cgis.push_back(c);
-}
+void Location::add_cgi(std::pair<const std::string, const std::string > c) { _cgis.push_back(c); }
 
-bool Location::get_dir_listing()
-{
-    return _dir_listing;
-}
+bool Location::get_dir_listing() { return _dir_listing; }
 
-bool Location::get_accept_upload()
-{
-    return _accept_upload;
-}
+bool Location::get_accept_upload() { return _accept_upload; }
 
-int Location::get_allowed_methods()
-{
-    return _allowed_methods;
-}
+int Location::get_allowed_methods() { return _allowed_methods; }
 
-std::vector<std::string> &Location::get_indexes()
-{
-    return _indexes;
-}
+std::vector<std::string> &Location::get_indexes() { return _indexes; }
 
-std::string &Location::get_root()
-{
-    return _root;
-}
+std::string &Location::get_root() { return _root; }
 
-std::string &Location::get_upload_dir()
-{
-    return _upload_dir;
-}
+std::string &Location::get_upload_dir() { return _upload_dir; }
 
-std::pair<int, std::string> &Location::get_redirect()
-{
-    return _redirect;
-}
+std::pair<int, std::string> &Location::get_redirect() { return _redirect; }
 
-std::string &Location::get_location_path()
-{
-    return _location_path;
-}
+std::string &Location::get_location_path() { return _location_path; }
 
 /*
 ██████  ██    ██ ██████  ██      ██  ██████
@@ -197,6 +170,8 @@ std::string   Location::get_local_path(std::string &uri)
 	// _location_path = /image/chats
 	// _root          = /var/www/images
 	// local_path     = root + (uri - location_path) = /var/www/images/1.jpg
+    logs::SdevLog("Composing local path for uri: " + uri);
+    logs::SdevLog("Local path: " + _root + " + " + uri.substr(_location_path.size(), uri.size()));
 	return _root + uri.substr(_location_path.size(), uri.size());
 }
 
@@ -207,7 +182,7 @@ std::string   Location::get_local_path(std::string &uri)
 /*
 	Returns an extremelly basic html page with a list of files in the directory
 */
-std::string Location::dir_listing_content(const std::string &dir_path)
+std::string Location::dir_listing_content(std::string &dir_path, std::string &relative_uri)
 {
 	static const std::string header = "<!DOCTYPE html>\n<html>\n<head>\n<title>Directory listing</title>\n</head>\n<body>\n";
 	static const std::string footer = "</body>\n</html>\n";
@@ -224,6 +199,11 @@ std::string Location::dir_listing_content(const std::string &dir_path)
 	dir = opendir(dir_path.c_str());
 	if (!dir)
 		return (ret + "Error opening directory" + footer);
+    if (relative_uri[relative_uri.size() - 1] != '/')
+        relative_uri += "/";
+    if (dir_path[dir_path.size() - 1] != '/')
+        dir_path += "/";
+    logs::SdevLog("Dir opened: " + dir_path + " relative uri: " + relative_uri);
 	while (true)
 	{
 		entry = readdir(dir);
@@ -232,13 +212,14 @@ std::string Location::dir_listing_content(const std::string &dir_path)
 		if (entry->d_name[0] == '.') // Skip hidden files
 			continue ;
 		const std::string entry_str = std::string(entry->d_name);
+        logs::SdevLog("Entry: " + entry_str);
 
 		utils::e_path_type type = utils::what_is_this_path(dir_path + entry_str);
 		if (type == utils::FILE)
 			ret += "File: ";
 		else if (type == utils::DIRECTORY)
 			ret += "Directory: ";
-		ret += href_open + entry_str + "\">" + entry_str + href_close + br;
+		ret += href_open + relative_uri + entry_str + "\">" + entry_str + href_close + br;
 	}
 	closedir(dir);
 	ret += footer;
@@ -255,12 +236,7 @@ void   Location::build_response_get_dir(Client &client, std::string &local_path)
             if (utils::what_is_this_path(index_path) == utils::FILE)
             {
                 logs::SdevLog("Get-Dir: Sending Index");
-                client.response.file_path_to_send = index_path;
-                client.response.body = "";
-                client.response.status_code = 200;
-	            client.response.headers = Http::get_status_string(200);
-                client.response.headers += "Content-Type: text/html\r\n";
-                client.response.headers += utils::get_file_length_header(index_path);
+                build_response_get_file(client, index_path);
                 return ;
             }
         }
@@ -270,27 +246,28 @@ void   Location::build_response_get_dir(Client &client, std::string &local_path)
         throw Http::HttpException(403);
     }
     logs::SdevLog("Get-Dir: Dir listing");
-	client.response.file_path_to_send = "";
-	client.response.body = dir_listing_content(local_path);
+	client.response.file_path_to_send.clear();
+	client.response.body = dir_listing_content(local_path, client.request.uri);
 	client.response.status_code = 200;
-	client.response.headers = Http::get_status_string(200);
 
     client.response.body_size = client.response.body.size();
-	client.response.headers = \
+    client.response.headers = Http::get_status_string(client.response.status_code);
+	client.response.headers += \
 		"Content-Type: text/html\r\n"\
-		"Content-Length: " + utils::ito_str(client.response.body_size) + "\r\n";
+		"Content-Length: " + utils::anything_to_str(client.response.body_size) + "\r\n";
 }
+
+
 
 void Location::build_response_get_file(Client &client, std::string &local_path)
 {
 	client.response.file_path_to_send = local_path;
-	client.response.body = "";
+	client.response.body.clear();
     client.response.status_code = 200;
-	client.response.headers = Http::get_status_string(200);
-    std::string content_type = "text/html"; // FOR NOW
-    if (local_path.find(".png") != std::string::npos)
-        content_type = "image/png";
-    client.response.headers += "Content-Type:" + content_type + "\r\n";
+
+    client.response.headers = Http::get_status_string(client.response.status_code);
+    client.response.headers += utils::get_file_length_header(local_path);
+    client.response.headers += utils::get_content_type(local_path);
 }
 
 void   Location::handle_get_request(Client &client)

@@ -24,7 +24,7 @@ int main(int ac, char **av)
 				cluster.start();
 				return (EXIT_SUCCESS);
 			} catch (std::exception &e) {
-				globalLog.errLog("A crtical error occured, attempting to restart the cluster: " + utils::ito_str(crash_count) + " out of 3\nDetails: " + std::string(e.what()));
+				globalLog.errLog("A crtical error occured, attempting to restart the cluster: " + utils::anything_to_str(crash_count) + " out of 3\nDetails: " + std::string(e.what()));
 			}
 			crash_count ++;
 		}

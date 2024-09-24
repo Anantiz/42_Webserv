@@ -1,4 +1,4 @@
-#pragma once
+// #pragma once
 #ifndef CLIENT_EVENT_HPP
 #define CLIENT_EVENT_HPP
 
@@ -56,7 +56,7 @@ public:
 		KEEP_ALIVE,
 		TO_CLOSE,
 	};
-	
+
 	enum Boundarystatus {
 		GETTING_HEADER_B,
 		HEADER_ALL_RECEIVED_B,
@@ -89,11 +89,11 @@ public:
 		SENDING_HEADER,
 		HEADER_SENT,
 		SENDING_FROM_FILE,
-		SENDING_FROM_BUFFER,
+		SENDING_PRE_FILLED_BODY,
 		DONE_SENDING,
 	};
 
-	Client( int arg_poll_fd, int );
+	Client( int entry_socket_fd, int arg_access_port);
 	~Client();
 
 	//response function
@@ -109,7 +109,7 @@ public:
 	void				extract_headers( std::string &line );
 	bool				set_end_request( void );
 	void				clean_first_boundary_b();
-		
+
 	//Handle content
 	void				parse_content();
 	void				parseChunk();

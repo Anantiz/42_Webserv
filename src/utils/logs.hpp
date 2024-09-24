@@ -1,4 +1,5 @@
 #pragma once
+#define DEBUG_PROD
 
 #include <iostream>
 #include <fstream>
@@ -62,7 +63,11 @@ public:
 	void errLog(const std::string &msg) const;
 
 private:
-	const static logs::LogLevel defaultLogLevel = logs::DEV;
+	#ifdef DEBUG_PROD
+		const static logs::LogLevel defaultLogLevel = logs::DEV;
+	#else
+		const static logs::LogLevel defaultLogLevel = logs::INFO;
+	#endif
 
 	enum LogLevel _logLevel;
 

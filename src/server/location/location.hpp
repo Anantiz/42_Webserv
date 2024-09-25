@@ -12,6 +12,7 @@
 #include "utils/utils.hpp"
 #include "client/client.hpp"
 #include "utils/logs.hpp"
+#include "CGI/cgi.hpp"
 
 class Location
 {
@@ -27,7 +28,7 @@ private:
 	int								_allowed_methods; // Mask, GET=001 POST=010 DELETE=100
 	std::pair<int, std::string>		_redirect;        // (status_code, target_uri)
 
-	std::vector< std::pair< std::string, std::string> > _cgis; // A list of cgi scripts/programs with their respective extensions
+	std::vector< std::pair< std::string, std::string> > _cgis; // A list of cgis with their respective extensions
 
 	bool _was_set_root;
 	bool _was_set_upload_dir;
@@ -73,7 +74,8 @@ private:
 	void						handle_delete_request(Client &client);
 
 	// Get
-	std::string					get_local_path(std::string &uri);
+	std::string   				get_local_path(const std::string &uri) const;
+
 	std::string					dir_listing_content(std::string &dir_path, std::string &uri);
 	void						build_response_get_file(Client &client, std::string &local_path);
 	void						build_response_get_dir(Client &client, std::string &local_path);

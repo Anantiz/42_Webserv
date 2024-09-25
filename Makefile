@@ -38,11 +38,16 @@ HTTP_FILES:= http.cpp
 SRC_FILES+= 	$(addprefix $(HTTP_PATH)/,$(HTTP_FILES))
 
 
+### CGI ########## ########## ########## ########## ##########
+CGI_PATH:=CGI
+CGI_FILES:= cgi.cpp
+SRC_FILES+= 	$(addprefix $(CGI_PATH)/,$(CGI_FILES))
+
+
 ### CLUSTER ########## ########## ########## ########## ##########
 CLUSTER_PATH:=cluster
 CLUSTER_FILES:= cluster.cpp start.cpp run.cpp methods.cpp
 SRC_FILES+= 	$(addprefix $(CLUSTER_PATH)/,$(CLUSTER_FILES))
-
 
 
 ### SERV ########## ########## ########## ########## ##########

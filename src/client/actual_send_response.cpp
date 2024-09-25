@@ -62,21 +62,24 @@ void	Client::send_response( void )
             this->response.offset = 0;
 
             // Send by file or by pre-filled-body ?
-            if (this->response.file_path_to_send.empty()) // No file path, send the pre-filled body
+            if (!this->response.body.empty()) // If body is present (CGI or errors)
                 this->response_status = SENDING_PRE_FILLED_BODY;
-            else // Send file
+            else if (!this->response.file_path_to_send.empty())// Send file
             {
                 this->response.buffer.clear();
                 this->response.buffer.reserve(LOCAL_FILE_READ_CHUNK_SIZE);
                 this->response_status = SENDING_FROM_FILE;
                 this->response.file_fd = open(this->response.file_path_to_send.c_str(), O_RDONLY);
                 if (this->response.file_fd == -1) {
-                    logs::SdevLog("\033[91mDouble Error\033[0m opening file to send, local error file path : " + this->response.file_path_to_send);
+                    logs::SdevLog("\033[91mError\033[0m opening file to send, local error file path : " + this->response.file_path_to_send);
                     this->connection_status = TO_CLOSE;
                     return ;
                 } else {
                     logs::SdevLog("Sending file: " + this->response.file_path_to_send);
                 }
+            } else {
+                finalize_response();
+                return ;
             }
         }
 

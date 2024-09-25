@@ -1,4 +1,53 @@
 #include "utils.hpp"
+#include <stdlib.h>
+
+size_t	ft_strlen(const char *s)
+{
+	size_t i;
+
+	if (!s)
+		return 0;
+	i = 0;
+	while (s[i])
+		i++;
+	return (i);
+}
+
+static char	*ft_strjoin_ext(char *s3, const char *s2, int i, int j)
+{
+	while (s2[j])
+	{
+		s3[i] = s2[j];
+		i++;
+		j++;
+	}
+	s3[i] = '\0';
+	return (s3);
+}
+
+char	*ft_strjoin(const char *s1, const char *s2)
+{
+	int		i;
+	int		j;
+	char	*s3;
+
+	if (!s1 || !s2)
+		return (0);
+	i = (ft_strlen(s1) + ft_strlen(s2) + 1);
+	s3 = (char *) malloc(i * sizeof(char));
+	if (!s3)
+		return (NULL);
+	i = 0;
+	j = 0;
+	while (s1[i])
+	{
+		s3[i] = s1[i];
+		i++;
+	}
+	ft_strjoin_ext(s3, s2, i, j);
+	return (s3);
+}
+
 
 int utils::str_to_int(const std::string &str, int &error)
 {
@@ -64,6 +113,15 @@ void utils::bzero(void *s, size_t n)
 	char *p = (char *)s;
 	while (n--)
 		*p++ = 0;
+}
+
+bool utils::ends_with(const std::string& str, const std::string& suffix) {
+    if (str.length() >= suffix.length()) {
+        // Compare the end of the string with the suffix
+        return (str.compare(str.length() - suffix.length(), suffix.length(), suffix) == 0);
+    } else {
+        return false;
+    }
 }
 
 std::string utils::strip(const std::string &str)

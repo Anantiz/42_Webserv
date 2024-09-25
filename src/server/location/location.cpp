@@ -21,7 +21,7 @@ Location::~Location()
 
 void Location::check_mandatory_directives( void )
 {
-    if (_root.empty())
+    if (_was_set_root == false and _was_set_redirect == false)
         throw std::runtime_error("No root specified for location");
 }
 
@@ -80,6 +80,8 @@ void Location::set_redirect(std::pair<int, const std::string > r)
 {
     if (_was_set_redirect)
         throw std::runtime_error("Duplicate directive: return");
+    if (!((r.first >= 300 and r.first <= 304) or (r.first == 307  or r.first == 308)))
+        throw std::runtime_error("Invalid return code");
     _was_set_redirect = true;
     _redirect = r;
 }
@@ -131,10 +133,37 @@ size_t  Location::count_blocks(const std::string &uri) const
     return count;
 }
 
+
+
 void   Location::build_request_response(Client &client)
 {
     if ((_allowed_methods & client.request.method) == 0)
         throw Http::HttpException(405);
+
+    if (_was_set_redirect) {
+        logs::SdevLog("Redirecting");
+        client.response.status_code = _redirect.first;
+        client.response.headers = Http::get_status_string(client.response.status_code);
+        client.response.headers += "Location: " + _redirect.second + "\r\n";
+        client.response.file_path_to_send.clear();
+        client.response.body.clear();
+        client.connection_status = Client::RESPONSE_READY;
+        return ;
+    }
+    std::string local_path = get_local_path(client.request.uri);
+    // CGI
+    for (size_t i = 0; i < _cgis.size(); i++)
+    {
+        if (utils::ends_with(local_path, _cgis[i].second))
+        {
+            logs::SdevLog("\033[96mHandling\033[0m CGI request");
+            CGI_bridge(client, _cgis[i].first, local_path);
+            client.connection_status = Client::RESPONSE_READY;
+            return ;
+        }
+    }
+
+    // Default
     switch (client.request.method)
     {
         case Http::GET:
@@ -162,15 +191,18 @@ void   Location::build_request_response(Client &client)
 ██      ██   ██ ██   ████   ██   ██    ██    ███████
 */
 
-std::string   Location::get_local_path(std::string &uri)
+std::string   Location::get_local_path(const std::string &uri) const
 {
 	// uri            = /image/chats/1.jpg
 	// _location_path = /image/chats
 	// _root          = /var/www/images
 	// local_path     = root + (uri - location_path) = /var/www/images/1.jpg
-    logs::SdevLog("Composing local path for uri: " + uri);
-    logs::SdevLog("Local path: " + _root + " + " + uri.substr(_location_path.size(), uri.size()));
-	return _root + uri.substr(_location_path.size(), uri.size());
+
+    std::string path_uri = uri.substr(0, find(uri.begin(), uri.end(), '?') - uri.begin());
+
+    logs::SdevLog("Composing local path for uri: " + path_uri);
+    logs::SdevLog("Local path: " + _root + " + " + path_uri.substr(_location_path.size(), path_uri.size()));
+	return _root + path_uri.substr(_location_path.size(), path_uri.size());
 }
 
 /**
@@ -189,6 +221,7 @@ std::string Location::dir_listing_content(std::string &dir_path, std::string &re
 	static const std::string br = "<br>\n";
 	std::string              ret = "";
 
+    int entries = 0;
 	struct dirent	        *entry;
 	DIR				        *dir;
 
@@ -211,6 +244,7 @@ std::string Location::dir_listing_content(std::string &dir_path, std::string &re
 			continue ;
 		const std::string entry_str = std::string(entry->d_name);
         logs::SdevLog("Entry: " + entry_str);
+        entries++;
 
 		utils::e_path_type type = utils::what_is_this_path(dir_path + entry_str);
 		if (type == utils::FILE)
@@ -218,6 +252,10 @@ std::string Location::dir_listing_content(std::string &dir_path, std::string &re
 		else if (type == utils::DIRECTORY)
 			ret += "Directory: ";
 		ret += href_open + relative_uri + entry_str + "\">" + entry_str + href_close + br;
+        if (entries > 250) {  // Limit to 250 entries, cuz fuck you
+           ret += "<p>Too much entries, cutting it here ...</p>" + br;
+           break;
+        }
 	}
 	closedir(dir);
 	ret += footer;
@@ -261,9 +299,9 @@ void Location::build_response_get_file(Client &client, std::string &local_path)
 {
 	client.response.file_path_to_send = local_path;
 	client.response.body.clear();
-    client.response.status_code = 200;
 
-    client.response.headers = Http::get_status_string(client.response.status_code);
+    client.response.status_code = 200;
+    client.response.headers = Http::get_status_string(200);
     client.response.headers += utils::get_file_length_header(local_path);
     client.response.headers += utils::get_content_type(local_path);
 }
@@ -308,19 +346,15 @@ void    Location::download_client_file(Client &client, std::string &file_path)
     file.close();
 }
 
-void    Location::post_to_cgi(Client &client, std::string &local_path)
-{
-    (void)client;
-    (void)local_path;
-}
-
 void	Location::handle_post_request(Client &client)
 {
-    (void)client;
-    // logs::SdevLog("Post: Downloading file");
-    // if (download_client_file)
-        // download_client_file(client, get_local_path(client.request.uri));
-    // logs::SdevLog("Post: To CGI");
+    std::string file_to_download_to = get_local_path(client.request.uri);
+
+    logs::SdevLog("Post: Downloading file");
+    if (_accept_upload)
+        download_client_file(client, file_to_download_to);
+    else
+        throw Http::HttpException(403);
 }
 
 /**

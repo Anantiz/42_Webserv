@@ -40,6 +40,7 @@ namespace utils
 	bool					in_ports(u_int16_t p, std::vector<u_int16_t> &ports);
 	bool    				in_servers(std::string &name, std::vector<std::pair<std::string, Server *> > &servers);
 	void					bzero(void *s, size_t n);
+	bool 					ends_with(const std::string& str, const std::string& suffix);
 
 	size_t 					skip_spaces(const std::string &str, size_t start);
 	size_t 					skip_comments(const std::string &str, size_t start);
@@ -55,5 +56,9 @@ namespace utils
 	const std::string		get_file_length_header(const std::string& file_path);
 
 } // namespace utils
+
+//fck namespace
+size_t	ft_strlen(const char *s);
+char	*ft_strjoin(const char *s1, const char *s2);
 
 #endif // UTILS_HPP

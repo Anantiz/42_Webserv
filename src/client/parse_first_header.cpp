@@ -94,9 +94,9 @@ void	Client::parsefirstheader()
 {
 	size_t endpos = this->request.buffer.find( "\r\n\r\n" );
 	std::string		first_header = this->request.buffer.substr(0, endpos + 2);
-	_logger.SdevLog( "HEADER = " + utils::anything_to_str(first_header) );
+	// _logger.SdevLog( "HEADER = " + utils::anything_to_str(first_header) );
 	this->request.buffer = this->request.buffer.substr( endpos + 4, this->request.buffer.size() );
-	_logger.SdevLog( "Buffer after preextraction = " + utils::anything_to_str(this->request.buffer) );
+	// _logger.SdevLog( "Buffer after preextraction = " + utils::anything_to_str(this->request.buffer) );
 	std::string 	line;
 	while ( gnlEcoplus( first_header,  line ) )
 		extract_headers( line );
@@ -109,11 +109,28 @@ void	Client::parsefirstheader()
 	//Print all header KEY =   / VALUE =
 	_logger.SdevLog( "HEADER EXTRACTED SUCCESFULLY" );
 
-	// std::map<std::string, std::string>::iterator it = this->request.mainHeader.begin();
-	// while (it != this->request.mainHeader.end())
-	// {
-	// 	_logger.SdevLog( "KEY = " + utils::anything_to_str(it->first) );
-	// 	_logger.SdevLog( "VALUE = " + utils::anything_to_str(it->second) );
-	// 	it++;
-	// }
+	std::map<std::string, std::string>::iterator it = this->request.mainHeader.begin();
+	while (it != this->request.mainHeader.end())
+	{
+		if (it->first == "Host") {
+			this->request.host = it->second.substr(0, it->second.find(':'));
+			_logger.SdevLog( "\033[96mParsed\033[0m Host: " + utils::anything_to_str(this->request.host));
+		} else if (it->first == "Content-Length") {
+			int err = 0;
+			this->request.content_length = (size_t)utils::str_to_int(it->second, err);
+			if (err == 1)
+				throw Http::HttpException(400);
+			_logger.SdevLog( "\033[96mParsed\033[0m Content-Length: " + utils::anything_to_str(this->request.body_size));
+		} else if (it->first == "Connection") {
+			if (it->second == "close")
+				this->request.keep_alive = false;
+			else if (it->second == "keep-alive")
+				this->request.keep_alive = true;
+			else
+				this->request.keep_alive = false;
+			_logger.SdevLog( "\033[96mParsed\033[0m Keep-Alive: " + utils::anything_to_str(this->request.keep_alive));
+		}
+		// _logger.SdevLog( "Header: " + utils::anything_to_str(it->first) + " = " + utils::anything_to_str(it->second));
+		it++;
+	}
 }

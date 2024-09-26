@@ -87,6 +87,8 @@ void Server::add_custom_error_page(int status_code, std::string path)
         throw std::runtime_error("Invalid status code for custom error page");
     if (_custom_error_pages.find(status_code) != _custom_error_pages.end())
         throw std::runtime_error("Duplicate directive: 2 error pages for the same status code");
+    if (access(path.c_str(), R_OK) == -1)
+        throw std::runtime_error("Invalid path for custom error page");
     _custom_error_pages[status_code] = path;
 }
 
@@ -156,9 +158,9 @@ void Server::build_error_response(Client &client, int status_code) const
     client.response.status_code = status_code;
     std::map<int, std::string>::const_iterator cutom_error_page = _custom_error_pages.find(status_code);
     if (cutom_error_page == _custom_error_pages.end())
-        client.error_response("");
+        client.generate_quick_response("");
     else
-        client.error_response(cutom_error_page->second);
+        client.generate_quick_response(cutom_error_page->second);
 }
 
 Location &Server::match_best_location(const std::string &uri) const

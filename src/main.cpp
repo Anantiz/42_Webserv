@@ -1,15 +1,6 @@
 #include "webserv.hpp"
 
-// #define DEFAULT_CONFIG_FILE_PATH "configs/webserv-default.conf"
-// #define DEFAULT_CONFIG_FILE_PATH "configs/config_invalid.conf"
-// #define DEFAULT_CONFIG_FILE_PATH "configs/config1.conf"
-// #define DEFAULT_CONFIG_FILE_PATH "configs/config2.conf"
-// #define DEFAULT_CONFIG_FILE_PATH "configs/config3.conf"
-// #define DEFAULT_CONFIG_FILE_PATH "configs/config4.conf"
-// #define DEFAULT_CONFIG_FILE_PATH "configs/config_invalid_char.conf"
-// #define DEFAULT_CONFIG_FILE_PATH "configs/config_invalid_syntax.conf"
-// #define DEFAULT_CONFIG_FILE_PATH "configs/config_invalid_values.conf"
-#define DEFAULT_CONFIG_FILE_PATH "configs/config_large_values.conf"
+#define DEFAULT_CONFIG_FILE_PATH "configs/australia.conf"
 
 int main(int ac, char **av)
 {

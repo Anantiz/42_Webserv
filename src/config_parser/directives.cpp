@@ -116,13 +116,17 @@ size_t ConfigParser::index_directive(const std::string &unit, size_t start, Loca
 
     while (true)
     {
-        word = utils::read_word(unit, start, start);
-        if (word == "" || word == ";")
+        start = utils::skip_spaces(unit, start);
+        if (unit[start] == ';') {
+            word = utils::read_word(unit, start, start);
             break;
+        }
+        word = utils::read_path(unit, start, start);
+        logs::SdevLog("\t\tIndex: " + word);
+        if (word == "")
+            throw std::runtime_error("index: Unexpected end of file");
         location.add_index(word);
     }
-    if (word == "")
-        throw std::runtime_error("index: Unexpected end of file");
     if (location.get_indexes().empty())
         throw std::runtime_error("index: No index specified");
     return start;
@@ -157,6 +161,10 @@ size_t ConfigParser::cgi_directive(const std::string &unit, size_t start, Locati
         throw std::runtime_error("cgi: Unexpected end of file provide a path and an extension");
     cgi.first = word;
     word = utils::read_word(unit, start, start);
+    if ((word[0] == '"' and word[word.size() - 1] == '"') or (word[0] == '\'' and word[word.size() - 1] == '\''))
+        word = word.substr(1, word.size() - 2);
+    if (word[0] != '.')
+        throw std::runtime_error("cgi: Invalid extension" + word);
     if (word == "")
         throw std::runtime_error("cgi: Unexpected end of file no extension provided");
     cgi.second = word;
@@ -164,6 +172,7 @@ size_t ConfigParser::cgi_directive(const std::string &unit, size_t start, Locati
     word = utils::read_word(unit, start, start);
     if (word != ";")
         throw std::runtime_error("Unexpected token" + word);
+    logs::SdevLog("CGI: " + cgi.first + " extension: " + cgi.second);
     return start;
 }
 

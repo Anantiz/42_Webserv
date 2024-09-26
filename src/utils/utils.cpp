@@ -1,4 +1,17 @@
 #include "utils.hpp"
+#include <stdlib.h>
+
+size_t	ft_strlen(const char *s)
+{
+	size_t i;
+
+	if (!s)
+		return 0;
+	i = 0;
+	while (s[i])
+		i++;
+	return (i);
+}
 
 int utils::str_to_int(const std::string &str, int &error)
 {
@@ -64,6 +77,15 @@ void utils::bzero(void *s, size_t n)
 	char *p = (char *)s;
 	while (n--)
 		*p++ = 0;
+}
+
+bool utils::ends_with(const std::string& str, const std::string& suffix) {
+    if (str.length() >= suffix.length()) {
+        // Compare the end of the string with the suffix
+        return (str.compare(str.length() - suffix.length(), suffix.length(), suffix) == 0);
+    } else {
+        return false;
+    }
 }
 
 std::string utils::strip(const std::string &str)

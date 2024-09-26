@@ -62,7 +62,7 @@ void	Cluster::remove_closed_conections()
 		// Remove from poll
 		close(_poll_fds[i].fd);
 		_poll_fds.erase(_poll_fds.begin() + i);
-		
+
 		removed.push_back(i);
 	}
 }
@@ -73,6 +73,6 @@ void	Cluster::edit_pollfd(int i, short events, Client *client)
 	(void)i;
 	(void)client;
 	(void)events;
-	// _poll_fds[i].events = events;
-	// client->poll_fd.events = events; // This data is useless, but just keep it consistent
+	_poll_fds[i].events = events;
+	client->poll_fd.events = events; // This data is useless, but just keep it consistent
 }

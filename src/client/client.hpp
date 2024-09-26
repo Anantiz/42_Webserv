@@ -121,7 +121,7 @@ public:
 	void				extract_headers_b( std::string &line );
 	void				parse_content_b();
 
-	void				error_response( const std::string& custom_page );
+	void				generate_quick_response( const std::string& custom_page );
 	bool				end_contentlength( void );
 	pollfd				&getPollfd();
 	void				boundaryParser();

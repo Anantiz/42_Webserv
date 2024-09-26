@@ -19,13 +19,13 @@ void				Client::clean_first_boundary_b()
 
 void				Client::parseBody()
 {
-	_logger.SdevLog( "Start parsing the body (default case) : " + utils::anything_to_str( this->request.buffer ) );
+	// _logger.SdevLog( "Start parsing the body (default case) : " + utils::anything_to_str( this->request.buffer ) );
 	this->request.body.append(this->request.buffer);
 	this->request.received_size += this->request.buffer.size();
 	bzero( buff, strlen(buff) );
 	this->request.buffer.erase();
 
-	_logger.SdevLog( "Total body : " + utils::anything_to_str( this->request.body ) );
+	// _logger.SdevLog( "Total body : " + utils::anything_to_str( this->request.body ) );
 	_logger.SdevLog( "Content lenght : " + utils::anything_to_str( this->request.received_size ) );
 	_logger.SdevLog( "Supposed size : " + utils::anything_to_str( this->request.body_size ) );
 	if ( detect_end() == true )
@@ -39,7 +39,7 @@ void				Client::parseBody()
 
 void				Client::parse_content()
 {
-	_logger.SdevLog( "Start parsing the content (select chunk of default)" );
+	_logger.SdevLog( "Start parsing the content (select chunk or default)" );
 	if (this->eor == MULTIPART)
 		parseChunk();
 	else

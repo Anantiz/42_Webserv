@@ -91,7 +91,7 @@ void	Client::parse_header_b()
 bool	Client::get_header_b()
 {
 		_logger.SdevLog( "[Boundary] in get header" );
-		_logger.SdevLog( "[Boundary] buffer to find header : " + utils::anything_to_str( request.buffer ));
+		// _logger.SdevLog( "[Boundary] buffer to find header : " + utils::anything_to_str( request.buffer ));
 	size_t	end_pos = this->request.buffer.find( "\r\n\r\n" );
 	if ( end_pos != std::string::npos )
 	{
@@ -118,31 +118,27 @@ void	Client::parsefirstheader_b()
 {
 	size_t endpos = this->request.buffer.find( "\r\n\r\n" );
 	std::string		first_header = this->request.buffer.substr(0, endpos + 2);
-	_logger.SdevLog( "[Boundary] HEADER = " + utils::anything_to_str(first_header) );
+	// _logger.SdevLog( "[Boundary] HEADER = " + utils::anything_to_str(first_header) );
 	this->request.buffer = this->request.buffer.substr( endpos + 4, this->request.buffer.size() );
-	_logger.SdevLog( "[Boundary] Buffer after preextraction = " + utils::anything_to_str(this->request.buffer) );
+	// _logger.SdevLog( "[Boundary] Buffer after preextraction = " + utils::anything_to_str(this->request.buffer) );
 	std::string 	line;
 
 	while ( gnlEcoplus( first_header,  line ) )
 		extract_headers_b( line );
 
 	this->b_connection_status = GETTING_BODY_B;
-	//Print all header KEY =   / VALUE =
-	_logger.SdevLog( "[Boundary] HEADER EXTRACTED SUCCESFULLY" );
 
+	_logger.SdevLog( "[Boundary] HEADERS EXTRACTED SUCCESFULLY" );
 	std::map<std::string, std::string>::iterator it = b_request.mainHeader.begin();
-
-	while (it != b_request.mainHeader.end())
-	{
-		_logger.SdevLog( "[Boundary] KEY = " + utils::anything_to_str(it->first) );
-		_logger.SdevLog( "[Boundary] VALUE = " + utils::anything_to_str(it->second) );
+	while (it != b_request.mainHeader.end()) {
+		_logger.SdevLog( "[Boundary]Header: " + utils::anything_to_str(it->first) + " = " + utils::anything_to_str(it->second));
 		it++;
 	}
 }
 
 void	Client::print_request()
 {
-	return; 
+	return;
 	_logger.SdevLog( "\n\n ----------------------- \n REQUEST \n -----------------------");
 	_logger.SdevLog( "------------------------------------------------------------------");
 	_logger.SdevLog( "Method :" + utils::anything_to_str( this->request.method ) );

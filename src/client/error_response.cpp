@@ -7,10 +7,12 @@
  * we build a basic error response and send it to the client.
  * It is otherwise the server's responsibility to build the response.
  */
-void Client::error_response( const std::string& custom_page )
+void Client::generate_quick_response( const std::string& custom_page )
 {
     if (response.status_code < 400) {
-            logs::SdevLog("\033[91mWe are trying to build an error response with a status code that is not an error, how did we get here?\033[0m");
+            response.headers = Http::get_status_string(response.status_code) + "Content-length: 0\r\n";
+            response.body.clear();
+            connection_status = RESPONSE_READY;
         return ;
     }
 

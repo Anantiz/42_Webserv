@@ -55,7 +55,7 @@ SERV_PATH:=server
 SERV_FILES:= server.cpp
 SRC_FILES+= 	$(addprefix $(SERV_PATH)/,$(SERV_FILES))
 LOCATIONS_PATH:=$(SERV_PATH)/location
-LOCATIONS_FILES:= location.cpp
+LOCATIONS_FILES:= location.cpp download_post.cpp
 SRC_FILES+= 	$(addprefix $(LOCATIONS_PATH)/,$(LOCATIONS_FILES))
 
 

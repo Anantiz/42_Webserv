@@ -36,6 +36,11 @@ namespace Http {
 	{
 		std::string							startDelimiter;
 		std::string							endDelimiter;
+
+		// A vector of each part (header + body) of the multipart request
+		// It's a pair with
+		//     first: A map of the headers Header-Name -> Header-Value
+		//     second: the body of the 
 		std::vector<std::pair<std::map<std::string, std::string>, std::string> >	headBody;
 	};
 
@@ -54,6 +59,12 @@ namespace Http {
 		Http::Boundary						boundary;
 		std::string							buffer;
 		bool								multipart;
+
+		// Parsed Headers
+		bool								keep_alive;
+		size_t								content_length;
+		std::string							content_type;
+
 	};
 
 	struct Response

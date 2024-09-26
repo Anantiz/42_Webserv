@@ -4,7 +4,7 @@ Location::Location(std::string &location_path) : _location_path(location_path)
 {
     _dir_listing = false;
     _accept_upload = false;
-    _allowed_methods = 0b011;
+    _allowed_methods = Http::GET | Http::POST;
     _root = "";
     _upload_dir = "";
    	_was_set_root = false;
@@ -72,8 +72,11 @@ void Location::set_upload_dir(const std::string& u)
 {
     if (_was_set_upload_dir)
         throw std::runtime_error("Duplicate directive: upload_dir");
+    set_accept_upload(true);
     _was_set_upload_dir = true;
     _upload_dir = u;
+    if (_upload_dir[_upload_dir.size() - 1] != '/')
+        _upload_dir += "/";
 }
 
 void Location::set_redirect(std::pair<int, const std::string > r)
@@ -201,7 +204,7 @@ std::string   Location::get_local_path(const std::string &uri) const
     std::string path_uri = uri.substr(0, find(uri.begin(), uri.end(), '?') - uri.begin());
 
     logs::SdevLog("Composing local path for uri: " + path_uri);
-    logs::SdevLog("Local path: " + _root + " + " + path_uri.substr(_location_path.size(), path_uri.size()));
+    logs::SdevLog("Local path: " + _root + " + " + path_uri.substr(_location_path.size(), path_uri.size()) + "=" + (_root + path_uri.substr(_location_path.size(), path_uri.size())));
 	return _root + path_uri.substr(_location_path.size(), path_uri.size());
 }
 
@@ -279,6 +282,7 @@ void   Location::build_response_get_dir(Client &client, std::string &local_path)
     }
 
     if (_dir_listing == false) {
+        logs::SdevLog("Get-Dir: No index, no dir listing");
         throw Http::HttpException(403);
     }
     logs::SdevLog("Get-Dir: Dir listing");
@@ -335,26 +339,20 @@ void   Location::handle_get_request(Client &client)
  * POST
  */
 
-void    Location::download_client_file(Client &client, std::string &file_path)
-{
-    // Many things to change here, this is just a placeholder
-    std::ofstream file(file_path.c_str(), std::ios::binary);
-
-    if (!file.is_open())
-        throw Http::HttpException(500);
-    file << client.request.body;
-    file.close();
-}
-
 void	Location::handle_post_request(Client &client)
 {
     std::string file_to_download_to = get_local_path(client.request.uri);
 
-    logs::SdevLog("Post: Downloading file");
-    if (_accept_upload)
-        download_client_file(client, file_to_download_to);
-    else
-        throw Http::HttpException(403);
+    if (_accept_upload) {
+        logs::SdevLog("\033[92mPost\033[0m: Downloading file to: " + file_to_download_to);
+        handleMultipart(client, _upload_dir);
+        client.response.status_code = 204;
+        client.generate_quick_response("");
+    }
+    else {
+        client.response.status_code = 204;
+        client.generate_quick_response("");
+    }
 }
 
 /**

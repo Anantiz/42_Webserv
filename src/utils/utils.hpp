@@ -59,6 +59,6 @@ namespace utils
 
 //fck namespace
 size_t	ft_strlen(const char *s);
-char	*ft_strjoin(const char *s1, const char *s2);
+char	*ft_cpp_join_strings(const char *s1, const char *s2);
 
 #endif // UTILS_HPP

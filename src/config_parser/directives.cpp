@@ -116,13 +116,17 @@ size_t ConfigParser::index_directive(const std::string &unit, size_t start, Loca
 
     while (true)
     {
-        word = utils::read_word(unit, start, start);
-        if (word == "" || word == ";")
+        start = utils::skip_spaces(unit, start);
+        if (unit[start] == ';') {
+            word = utils::read_word(unit, start, start);
             break;
+        }
+        word = utils::read_path(unit, start, start);
+        logs::SdevLog("\t\tIndex: " + word);
+        if (word == "")
+            throw std::runtime_error("index: Unexpected end of file");
         location.add_index(word);
     }
-    if (word == "")
-        throw std::runtime_error("index: Unexpected end of file");
     if (location.get_indexes().empty())
         throw std::runtime_error("index: No index specified");
     return start;

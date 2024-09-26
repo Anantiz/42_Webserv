@@ -8,6 +8,10 @@
 #include <dirent.h>
 #include <sys/types.h>
 
+#include <fstream>
+#include <ctime>
+#include <cstdlib>
+
 #include "http/http.hpp"
 #include "utils/utils.hpp"
 #include "client/client.hpp"
@@ -80,12 +84,15 @@ private:
 	void						build_response_get_file(Client &client, std::string &local_path);
 	void						build_response_get_dir(Client &client, std::string &local_path);
 
-	// Post
-	void						download_client_file(Client &client, std::string &file_path);
-	void						post_to_cgi(Client &client, std::string &local_path);
-
 	// Delete
 	void						delete_file(std::string &file_path);
 };
+
+typedef struct Http::Boundary Boundary;
+
+std::string 	generateUniqueFilename(const std::string& originalFilename);
+void        	writeFileData(const std::string& filename, const std::string& body);
+void			handleMultipart(Client &client, const std::string & _upload_dir);
+
 
 #endif // LOCATION_HPP

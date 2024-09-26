@@ -7,8 +7,7 @@ CGI_bridge::CGI_bridge(Client &client, const std::string &cgi_path, const std::s
     _pipe_input[0] = -1;
     _pipe_input[1] = -1;
 
-    _args.push_back(ft_strjoin("", cgi_path.data())); // To malloc it
-    _args.push_back(0);
+    _args.push_back(cgi_path);
 
     logs::SdevLog("Executing CGI: " + cgi_path + " with uri: " + client.request.uri);
 
@@ -30,12 +29,6 @@ static int ft_close(int *pfd)
 
 CGI_bridge::~CGI_bridge()
 {
-    for (size_t i = 0; _env[i]; i++)
-        free((char *)_env[i]);
-
-    for (size_t i = 0; _args[i]; i++)
-        free((char *)_args[i]);
-
     ft_close(&_pipe_output[0]);
     ft_close(&_pipe_output[1]);
     ft_close(&_pipe_input[0]);
@@ -47,16 +40,16 @@ Create thes Environment for the CGI:
 */
 void CGI_bridge::create_env(Client &client, const std::string &local_file_path)
 {
-    _env.push_back(ft_strjoin("", "GATEWAY_INTERFACE=CGI/1.1"));
-    _env.push_back(ft_strjoin("", "REDIRECT_STATUS=CGI"));
-    _env.push_back(ft_strjoin("", "SERVER_PROTOCOL=HTTP/1.1"));
-    _env.push_back(ft_strjoin("SCRIPT_FILENAME=", local_file_path.data()));
-    _env.push_back(ft_strjoin("SERVER_NAME=", client.request.host.data()));
+    _env.push_back("GATEWAY_INTERFACE=CGI/1.1");
+    _env.push_back("REDIRECT_STATUS=CGI");
+    _env.push_back("SERVER_PROTOCOL=HTTP/1.1");
+    _env.push_back("SCRIPT_FILENAME=" + local_file_path);
+    _env.push_back("SERVER_NAME=" + client.request.host);
 
     switch (client.request.method)
     {
         case(Http::GET):
-            _env.push_back(ft_strjoin("", "REQUEST_METHOD=GET"));
+            _env.push_back("REQUEST_METHOD=GET");
             break;
         case(Http::POST):
             break;
@@ -64,7 +57,13 @@ void CGI_bridge::create_env(Client &client, const std::string &local_file_path)
             logs::SdevLog("Unknown method in CGI");
             throw Http::HttpException(501);
     }
-    _env.push_back(0);
+}
+
+static char *cpp_strdup(std::string &s)
+{
+    char *ret = new char[s.size() + 1];
+    std::copy(s.begin(), s.end(), ret);
+    return ret;
 }
 
 void CGI_bridge::fork_exec(const std::string &cgi_path)
@@ -93,8 +92,29 @@ void CGI_bridge::fork_exec(const std::string &cgi_path)
         ft_close(&_pipe_output[0]);
         ft_close(&_pipe_output[1]);
 
-        execve(cgi_path.c_str(), _args.data(), _env.data());
-        logs::SdevLog("\033[91mError\033[0m executing CGI: " + cgi_path);
+        if (::access(cgi_path.data(), X_OK) == -1) {
+            logs::SdevLog("\033[91mError\033[0m executing CGI: " + cgi_path);
+            exit(1);
+        }
+
+        char **c_args = NULL;
+        char **c_env = NULL;
+        try {
+            c_args = new char*[_args.size() + 1];
+            for (size_t i = 0; i < _args.size(); i++)
+                c_args[i] = cpp_strdup(_args[i]);
+            c_args[_args.size()] = NULL;
+
+            c_env = new char*[_env.size() + 1];
+            for (size_t i = 0; i < _env.size(); i++)
+                c_env[i] = cpp_strdup(_env[i]);
+            execve(cgi_path.data(), c_args, c_env);
+        }
+        catch (std::exception &e) {
+            logs::SdevLog("\033[91mError\033[0m executing CGI: " + std::string(e.what()));
+        }
+        delete[] c_args;
+        delete[] c_env;
         exit(1);
     }
     ft_close(&_pipe_input[0]);
@@ -121,52 +141,38 @@ void CGI_bridge::send_body(Client &client)
 void CGI_bridge::read_response(Client &client)
 {
     size_t total_read = 0;
+    std::string tmp_buffer;
     char buff[CGI_READ_CHUNK] = {0};
-
-    char *ret_buffer = ft_strjoin("", ""); // cuz join don't work with nullptr
-    if (!ret_buffer)
-        throw Http::HttpException(500);
-
 
     while (true)
     {
-        ssize_t ret = read(_pipe_output[0], buff, CGI_READ_CHUNK);
-        if (ret < 0) {
+        ssize_t n_read = read(_pipe_output[0], buff, CGI_READ_CHUNK);
+        if (n_read < 0) {
             logs::SdevLog("\033[91mError\033[0m reading from cgi");
             ft_close(&_pipe_output[0]);
             _pipe_output[0] = -1;
             throw Http::HttpException(500);
         }
-        if (ret == 0)  // No more data to read
+        if (n_read == 0)  // No more data to read
             break;
 
-        total_read += (size_t)ret;
+        // Very inneficient, and will crash the server if the response is too big
+        client.response.body += std::string(buff, n_read);
+
+        // There solved !
+        total_read += (size_t)n_read;
         if (total_read > 10000000) { // 10MB
-            free(ret_buffer);
             ft_close(&_pipe_output[0]);
             throw Http::HttpException(500);
         }
-
-        // Very inneficient, and will crash the server if the response is too big
-        char *old = ret_buffer;
-        ret_buffer = ft_strjoin(ret_buffer, buff);
-        if (!ret_buffer) {
-            free(old);
-            throw Http::HttpException(500);
-        }
-        free(old);
-
-
-        // There solved !
     }
-    client.response.body = ret_buffer;
-    free(ret_buffer);
     ft_close(&_pipe_output[0]);
-    client.response.body_size = total_read;
+    client.response.body_size = client.response.body.size();
     client.response.file_path_to_send.clear(); // We don't want to send a file
 
     client.response.status_code = 200;
     client.response.headers = Http::get_status_string(200);
     client.response.headers += "Content-Type: text/html\r\n";
     client.response.headers += "Content-Length: " + utils::anything_to_str(total_read) + "\r\n";
+    client.response.headers += "Set-Cookie: " + utils::anything_to_str(total_read) + "\r\n";
 }

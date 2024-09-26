@@ -26,8 +26,8 @@ public:
     ~CGI_bridge();
 
 private:
-    std::vector<char *>                 _env;
-    std::vector<char *>                 _args;
+    std::vector<std::string>            _env;
+    std::vector<std::string>            _args;
     int                                 _pipe_input[2];
     int                                 _pipe_output[2];
 

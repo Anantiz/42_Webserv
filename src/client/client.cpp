@@ -64,6 +64,15 @@ pollfd &Client::getPollfd() {
 	return poll_fd;
 }
 
+const size_t MAX_BUFFER_SIZE = 32 * 1024 * 1024; // 32 * 1024 * 1024 = 33,554,432 bytes (32 MB)
+
+void addToBuffer(std::string &buffer, const char *data) {
+    if (buffer.size() > MAX_BUFFER_SIZE) {
+        throw Http::HttpException(414);
+    }
+    buffer.append(data);
+}
+
 void	Client::receive_request_data()
 {
 		pollfd 		pollFd = getPollfd();

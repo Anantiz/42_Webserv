@@ -1,8 +1,11 @@
 #include "client/client.hpp"
 #include "http/http.hpp"
+#include "utils/utils.hpp"
 
 #include <string>
-#include <map>
+#include <vector>
+
+#define CGI_READ_CHUNK 4096
 
 /*
 Purpose:
@@ -16,19 +19,20 @@ Purpose:
 */
 class CGI_bridge
 {
+    CGI_bridge() {}
 public:
 
-    CGI_bridge(Client &client, const std::string &cgi_path);
+    CGI_bridge(Client &client, const std::string &cgi_path, const std::string &local_file_path);
     ~CGI_bridge();
 
 private:
-    std::map<std::string, std::string>  _env_map;
-    char                                **_env;
-    int                                 _pipe_send[2];
-    int                                 _pipe_read[2];
+    std::vector<std::string>            _env;
+    std::vector<std::string>            _args;
+    int                                 _pipe_input[2];
+    int                                 _pipe_output[2];
 
-    void create_env(Client &client);
-    void fork_exec(Client &client, const std::string &cgi_path);
+    void create_env(Client &client, const std::string &local_file_path);
+    void fork_exec(const std::string &cgi_path);
     void send_body(Client &client);
     void read_response(Client &client);
 

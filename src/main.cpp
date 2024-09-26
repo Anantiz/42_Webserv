@@ -1,6 +1,7 @@
 #include "webserv.hpp"
 
-#define DEFAULT_CONFIG_FILE_PATH "configs/webserv-default.conf"
+#define DEFAULT_CONFIG_FILE_PATH "configs/australia.conf"
+// #define DEFAULT_CONFIG_FILE_PATH "configs/webserv-default.conf"
 // #define DEFAULT_CONFIG_FILE_PATH "configs/webserv-test-tokens.conf"
 
 int main(int ac, char **av)

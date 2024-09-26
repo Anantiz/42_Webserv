@@ -10,7 +10,7 @@ Client::Client(int entry_socket_fd, int arg_access_port) : client_len(sizeof(cli
 
 	memset(buff, 0, sizeof(buff));
 
-	this->poll_fd = (pollfd){cfd, POLLIN | POLLOUT, 0};
+	this->poll_fd = (pollfd){cfd, POLLIN, 0};
 	this->connection_status = Client::GETTING_HEADER;
 	this->access_port = arg_access_port; // To match the server
 	this->server = NULL;
@@ -40,6 +40,10 @@ Client::Client(int entry_socket_fd, int arg_access_port) : client_len(sizeof(cli
     this->request.buffer.clear();
     this->request.multipart = false;
 
+	this->request.keep_alive = false;
+	this->request.content_length = 0;
+	this->request.content_type.clear();
+
 	this->response.method = Http::UNKNOWN_METHOD;
     this->response.status_code = 200;
     this->response.headers.clear();
@@ -49,6 +53,7 @@ Client::Client(int entry_socket_fd, int arg_access_port) : client_len(sizeof(cli
     this->response.buffer.clear();
     this->response.last_read = 0;
     this->response.offset = 0;
+
 }
 
 Client::~Client() {
@@ -69,7 +74,7 @@ void	Client::receive_request_data()
 			logs::SdevLog( "Client did some bullshit, pollin with no bytes to read" );
 			return ;
 		}
-		_logger.SdevLog( "New content to add : " + utils::anything_to_str(buff) );
+		// _logger.SdevLog( "New content to add : " + utils::anything_to_str(buff) );
 		request.buffer.append(buff);
 		memset(buff, 0, sizeof(buff));
 }
@@ -99,19 +104,7 @@ bool	Client::get_header()
 	if ( end_pos != std::string::npos )
 	{
 		_logger.SdevLog( "ALL HEADER RECEIVED" );
-		_logger.SdevLog( request.buffer );
-
-		// // factoriser ce bordel (permet de recuperer ce quón recoit en plus du header une fois le header recu)
-		// size_t length = this->request.buffer.length() - (end_pos + 4);
-		// if (length > sizeof(this->buff) - 1)
-		// {
-    	// 	length = sizeof(this->buff) - 1;  // Leave space for the null terminator
-		// }
-		// // Copy the substring from request.buffer into this->buff
-		// this->request.buffer.copy(this->buff, length, end_pos + 4);
-
-		// // Null-terminate the buffer
-		// this->buff[length] = '\0';
+		// _logger.SdevLog( request.buffer );
 		this->connection_status = HEADER_ALL_RECEIVED;
 	}
 	return true;

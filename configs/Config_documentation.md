@@ -49,7 +49,7 @@ Fields: [Authorized_scope][Optional/Mandatory][Directive_name][args...]
     ? Defines an HTTP redirection with the given status code and target URI.
 
 {location} {Optional} upload_dir <path/to/upload/directory>
-    ? Specifies the directory where uploaded files should be saved. default is not allowed
+    ? Specifies the directory where uploaded files should be saved. if not specified no file will be downloaded from the client.
 
 
 

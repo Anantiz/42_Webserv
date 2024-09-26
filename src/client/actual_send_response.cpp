@@ -22,10 +22,10 @@ void	Client::send_response( void )
             if (!this->response.file_path_to_send.empty() && access(this->response.file_path_to_send.c_str(), R_OK) == -1)
             {
                 logs::SdevLog("\033[91mError\033[0m accessing file to send, local error file path : " + this->response.file_path_to_send);
-                this->response.status_code = 500;
+                this->response.status_code = 404;
                 this->response.body.clear();
                 this->response.file_path_to_send.clear();
-                this->error_response("");
+                this->generate_quick_response("");
             }
 
             this->response_status = SENDING_HEADER;
@@ -48,6 +48,7 @@ void	Client::send_response( void )
                 logs::SdevLog("\033[91mError\033[0m sending headers, client closed connection");
                 this->to_close = true;
                 cleanup_for_next_request();
+                return;
             }
             this->response.offset += tmp;
         }
@@ -62,21 +63,23 @@ void	Client::send_response( void )
             this->response.offset = 0;
 
             // Send by file or by pre-filled-body ?
-            if (this->response.file_path_to_send.empty()) // No file path, send the pre-filled body
+            if (!this->response.body.empty()) // If body is present (CGI or errors)
                 this->response_status = SENDING_PRE_FILLED_BODY;
-            else // Send file
+            else if (!this->response.file_path_to_send.empty())// Otherwise Send file
             {
                 this->response.buffer.clear();
                 this->response.buffer.reserve(LOCAL_FILE_READ_CHUNK_SIZE);
                 this->response_status = SENDING_FROM_FILE;
                 this->response.file_fd = open(this->response.file_path_to_send.c_str(), O_RDONLY);
                 if (this->response.file_fd == -1) {
-                    logs::SdevLog("\033[91mDouble Error\033[0m opening file to send, local error file path : " + this->response.file_path_to_send);
+                    logs::SdevLog("\033[91mError\033[0m opening file to send, local error file path : " + this->response.file_path_to_send);
                     this->connection_status = TO_CLOSE;
                     return ;
-                } else {
+                } else
                     logs::SdevLog("Sending file: " + this->response.file_path_to_send);
-                }
+            } else { // Nothing to send
+                finalize_response();
+                return ;
             }
         }
 
@@ -96,6 +99,7 @@ void	Client::send_response( void )
                 logs::SdevLog("\033[91mError\033[0m sending body, client closed connection");
                 this->to_close = true;
                 cleanup_for_next_request();
+                return ;
             }
             this->response.offset += tmp;
         }
@@ -110,7 +114,7 @@ void	Client::send_response( void )
                     this->response.status_code = 500;
                     this->response.body.clear();
                     this->response.file_path_to_send.clear();
-                    this->error_response("");
+                    this->generate_quick_response("");
                     this->response_status = SENDING_PRE_FILLED_BODY;
                 }
                 else if (this->response.last_read == 0) {
@@ -141,35 +145,37 @@ void	Client::send_response( void )
 void    Client::finalize_response( void )
 {
     this->response_status = DONE_SENDING;
-    if (this->response.file_fd != -1)
+    if (this->response.file_fd != -1) {
         close(this->response.file_fd);
-    this->response.file_fd = -1;
+        this->response.file_fd = -1;
+    }
     ssize_t sent = send(this->poll_fd.fd, "\0", 1, MSG_DONTWAIT);
     if (sent <= 0) {
         logs::SdevLog("\033[91mError\033[0m sending end of response, client closed connection");
         this->to_close = true;
     }
     this->response.offset += sent;
-    if (this->response.offset == 1)
-    {
-        if (this->to_close)
-            this->connection_status = TO_CLOSE;
-        else
-            cleanup_for_next_request();
+    if (this->response.offset == 1) {
+        cleanup_for_next_request();
     }
     logs::SdevLog("\033[96mResponse sent\033[0m");
 }
 
 void    Client::cleanup_for_next_request( void )
 {
-    if (this->response.file_fd != -1)
+    if (this->response.file_fd != -1) {
+        this->response.file_fd = -1;
         close(this->response.file_fd);
-    if (this->to_close or this->connection_status == TO_CLOSE) {
+    }
+    if ((this->to_close and this->request.keep_alive == false) or this->connection_status == TO_CLOSE) {
         this->connection_status = Client::TO_CLOSE;
+        logs::SdevLog("\033[92mKilling\033[0m");
         return ;
+    } else {
+        this->connection_status = Client::KEEP_ALIVE;
+        logs::SdevLog("\033[92mKeep-Alive\033[0m");
     }
 
-    this->response.file_fd = -1;
     this->request.method = Http::UNKNOWN_METHOD;
     this->request.protocol = Http::FALSE_PROTOCOL;
     this->request.host.clear();
@@ -185,6 +191,10 @@ void    Client::cleanup_for_next_request( void )
     this->request.buffer.clear();
     this->request.multipart = false;
 
+    this->request.keep_alive = false;
+	this->request.content_length = 0;
+	this->request.content_type = "";
+
     this->response.method = Http::UNKNOWN_METHOD;
     this->response.status_code = 200;
     this->response.headers.clear();
@@ -195,9 +205,9 @@ void    Client::cleanup_for_next_request( void )
     this->response.last_read = 0;
     this->response.offset = 0;
 
+    this->to_close = false;
     this->eor = Client::DONT;
     this->treating_status = Client::NOTHING;
     this->response_status = Client::NONE;
     this->state = Client::PARSING_HEADERS;
-    this->connection_status = Client::KEEP_ALIVE;
 }

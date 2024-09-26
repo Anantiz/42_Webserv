@@ -16,14 +16,14 @@ void	Cluster::handle_pollin(int i, Client *client)
 	} catch (const Http::HttpException &e) {
 		_logger.devLog("\033[91mError\033[0m: " + std::string(e.what()));
 		client->response.status_code = e.get_status_code();
-		client->error_response("");
+		client->generate_quick_response("");
 		client->connection_status = Client::RESPONSE_READY;
 		client->to_close = true; // Close once answer is sent
 		return ;
 	} catch (const std::exception &e) {
 		_logger.devLog("\033[91mError\033[0m: " + std::string(e.what()));
 		client->response.status_code = 500;
-		client->error_response("");
+		client->generate_quick_response("");
 		client->connection_status = Client::RESPONSE_READY;
 		client->to_close = true; // Close once answer is sent
 		return ;
@@ -45,7 +45,7 @@ void	Cluster::handle_pollin(int i, Client *client)
 		if (!client->server) {
 			_logger.devLog("Client didn't send `host` header, forbidden in Http/1.1, sending 400");
 			client->response.status_code = 400;
-			client->error_response("");
+			client->generate_quick_response("");
 			client->connection_status = Client::RESPONSE_READY;
 			client->to_close = true; // Close once answer is sent
 
@@ -57,9 +57,9 @@ void	Cluster::handle_pollin(int i, Client *client)
 	else
 		_logger.devLog("Client request not ready to be matched with server");
 
-	// if (client->connection_status == Client::RESPONSE_READY) {
-	// 	edit_pollfd(i, POLLOUT, client);
-	// }
+	if (client->connection_status == Client::RESPONSE_READY) {
+		edit_pollfd(i, POLLOUT, client);
+	}
 }
 
 void	Cluster::handle_pollout(int i, Client *client)

@@ -63,6 +63,7 @@ static char *cpp_strdup(std::string &s)
 {
     char *ret = new char[s.size() + 1];
     std::copy(s.begin(), s.end(), ret);
+    ret[s.size()] = 0;
     return ret;
 }
 
@@ -72,7 +73,6 @@ void CGI_bridge::fork_exec(const std::string &cgi_path)
         throw Http::HttpException(500);
     if (pipe(_pipe_output) == -1) {
         ft_close(&_pipe_input[1]); ft_close(&_pipe_input[0]);
-
         throw Http::HttpException(500);
     }
 
@@ -97,17 +97,18 @@ void CGI_bridge::fork_exec(const std::string &cgi_path)
             exit(1);
         }
 
-        char **c_args = NULL;
-        char **c_env = NULL;
+        char **c_args = 0;
+        char **c_env = 0;
         try {
             c_args = new char*[_args.size() + 1];
             for (size_t i = 0; i < _args.size(); i++)
                 c_args[i] = cpp_strdup(_args[i]);
-            c_args[_args.size()] = NULL;
+            c_args[_args.size()] = 0;
 
             c_env = new char*[_env.size() + 1];
             for (size_t i = 0; i < _env.size(); i++)
                 c_env[i] = cpp_strdup(_env[i]);
+            c_env[_env.size()] = 0;
             execve(cgi_path.data(), c_args, c_env);
         }
         catch (std::exception &e) {

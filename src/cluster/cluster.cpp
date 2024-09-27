@@ -31,7 +31,6 @@ Cluster::~Cluster()
 	_logger.infoLog("Shuting down the server");
 	cleanup();
 	_logger.infoLog("Server is down");
-	exit(0);
 }
 
 void	Cluster::cleanup()

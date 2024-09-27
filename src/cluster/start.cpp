@@ -60,7 +60,5 @@ int	Cluster::start()
 	size_t size = _listen_socket_fds.size();
 	for (size_t i=0; i<size; i++)
 		_poll_fds.push_back((pollfd){_listen_socket_fds[i], POLLIN, 0});
-
-	_to_remove.reserve(_max_clients / 4);
 	return run();
 }

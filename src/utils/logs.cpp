@@ -45,10 +45,10 @@ logs::~logs()
 void logs::SdevLog(const std::string &msg)
 {
 	(void)msg;
-	// #ifdef DEBUG_PROD
-		// if (logs::defaultLogLevel == logs::DEV)
-			// std::cerr << WHITE << "[DEV] " << RESET << msg << std::endl;
-	// #endif
+	#ifdef DEBUG_PROD
+		if (logs::defaultLogLevel == logs::DEV)
+			std::cerr << WHITE << "[DEV] " << RESET << msg << std::endl;
+	#endif
 }
 
 

@@ -13,7 +13,7 @@ CGI_bridge::CGI_bridge(Client &client, const std::string &cgi_path, const std::s
 
     create_env(client, local_file_path);
     fork_exec(cgi_path);
-    send_body(client);
+    send_body(client, local_file_path);
     read_response(client);
 }
 
@@ -40,6 +40,7 @@ Create thes Environment for the CGI:
 */
 void CGI_bridge::create_env(Client &client, const std::string &local_file_path)
 {
+    client.request.headers = client.request.mainHeader; // Fuck you loris
     try {
         _env.push_back("GATEWAY_INTERFACE=CGI/1.1");
         _env.push_back("REDIRECT_STATUS=CGI");
@@ -52,6 +53,21 @@ void CGI_bridge::create_env(Client &client, const std::string &local_file_path)
         _env.push_back("REMOTE_PORT=" + utils::anything_to_str(client.client_addr.sin_port));
         _env.push_back("REQUEST_URI=" + client.request.uri);
 
+        //Set cookies (from client.request.headers, it is a map)
+        if (client.request.headers.find("Cookie") != client.request.headers.end()) {
+            _env.push_back("HTTP_COOKIE=" + client.request.headers["Cookie"]);
+            logs::SdevLog("Cookie: " + client.request.headers["Cookie"]);
+        } else {
+            logs::SdevLog("No cookie");
+        }
+        // Handle User-Agent
+        if (client.request.headers.find("User-Agent") != client.request.headers.end()) {
+            _env.push_back("HTTP_USER_AGENT=" + client.request.headers["User-Agent"]);
+        }
+        // Handle Referer
+        if (client.request.headers.find("Referer") != client.request.headers.end()) {
+            _env.push_back("HTTP_REFERER=" + client.request.headers["Referer"]);
+        }
         // What is missing ? (We only support GET and POST)
 
         switch (client.request.method)
@@ -158,21 +174,57 @@ void CGI_bridge::fork_exec(const std::string &cgi_path)
     ft_close(&_pipe_output[1]);
 }
 
-void CGI_bridge::send_body(Client &client)
+void CGI_bridge::send_body(Client &client, const std::string &local_file_path)
 {
     size_t total_written = 0;
+    char buff[CGI_READ_CHUNK] = {0};
+    int fd = -1;
 
-    while (total_written < client.request.body.size())
+    if (client.request.method == Http::GET)
     {
-        ssize_t ret = write(_pipe_input[1], &client.request.body.data()[total_written], CGI_READ_CHUNK);
-        if (ret < 0) {
-            logs::SdevLog("\033[91mError\033 writing to cgi[0m");
+        fd = open(local_file_path.data(), O_RDONLY);
+        if (fd == -1) {
+            kill(_pid, SIGKILL);
             ft_close(&_pipe_input[1]);ft_close(&_pipe_output[0]);
+            logs::SdevLog("\033[91mError\033[0m opening file: " + local_file_path);
             throw Http::HttpException(500);
         }
-        total_written += ret;
+        logs::SdevLog("Opened file: " + local_file_path);
+    }
+
+    bool run = true;
+    while (run)
+    {
+        ssize_t bytes_written = 0;
+
+        if (client.request.method == Http::GET) {
+            ssize_t bytes_read = read(fd, buff, CGI_READ_CHUNK);
+            logs::SdevLog("Read from file: " + utils::anything_to_str(bytes_read) + " bytes");
+            if (bytes_read < 0) {
+                logs::SdevLog("\033[91mError\033[0m reading from file");
+                close(fd);
+                ft_close(&_pipe_input[1]);ft_close(&_pipe_output[0]);
+                throw Http::HttpException(500);
+            } if (bytes_read == 0) {
+                run = false;
+            }
+            bytes_written = write(_pipe_input[1], buff, (size_t)bytes_read);
+        } else {
+            bytes_written = write(_pipe_input[1], &client.request.body.data()[total_written], CGI_READ_CHUNK);
+            total_written += bytes_written;
+            if (total_written >= client.request.body.size())
+                run = false;
+        }
+
+        if (bytes_written < 0) {
+            logs::SdevLog("\033[91mError\033 writing to cgi[0m");
+            ft_close(&_pipe_input[1]);ft_close(&_pipe_output[0]);
+            close(fd);
+            throw Http::HttpException(500);
+        }
     }
     ft_close(&_pipe_input[1]);
+    close(fd);
 }
 
 #define TIMEOUT 5

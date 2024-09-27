@@ -3,6 +3,10 @@
 #include <sys/wait.h>
 #include <cstring>
 
+#define BODY "\
+import os\n\
+import http.cookies\n\ndef print_html(cookie_value=None):\n    # Print content type header and set cookie if needed\n    print(\"Content-Type: text/html\", end=\"\r\n\", flush=True)\n    if cookie_value:\n        print(f\"Set-Cookie: user_id={cookie_value}; Path=/; HttpOnly\", end=\"\r\n\", flush=True)\n\n    print(\"\",end=\"\r\n\")  # End of headers (must have a blank line here to separate headers from body, end=\"\r\n\", flush=True)\n\n    # HTML content begins\n    print(\"<html><head><title>CGI Cookie Example</title></head>\", flush=True)\n    print(\"<body>\", flush=True)\n    if cookie_value:\n        print(f\"<p>Cookie 'user_id' is set to: {cookie_value}</p>\", flush=True)\n    else:\n        print(\"<p>No cookie found. Setting a new cookie!</p>\", flush=True)\n    print(\"</body></html>\", end=\"\r\n\", flush=True)\n\n# Read existing cookies\ncookie = http.cookies.SimpleCookie(os.environ.get(\"HTTP_COOKIE\", \"\"))\nuser_id = cookie.get(\"user_id\")\n\n# If there's no cookie, set a new one\nif user_id is None:\n    user_id = \"12345\"  # Example of a new user ID\n    print_html(cookie_value=user_id)\nelse:\n    # If cookie exists, display its value\n    print_html(cookie_value=user_id.value)\nexit(0)\n"
+
 int main() {
     int pipe_in[2];
     int pipe_out[2];
@@ -41,7 +45,7 @@ int main() {
         close(pipe_out[1]);
 
         // Send body to python3
-        const char *body = "print('Hello from Python!')";
+        const char *body = BODY;
         write(pipe_in[1], body, strlen(body));
         close(pipe_in[1]);
 

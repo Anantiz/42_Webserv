@@ -36,7 +36,7 @@ private:
 
     void create_env(Client &client, const std::string &local_file_path);
     void fork_exec(const std::string &cgi_path);
-    void send_body(Client &client);
+    void send_body(Client &client, const std::string &local_file_path);
     void read_response(Client &client);
     static void parse_cgi_response(Client &client);
     static int find_status_code(std::string &cgi_headers);

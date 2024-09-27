@@ -40,23 +40,58 @@ Create thes Environment for the CGI:
 */
 void CGI_bridge::create_env(Client &client, const std::string &local_file_path)
 {
-    _env.push_back("GATEWAY_INTERFACE=CGI/1.1");
-    _env.push_back("REDIRECT_STATUS=CGI");
-    _env.push_back("SERVER_PROTOCOL=HTTP/1.1");
-    _env.push_back("SCRIPT_FILENAME=" + local_file_path);
-    _env.push_back("SERVER_NAME=" + client.request.host);
+    try {
+        _env.push_back("GATEWAY_INTERFACE=CGI/1.1");
+        _env.push_back("REDIRECT_STATUS=CGI");
+        _env.push_back("SERVER_PROTOCOL=HTTP/1.1");
+        _env.push_back("SCRIPT_FILENAME=" + local_file_path); // Not sure if it is right, this sends the path of the file being feed into the stdin, not the path of the executable
+        _env.push_back("SERVER_NAME=" + client.request.host);
+        _env.push_back("SERVER_SOFTWARE=Webserv");
+        _env.push_back("SERVER_PORT=" + utils::anything_to_str(client.access_port));
+        _env.push_back("REMOTE_ADDR=" + utils::anything_to_str(client.client_addr.sin_addr.s_addr));
+        _env.push_back("REMOTE_PORT=" + utils::anything_to_str(client.client_addr.sin_port));
+        _env.push_back("REQUEST_URI=" + client.request.uri);
 
-    switch (client.request.method)
-    {
-        case(Http::GET):
-            _env.push_back("REQUEST_METHOD=GET");
-            break;
-        case(Http::POST):
-            break;
-        default:
-            logs::SdevLog("Unknown method in CGI");
-            throw Http::HttpException(501);
+        // What is missing ? (We only support GET and POST)
+
+        switch (client.request.method)
+        {
+            case(Http::GET): {
+                _env.push_back("REQUEST_METHOD=GET");
+
+                std::string::size_type pos = client.request.uri.find("?");
+                if (pos != std::string::npos) {
+                    _env.push_back("QUERY_STRING=" + client.request.uri.substr(pos + 1));
+                } else {
+                    _env.push_back("QUERY_STRING=");
+                }
+
+                break;
+            }
+            case(Http::POST): {
+                _env.push_back("REQUEST_METHOD=POST");
+
+                if (client.request.headers.find("Content-Type") == client.request.headers.end())
+                    throw Http::HttpException(400);
+                else
+                    _env.push_back("CONTENT_TYPE=" + client.request.headers["Content-Type"]);
+
+                if (client.request.headers.find("Content-Length") == client.request.headers.end())
+                    throw Http::HttpException(400);
+                else
+                    _env.push_back("CONTENT_LENGTH=" + client.request.headers["Content-Length"]);
+
+                break;
+            }
+            default:
+                logs::SdevLog("Unknown method in CGI");
+                throw Http::HttpException(501);
+        }
+    } catch (std::exception &e) {
+        logs::SdevLog("\033[91mError\033[0m creating CGI environment: " + std::string(e.what()));
+        throw Http::HttpException(500);
     }
+
 }
 
 static char *cpp_strdup(std::string &s)
@@ -76,13 +111,13 @@ void CGI_bridge::fork_exec(const std::string &cgi_path)
         throw Http::HttpException(500);
     }
 
-    int pid = fork();
-    if (pid == -1) {
+    _pid = fork();
+    if (_pid == -1) {
         ft_close(&_pipe_input[1]);ft_close(&_pipe_input[0]);
         ft_close(&_pipe_output[1]);ft_close(&_pipe_output[0]);
         throw Http::HttpException(500);
     }
-    if (pid == 0)
+    if (_pid == 0)
     {
         dup2(_pipe_input[0], 0); // CGI input
         ft_close(&_pipe_input[0]);
@@ -113,6 +148,7 @@ void CGI_bridge::fork_exec(const std::string &cgi_path)
         }
         catch (std::exception &e) {
             logs::SdevLog("\033[91mError\033[0m executing CGI: " + std::string(e.what()));
+            exit(1);
         }
         delete[] c_args;
         delete[] c_env;
@@ -139,8 +175,20 @@ void CGI_bridge::send_body(Client &client)
     ft_close(&_pipe_input[1]);
 }
 
+#define TIMEOUT 5
 void CGI_bridge::read_response(Client &client)
 {
+    time_t start_time = time(0);
+    while (waitpid(_pid, 0, WNOHANG) == 0) {
+        if (time(0) - start_time >= TIMEOUT) {
+            logs::SdevLog("\033[91mError\033[0mCGI timeout");
+            ft_close(&_pipe_output[0]);
+            _pipe_output[0] = -1;
+            throw Http::HttpException(500);
+        }
+        usleep(50);
+    }
+
     size_t total_read = 0;
     std::string tmp_buffer;
     char buff[CGI_READ_CHUNK] = {0};
@@ -163,17 +211,52 @@ void CGI_bridge::read_response(Client &client)
         // There solved !
         total_read += (size_t)n_read;
         if (total_read > 10000000) { // 10MB
+            logs::SdevLog("\033[91mError\033[0m CGI response too big");
             ft_close(&_pipe_output[0]);
-            throw Http::HttpException(500);
+            throw Http::HttpException(413);
         }
     }
     ft_close(&_pipe_output[0]);
-    client.response.body_size = client.response.body.size();
-    client.response.file_path_to_send.clear(); // We don't want to send a file
+    logs::SdevLog("Read CGI response: " + utils::anything_to_str(total_read) + " bytes");
+    CGI_bridge::parse_cgi_response(client);
+}
 
-    client.response.status_code = 200;
-    client.response.headers = Http::get_status_string(200);
-    client.response.headers += "Content-Type: text/html\r\n";
-    client.response.headers += "Content-Length: " + utils::anything_to_str(total_read) + "\r\n";
-    client.response.headers += "Set-Cookie: " + utils::anything_to_str(total_read) + "\r\n";
+void CGI_bridge::parse_cgi_response(Client &client)
+{
+    std::string::size_type  pos = client.response.body.find("\r\n\r\n");
+
+    if (pos == std::string::npos) {
+        logs::SdevLog("\033[91mCGI response is missing headers\033[0m: " + client.response.body + ".");
+        throw Http::HttpException(500);
+    }
+    std::string cgi_headers = client.response.body.substr(0, pos + 2);
+    std::string cgi_body;
+    if (pos + 4 < client.response.body.size())
+        cgi_body = client.response.body.substr(pos + 4);
+    else
+        cgi_body = "";
+
+    client.response.body = cgi_body;
+    client.response.body_size = client.response.body.size();
+
+    client.response.status_code = find_status_code(cgi_headers);
+    if (client.response.status_code == 0)
+        client.response.status_code = 200;
+    client.response.headers = Http::get_status_string(client.response.status_code);
+    client.response.headers += cgi_headers;
+
+    client.response.file_path_to_send.clear(); // We don't want to send a file
+    logs::SdevLog("CGI response ready: header_size=" + utils::anything_to_str(client.response.headers.size()) + " body_size=" + utils::anything_to_str( client.response.body_size));
+
+}
+
+int CGI_bridge::find_status_code(std::string &cgi_headers)
+{
+    int e = 0;
+
+    std::string::size_type pos = cgi_headers.find("Status: ");
+    if (pos == std::string::npos)
+        return 0;
+    std::string status_code = cgi_headers.substr(pos + 8, 3);
+    return utils::str_to_int(status_code, e);
 }

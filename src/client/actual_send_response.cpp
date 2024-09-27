@@ -12,30 +12,38 @@
 
 void	Client::send_response( void )
 {
+    // ## 1: Validate the response
     if (this->connection_status == RESPONSE_READY or this->connection_status == SENDING_RESPONSE)
     {
-        if (this->response_status == NONE)
-        {
+        if (this->response_status == NONE) {
             this->response.last_read = 0;
             this->response.offset = 0;
-
-            if (!this->response.file_path_to_send.empty() && access(this->response.file_path_to_send.c_str(), R_OK) == -1)
-            {
+            if (!this->response.file_path_to_send.empty() && access(this->response.file_path_to_send.c_str(), R_OK) == -1) {
                 logs::SdevLog("\033[91mError\033[0m accessing file to send, local error file path : " + this->response.file_path_to_send);
                 this->response.status_code = 404;
                 this->response.body.clear();
                 this->response.file_path_to_send.clear();
                 this->generate_quick_response("");
             }
+            if (this->response.headers.find("Content-Length:") == std::string::npos) {
+                this->response.headers += "Content-Length: " + utils::anything_to_str(this->response.body.size()) + "\r\n";
+                logs::SdevLog("Adding Content-Length to headers: ");
+            }
+
+            if (this->response.headers.find("\r\n\r\n") == std::string::npos) {
+                this->response.headers += "\r\n"; // Add the separator between headers and body
+                if (this->response.headers.find("\r\n\r\n") == std::string::npos) {
+                    this->response.headers += "\r\n"; // Safety net if we forgot to put a\r\n after the last header
+                }
+            }
 
             this->response_status = SENDING_HEADER;
             this->connection_status = SENDING_RESPONSE;
-            this->response.headers += "\r\n";
             logs::SdevLog("Headers: \n" + this->response.headers);
         }
 
-        if (this->response_status == SENDING_HEADER)
-        {
+        // ## 2: Send headers of the response
+        if (this->response_status == SENDING_HEADER) {
             if (this->response.offset == this->response.buffer.size()) {
                 this->response_status = HEADER_SENT;
             }
@@ -57,12 +65,11 @@ void	Client::send_response( void )
             return ;
         }
 
+        // ## 3 Decide how to send the body
         if (this->response_status == HEADER_SENT)
         {
             this->response.last_read = 0;
             this->response.offset = 0;
-
-            // Send by file or by pre-filled-body ?
             if (!this->response.body.empty()) // If body is present (CGI or errors)
                 this->response_status = SENDING_PRE_FILLED_BODY;
             else if (!this->response.file_path_to_send.empty())// Otherwise Send file
@@ -83,6 +90,7 @@ void	Client::send_response( void )
             }
         }
 
+        // ## 3.1: Send the body (pre-filled)
         if (this->response_status == SENDING_PRE_FILLED_BODY)
         {
             if (this->response.offset == this->response.body.size()) {
@@ -103,6 +111,7 @@ void	Client::send_response( void )
             }
             this->response.offset += tmp;
         }
+        // ## 3.2: Send the body (from file)
         else if (this->response_status == SENDING_FROM_FILE)
         {
             // Read
@@ -149,15 +158,7 @@ void    Client::finalize_response( void )
         close(this->response.file_fd);
         this->response.file_fd = -1;
     }
-    ssize_t sent = send(this->poll_fd.fd, "\0", 1, MSG_DONTWAIT);
-    if (sent <= 0) {
-        logs::SdevLog("\033[91mError\033[0m sending end of response, client closed connection");
-        this->to_close = true;
-    }
-    this->response.offset += sent;
-    if (this->response.offset == 1) {
-        cleanup_for_next_request();
-    }
+    cleanup_for_next_request();
     logs::SdevLog("\033[96mResponse sent\033[0m");
 }
 
@@ -193,7 +194,7 @@ void    Client::cleanup_for_next_request( void )
 
     this->request.keep_alive = false;
 	this->request.content_length = 0;
-	this->request.content_type = "";
+	this->request.content_type.clear();
 
     this->response.method = Http::UNKNOWN_METHOD;
     this->response.status_code = 200;

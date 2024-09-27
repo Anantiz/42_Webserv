@@ -1,5 +1,0 @@
-Sending 10000 parallel requests to http://localhost:6942/template.html...
-Error: 000
-Error: 000
-Error: 000
-Error: 000

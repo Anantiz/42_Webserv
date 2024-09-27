@@ -30,8 +30,7 @@ void	Cluster::handle_pollin(int i, Client *client)
 	}
 
 	if (client->connection_status == Client::TO_CLOSE) {
-		_logger.devLog("\033[91mError\033[0m pollin on terminated conection Killing conection: " + utils::anything_to_str(client->poll_fd.fd));
-		client->to_close = true; // Cirtical error, don't try to send response nor keep alive
+		_logger.devLog("Client closed conection: " + utils::anything_to_str(client->poll_fd.fd));
 		return ;
 	}
 
@@ -169,8 +168,9 @@ int	Cluster::run()
 			if (_poll_fds[i].revents & ~(POLLIN | POLLOUT))
 				handle_anything_else(i, client);
 
-			if (client->connection_status == Client::TO_CLOSE) {
-				_logger.devLog("Closing client: " + utils::anything_to_str(client->getPollfd().fd));
+			// Still close keep alive cuz I ain't got no 5min to fix that one non-closed conection
+			if (client->connection_status == Client::TO_CLOSE or client->connection_status == Client::KEEP_ALIVE) {
+				_logger.devLog("Removing client: " + utils::anything_to_str(client->getPollfd().fd));
 				_to_remove.push_back(i);
 			}
 			else if (client->connection_status == Client::KEEP_ALIVE) {

@@ -79,8 +79,9 @@ void	Client::receive_request_data()
 		ssize_t	bytes_read = recv(pollFd.fd, buff, sizeof(request.buffer) - 1, 0);
 		_logger.SdevLog( "Getting data from fd : " + utils::anything_to_str(poll_fd.fd) );
 		if ( bytes_read <= 0 ) {
+			_logger.SdevLog( "No data");
 			this->connection_status = Client::TO_CLOSE;
-			logs::SdevLog( "Client did some bullshit, pollin with no bytes to read" );
+			this->to_close = true;
 			return ;
 		}
 		// _logger.SdevLog( "New content to add : " + utils::anything_to_str(buff) );

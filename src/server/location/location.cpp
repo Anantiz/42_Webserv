@@ -222,7 +222,7 @@ std::string Location::dir_listing_content(std::string &dir_path, std::string &re
 	static const std::string href_open = "<a href=\"";
 	static const std::string href_close = "</a>\n";
 	static const std::string br = "<br>\n";
-	std::string              ret = "";
+	std::string              ret;
 
     int entries = 0;
 	struct dirent	        *entry;

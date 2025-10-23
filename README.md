@@ -12,6 +12,7 @@ Using C++ (std-98) write a simple web-server inspired from Nginx with HTTP/1.1 R
 - Supports config files akin to nginx.conf
 - Supports CGI (python, bash, php, etc...)
 - Supported methods: `GET` `POST` `DELETE`
+- Non-blockong responsive stream parsing
 
 #### Allowed libraries:
 - **None**

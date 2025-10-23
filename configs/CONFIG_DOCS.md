@@ -52,9 +52,6 @@ Fields: [Authorized_scope][Optional/Mandatory][Directive_name][args...]
     ? Specifies the directory where uploaded files should be saved. if not specified no file will be downloaded from the client.
 
 
-
-
-
   1 - Global Configuration (global)
 
     - log_error <path> (Optional): Spécifie le fichier où les erreurs (warnings et erreurs) doivent être enregistrées. Par défaut, c'est stderr.

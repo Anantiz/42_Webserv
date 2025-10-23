@@ -2,7 +2,7 @@
 
 const std::string utils::build_error_page(int error)
 {
-    // Don't talkk to me about this, it works
+    // Don't talk to me about this, it just works
     static const std::string str_1 = " <!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Error ";
     static const std::string str_3 = "</title>\n<style>\n        body {\n            font-family: Arial, sans-serif;\n            background-color: #f8f8f8;\n            color: #333;\n            display: flex;\n            justify-content: center;\n            align-items: center;\n            height: 100vh;\n            margin: 0;\n        }\n        .container {\n            text-align: center;\n        }\n        h1 {\n            font-size: 6em;\n            margin: 0;\n        }\n        p {\n            font-size: 1.5em;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <h1>";
     static const std::string str_5 = "</h1>\n        \n    </div>\n</body>\n</html>";
